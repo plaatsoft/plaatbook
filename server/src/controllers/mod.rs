@@ -5,11 +5,14 @@
  */
 
 use axum::http::StatusCode;
+use axum::response::IntoResponse;
 
-pub async fn home() -> &'static str {
+pub mod users;
+
+pub async fn home() -> impl IntoResponse {
     concat!("PlaatBook v", env!("CARGO_PKG_VERSION"))
 }
 
-pub async fn not_found() -> (StatusCode, &'static str) {
+pub async fn not_found() -> impl IntoResponse {
     (StatusCode::NOT_FOUND, "404 Not Found")
 }
