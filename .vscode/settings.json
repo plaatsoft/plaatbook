@@ -20,6 +20,7 @@
         "editor.defaultFormatter": "rust-lang.rust-analyzer",
         "editor.formatOnSave": true
     },
+    "rust-analyzer.cargo.extraEnv": { "DATABASE_URL": "sqlite://database.db" },
     "rust-analyzer.rustfmt.extraArgs": ["+nightly"],
     "rust-analyzer.check.command": "clippy",
     // Web extensions settings
