@@ -7,6 +7,7 @@
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 
+pub mod auth;
 pub mod users;
 
 pub async fn home() -> impl IntoResponse {

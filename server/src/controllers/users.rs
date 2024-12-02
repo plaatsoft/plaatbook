@@ -5,7 +5,6 @@
  */
 
 use axum::extract::{Path, State};
-use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
 use sqlx::{Pool, Sqlite};
@@ -49,22 +48,23 @@ pub async fn users_store(State(database): State<Pool<Sqlite>>) -> impl IntoRespo
         .await
         .unwrap();
 
-    (StatusCode::CREATED, Json(user)).into_response()
+    Json(user).into_response()
 }
 
 pub async fn users_show(
     State(database): State<Pool<Sqlite>>,
     Path(user_id): Path<Uuid>,
 ) -> impl IntoResponse {
-    if let Ok(user) =
+    if let Some(user) =
         sqlx::query_as!(
             User,
-            "SELECT id as \"id: uuid::Uuid\", username, email, password, created_at, updated_at FROM users WHERE id = ?"
-        ,user_id)
-        .fetch_one(&database)
+            "SELECT id as \"id: uuid::Uuid\", username, email, password, created_at, updated_at FROM users WHERE id = ? LIMIT 1",
+            user_id)
+        .fetch_optional(&database)
         .await
+        .unwrap()
     {
-       (StatusCode::OK, Json(user)).into_response()
+        Json(user).into_response()
     } else {
         not_found().await.into_response()
     }

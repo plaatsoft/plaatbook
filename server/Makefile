@@ -18,6 +18,7 @@ ci: init-database
 
 .PHONY: init-database
 init-database:
+	openssl rand -out jwt-secret.key 4096
 	sqlx database drop -y
 	sqlx database create
 	sqlx migrate run

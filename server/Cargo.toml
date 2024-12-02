@@ -11,10 +11,19 @@ axum = { version = "0.7.9", default-features = false, features = [
     "tokio",
     "http1",
     "json",
+    "form",
 ] }
+bcrypt = "0.16.0"
 chrono = { version = "0.4.38", features = ["serde"] }
+hmac = "0.12.1"
+jwt = "0.16.0"
+reqwest = { version = "0.12.9", default-features = false, features = [
+    "default-tls",
+    "json",
+] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+sha2 = "0.10.8"
 sqlx = { version = "0.8.2", default-features = false, features = [
     "runtime-tokio",
     "macros",
@@ -29,7 +38,11 @@ tokio = { version = "1.41", default-features = false, features = [
 tower-http = { version = "0.6.2", default-features = false, features = [
     "cors",
 ] }
-uuid = { version = "1.11", features = ["serde", "v7"] }
+uuid = { version = "1.11", default-features = false, features = [
+    "serde",
+    "v7",
+] }
+woothee = "0.13.0"
 
 [profile.release]
 opt-level = "z"

@@ -16,6 +16,12 @@ PlaatBook is a X/Twitter like clone example project
     cargo install cargo-udeps cargo-deny sqlx-cli cargo-watch
     ```
 
+-   Clear and init database:
+
+    ```sh
+    make -C server init-database
+    ```
+
 -   Watch, build and run server:
 
     ```sh

@@ -9,6 +9,7 @@ use std::net::Ipv4Addr;
 use anyhow::Result;
 use axum::routing::{get, post};
 use axum::Router;
+use controllers::auth::{auth_login, auth_logout};
 use controllers::users::{users_show, users_store};
 use sqlx::SqlitePool;
 use tower_http::cors::CorsLayer;
@@ -16,6 +17,7 @@ use tower_http::cors::CorsLayer;
 use crate::controllers::users::users_index;
 use crate::controllers::{home, not_found};
 
+mod consts;
 mod controllers;
 mod models;
 
@@ -28,6 +30,9 @@ async fn main() -> Result<()> {
 
     let app = Router::new()
         .route("/", get(home))
+        // Auth
+        .route("/auth/login", get(auth_login))
+        .route("/auth/logout", get(auth_logout))
         // Users
         .route("/users", get(users_index))
         .route("/users", post(users_store))
@@ -37,6 +42,7 @@ async fn main() -> Result<()> {
         .with_state(database);
 
     let listener = tokio::net::TcpListener::bind((Ipv4Addr::UNSPECIFIED, HTTP_PORT)).await?;
+    println!("Server listening at: http://localhost:{}/", HTTP_PORT);
     axum::serve(listener, app).await?;
     Ok(())
 }

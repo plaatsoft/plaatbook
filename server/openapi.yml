@@ -1,0 +1,186 @@
+openapi: 3.0.0
+info:
+  version: 0.1.0
+  title: PlaatBook API
+  description: A X/Twitter like clone example project
+
+servers:
+  - url: "http://localhost:8080"
+
+components:
+  securitySchemes:
+    TokenAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    # MARK: Path parts
+    UserID:
+      name: id
+      in: path
+      description: User ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    # MARK: Query variables
+    Query:
+      name: q
+      in: query
+      description: Search query
+      required: false
+      schema:
+        type: string
+    Page:
+      name: page
+      in: query
+      description: Page index (page size is set by limit)
+      required: false
+      schema:
+        type: integer
+    Limit:
+      name: limit
+      in: query
+      description: Item count per page
+      required: false
+      schema:
+        type: integer
+
+paths:
+  # PlaatBook
+  /:
+    get:
+      tags: [PlaatBook]
+      description: Some information about REST API
+      responses:
+        "200":
+          description: Name and version of REST API
+
+  # MARK: Auth
+  /auth/login:
+    post:
+      tags: [Auth]
+      description: Login with user credentials
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                logon:
+                  type: string
+                password:
+                  type: string
+              required:
+                - logon
+                - password
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+  /auth/logout:
+    put:
+      tags: [Auth]
+      description: Logout your auth token
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+
+  # MARK: Users
+  /users:
+    get:
+      tags: [Users]
+      description: Get all users
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+    post:
+      tags: [Users]
+      description: Create new user
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+              required:
+                - username
+                - email
+                - password
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+  /users/{id}:
+    get:
+      tags: [Users]
+      description: Get user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+    put:
+      tags: [Users]
+      description: Update user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
