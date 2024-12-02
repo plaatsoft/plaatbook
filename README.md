@@ -31,16 +31,10 @@ PlaatBook is a X/Twitter like clone example project
 ### Web
 
 -   Install [Node.js](https://nodejs.org/en/download)
--   Install dependencies:
+-   Watch, build and run web frontend:
 
     ```sh
-    cd web; npm install
-    ```
-
--   Start bundle server:
-
-    ```sh
-    cd web; npm start
+    make -C web start
     ```
 
 -   Run CI checks:

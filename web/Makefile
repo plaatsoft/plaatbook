@@ -1,9 +1,14 @@
 .PHONY: all
 all: ci
 
+.PHONY: start
+start:
+	@if [ ! -d "node_modules" ]; then npm ci; fi
+	npm start
+
 .PHONY: ci
 ci:
 	./check_copyright.sh
-	npm ci
+	@if [ ! -d "node_modules" ]; then npm ci; fi
 	npm run lint
 	npm run build
