@@ -28,6 +28,29 @@ PlaatBook is a X/Twitter like clone example project
     make -C server ci
     ```
 
+### Web
+
+-   Install [Node.js](https://nodejs.org/en/download)
+-   Install dependencies:
+
+    ```sh
+    cd web; npm install
+    ```
+
+-   Start bundle server:
+
+    ```sh
+    cd web; npm start
+    ```
+
+-   Run CI checks:
+
+    ```sh
+    make -C web ci
+    ```
+
+-   Open page in browser
+
 ## License
 
 Copyright © 2024 [PlaatSoft](https://www.plaatsoft.nl/)
