@@ -8,7 +8,7 @@ import { useLocation } from 'preact-iso';
 import { useState } from 'preact/hooks';
 import { Field } from '../../components/field.tsx';
 import { AuthService } from '../../services/auth.service.ts';
-import { Errors } from '../../models/index.ts';
+import { Errors } from '../../models/errors.ts';
 
 export function Register() {
     const authService = AuthService.getInstance();
@@ -22,6 +22,7 @@ export function Register() {
     const register = async (event: SubmitEvent) => {
         event.preventDefault();
         setIsLoading(true);
+        setErrors({});
         const errors = await authService.register(username, email, password);
         if (errors === undefined) {
             await authService.login(email, password);

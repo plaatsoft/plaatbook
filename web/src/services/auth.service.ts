@@ -7,7 +7,7 @@
 import { signal } from '@preact/signals';
 import { Session } from '../models/session.ts';
 import { User } from '../models/user.ts';
-import { Errors } from '../models/index.ts';
+import { Errors } from '../models/errors.ts';
 
 export const $authSession = signal<(Session | null) | undefined>(undefined);
 export const $authUser = signal<(User | null) | undefined>(undefined);
@@ -86,22 +86,58 @@ export class AuthService {
 
     async logout(): Promise<boolean> {
         // Try to logout current token
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
+        await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
         });
-        if (res.status != 200) {
-            return false;
-        }
 
         // Clear stores
+        localStorage.removeItem('token');
         $authSession.value = null;
         $authUser.value = null;
-
-        // Remove token
-        localStorage.removeItem('token');
         return true;
+    }
+
+    async changeDetails(username: string, email: string): Promise<Errors | undefined> {
+        // Try to change user details
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: new URLSearchParams({
+                username,
+                email,
+            }),
+        });
+        if (res.status != 200) {
+            return (await res.json()) as Errors;
+        }
+        $authUser.value = {
+            ...$authUser.value!,
+            username,
+            email,
+        };
+        return undefined;
+    }
+
+    async changePassword(current_password: string, password: string): Promise<Errors | undefined> {
+        // Try to change user password
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}/change_password`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: new URLSearchParams({
+                current_password,
+                password,
+            }),
+        });
+        if (res.status != 200) {
+            return (await res.json()) as Errors;
+        }
+        return undefined;
     }
 }
