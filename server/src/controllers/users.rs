@@ -14,10 +14,11 @@ use uuid::Uuid;
 
 use crate::controllers::not_found;
 use crate::models::user::{
-    is_unique_email, is_unique_email_or_auth_user_email, is_unique_username,
+    is_current_password, is_unique_email, is_unique_email_or_auth_user_email, is_unique_username,
     is_unique_username_or_auth_user_username,
 };
 use crate::models::{Session, User, UserRole};
+use crate::utils::convert_garde_report;
 use crate::Context;
 
 // MARK: Helpers
@@ -82,8 +83,10 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Result<Response> 
                 .body("400 Bad Request"));
         }
     };
-    if let Err(err) = body.validate_with(ctx) {
-        return Ok(Response::new().status(Status::BadRequest).json(err));
+    if let Err(report) = body.validate_with(ctx) {
+        return Ok(Response::new()
+            .status(Status::BadRequest)
+            .json(convert_garde_report(report)));
     }
 
     // Create a new user
@@ -152,6 +155,56 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Result<Respons
             username: String,
             #[garde(email, custom(is_unique_email_or_auth_user_email))]
             email: String,
+        }
+        let body = match serde_urlencoded::from_str::<Body>(&req.body) {
+            Ok(body) => body,
+            Err(_) => {
+                return Ok(Response::new()
+                    .status(Status::BadRequest)
+                    .body("400 Bad Request"));
+            }
+        };
+        if let Err(report) = body.validate_with(ctx) {
+            return Ok(Response::new()
+                .status(Status::BadRequest)
+                .json(convert_garde_report(report)));
+        }
+
+        // Update user
+        user.username = body.username;
+        user.email = body.email;
+        user.updated_at = Utc::now();
+        ctx.database
+            .query::<()>(
+                "UPDATE users SET username = ?, email = ? WHERE id = ?",
+                (user.username.clone(), user.email.clone(), user.id),
+            )?
+            .next();
+
+        Ok(Response::new().json(user))
+    } else {
+        not_found(req, ctx, path)
+    }
+}
+
+// MARK: Users change password
+pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Result<Response> {
+    let user = get_user(ctx, path);
+    if let Some(mut user) = user {
+        // Authorization
+        let auth_user = ctx.auth_user.as_ref().unwrap();
+        if !(user.id == auth_user.id || auth_user.role == UserRole::Admin) {
+            return Ok(Response::new()
+                .status(Status::Unauthorized)
+                .body("401 Unauthorized"));
+        }
+
+        // Parse and validate body
+        #[derive(Deserialize, Validate)]
+        #[garde(context(Context))]
+        struct Body {
+            #[garde(ascii, custom(is_current_password))]
+            current_password: String,
             #[garde(ascii, length(min = 6))]
             password: String,
         }
@@ -163,19 +216,19 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Result<Respons
                     .body("400 Bad Request"));
             }
         };
-        if let Err(err) = body.validate_with(ctx) {
-            return Ok(Response::new().status(Status::BadRequest).json(err));
+        if let Err(report) = body.validate_with(ctx) {
+            return Ok(Response::new()
+                .status(Status::BadRequest)
+                .json(convert_garde_report(report)));
         }
 
         // Update user
-        user.username = body.username;
-        user.email = body.email;
         user.password = bcrypt::hash(body.password, bcrypt::DEFAULT_COST)?;
         user.updated_at = Utc::now();
         ctx.database
             .query::<()>(
-                format!("UPDATE users SET {} WHERE id = ?", User::sets()),
-                user.clone(),
+                "UPDATE users SET password = ? WHERE id = ?",
+                (user.password.clone(), user.id),
             )?
             .next();
 

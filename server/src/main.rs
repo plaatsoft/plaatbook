@@ -14,7 +14,7 @@ use crate::consts::HTTP_PORT;
 use crate::controllers::auth::{auth_login, auth_logout, auth_validate};
 use crate::controllers::sessions::{sessions_index, sessions_revoke, sessions_show};
 use crate::controllers::users::{
-    users_create, users_index, users_sessions, users_show, users_update,
+    users_change_password, users_create, users_index, users_sessions, users_show, users_update,
 };
 use crate::controllers::{home, not_found};
 use crate::models::{Session, User};
@@ -23,6 +23,7 @@ mod consts;
 mod controllers;
 mod database;
 mod models;
+mod utils;
 
 #[derive(Clone)]
 struct Context {
@@ -50,6 +51,7 @@ fn main() {
             .post("/users", users_create)
             .get("/users/:user_id", users_show)
             .post("/users/:user_id", users_update)
+            .post("/users/:user_id/change_password", users_change_password)
             .get("/users/:user_id/sessions", users_sessions)
             // Sessions
             .get("/sessions", sessions_index)
@@ -105,7 +107,10 @@ fn main() {
             if session.is_none() {
                 return Response::new()
                     .status(http::Status::Unauthorized)
-                    .body("401 Unauthorized");
+                    .body("401 Unauthorized")
+                    // Cors middleware
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Headers", "Authorization");
             }
             let session = session.unwrap().unwrap();
 

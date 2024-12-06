@@ -94,3 +94,11 @@ pub fn is_unique_email_or_auth_user_email(value: &str, context: &Context) -> gar
     }
     is_unique_email(value, context)
 }
+
+pub fn is_current_password(value: &str, context: &Context) -> garde::Result {
+    let user = context.auth_user.as_ref().unwrap();
+    if !bcrypt::verify(value, &user.password).unwrap() {
+        return Err(garde::Error::new("password is incorrect"));
+    }
+    Ok(())
+}
