@@ -217,7 +217,7 @@ dependencies = [
 [[package]]
 name = "http"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#b3652c3f6d6120afdd7627fcbd0d9371664f3020"
+source = "git+https://github.com/bplaat/crates.git#675b83e5e360f7cf37ebbb71c86c2e0cabf53e52"
 dependencies = [
  "serde",
  "serde_json",
@@ -387,7 +387,7 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 [[package]]
 name = "router"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#b3652c3f6d6120afdd7627fcbd0d9371664f3020"
+source = "git+https://github.com/bplaat/crates.git#675b83e5e360f7cf37ebbb71c86c2e0cabf53e52"
 dependencies = [
  "anyhow",
  "http",
@@ -469,7 +469,7 @@ dependencies = [
 [[package]]
 name = "sqlite"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#b3652c3f6d6120afdd7627fcbd0d9371664f3020"
+source = "git+https://github.com/bplaat/crates.git#675b83e5e360f7cf37ebbb71c86c2e0cabf53e52"
 dependencies = [
  "chrono",
  "sqlite_derive",
@@ -479,7 +479,7 @@ dependencies = [
 [[package]]
 name = "sqlite_derive"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#b3652c3f6d6120afdd7627fcbd0d9371664f3020"
+source = "git+https://github.com/bplaat/crates.git#675b83e5e360f7cf37ebbb71c86c2e0cabf53e52"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -512,7 +512,7 @@ dependencies = [
 [[package]]
 name = "threadpool"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#b3652c3f6d6120afdd7627fcbd0d9371664f3020"
+source = "git+https://github.com/bplaat/crates.git#675b83e5e360f7cf37ebbb71c86c2e0cabf53e52"
 
 [[package]]
 name = "typenum"

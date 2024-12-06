@@ -9,7 +9,7 @@ use chrono::Utc;
 use uuid::Uuid;
 
 use crate::consts::DATABASE_PATH;
-use crate::models::User;
+use crate::models::{User, UserRole};
 
 pub fn open() -> Result<sqlite::Connection> {
     // Open database and create tables
@@ -20,6 +20,7 @@ pub fn open() -> Result<sqlite::Connection> {
             username TEXT UNIQUE NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            role INTEGER NOT NULL,
             created_at TIMESTAMP NOT NULL,
             updated_at TIMESTAMP NOT NULL
         )",
@@ -55,6 +56,7 @@ pub fn open() -> Result<sqlite::Connection> {
             username: "admin".to_string(),
             email: "admin@plaatsoft.nl".to_string(),
             password: bcrypt::hash("admin", bcrypt::DEFAULT_COST)?,
+            role: UserRole::Admin,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -63,7 +65,7 @@ pub fn open() -> Result<sqlite::Connection> {
                 format!(
                     "INSERT INTO users ({}) VALUES ({})",
                     User::columns(),
-                    User::params()
+                    User::values()
                 ),
                 admin,
             )?

@@ -13,6 +13,7 @@ use uuid::Uuid;
 pub struct Session {
     pub id: Uuid,
     pub user_id: Uuid,
+    #[serde(skip)]
     pub token: String,
     pub ip_address: String,
     pub ip_latitude: Option<f64>,

@@ -12,7 +12,10 @@ use router::Router;
 
 use crate::consts::HTTP_PORT;
 use crate::controllers::auth::{auth_login, auth_logout, auth_validate};
-use crate::controllers::users::{users_index, users_show, users_store};
+use crate::controllers::sessions::{sessions_index, sessions_revoke, sessions_show};
+use crate::controllers::users::{
+    users_create, users_index, users_sessions, users_show, users_update,
+};
 use crate::controllers::{home, not_found};
 use crate::models::{Session, User};
 
@@ -44,8 +47,14 @@ fn main() {
             .post("/auth/logout", auth_logout)
             // Users
             .get("/users", users_index)
-            .post("/users", users_store)
+            .post("/users", users_create)
             .get("/users/:user_id", users_show)
+            .post("/users/:user_id", users_update)
+            .get("/users/:user_id/sessions", users_sessions)
+            // Sessions
+            .get("/sessions", sessions_index)
+            .get("/sessions/:session_id", sessions_show)
+            .post("/sessions/:session_id/revoke", sessions_revoke)
             // Not found
             .fallback(not_found),
     );

@@ -11,6 +11,7 @@ use uuid::Uuid;
 
 use crate::Context;
 
+// MARK: User
 #[derive(Clone, Serialize, FromRow)]
 pub struct User {
     pub id: Uuid,
@@ -18,10 +19,34 @@ pub struct User {
     pub email: String,
     #[serde(skip)]
     pub password: String,
+    pub role: UserRole,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
 
+// MARK: User role
+#[derive(Clone, Copy, Serialize, Eq, PartialEq)]
+pub enum UserRole {
+    Normal = 0,
+    Admin = 1,
+}
+impl From<UserRole> for sqlite::Value {
+    fn from(value: UserRole) -> Self {
+        sqlite::Value::Integer(value as i64)
+    }
+}
+impl TryFrom<sqlite::Value> for UserRole {
+    type Error = sqlite::Error;
+    fn try_from(value: sqlite::Value) -> Result<Self, Self::Error> {
+        match value {
+            sqlite::Value::Integer(0) => Ok(UserRole::Normal),
+            sqlite::Value::Integer(1) => Ok(UserRole::Admin),
+            _ => Err(sqlite::Error::new("Value is invalid user role")),
+        }
+    }
+}
+
+// MARK: Validators
 pub fn is_unique_username(value: &str, context: &Context) -> garde::Result {
     let count = context
         .database
@@ -39,6 +64,13 @@ pub fn is_unique_username(value: &str, context: &Context) -> garde::Result {
     Ok(())
 }
 
+pub fn is_unique_username_or_auth_user_username(value: &str, context: &Context) -> garde::Result {
+    if value == context.auth_user.as_ref().unwrap().username {
+        return Ok(());
+    }
+    is_unique_username(value, context)
+}
+
 pub fn is_unique_email(value: &str, context: &Context) -> garde::Result {
     let count = context
         .database
@@ -54,4 +86,11 @@ pub fn is_unique_email(value: &str, context: &Context) -> garde::Result {
         return Err(garde::Error::new("email is not unique"));
     }
     Ok(())
+}
+
+pub fn is_unique_email_or_auth_user_email(value: &str, context: &Context) -> garde::Result {
+    if value == context.auth_user.as_ref().unwrap().email {
+        return Ok(());
+    }
+    is_unique_email(value, context)
 }

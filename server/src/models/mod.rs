@@ -5,7 +5,7 @@
  */
 
 pub use session::Session;
-pub use user::User;
+pub use user::{User, UserRole};
 
 pub mod session;
 pub mod user;
