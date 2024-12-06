@@ -16,6 +16,7 @@ use crate::consts::SESSION_EXPIRE_DURATION;
 use crate::models::{Session, User};
 use crate::Context;
 
+// MARK: Auth login
 pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
     // Parse body
     #[derive(Deserialize)]
@@ -105,7 +106,7 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
             format!(
                 "INSERT INTO sessions ({}) VALUES ({})",
                 Session::columns(),
-                Session::params()
+                Session::values()
             ),
             session.clone(),
         )?
@@ -119,6 +120,7 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
     })))
 }
 
+// MARK: Auth validate
 pub fn auth_validate(_: &Request, ctx: &Context, _: &Path) -> Result<Response> {
     Ok(Response::new().json(json!({
         "session": ctx.auth_session,
@@ -126,6 +128,7 @@ pub fn auth_validate(_: &Request, ctx: &Context, _: &Path) -> Result<Response> {
     })))
 }
 
+// MARK: Auth logout
 pub fn auth_logout(_: &Request, ctx: &Context, _: &Path) -> Result<Response> {
     // Expire session
     ctx.database
