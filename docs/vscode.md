@@ -1,3 +1,6 @@
+# VSCode Configuration
+
+```json
 {
     "recommendations": [
         "EditorConfig.EditorConfig",
@@ -49,3 +52,4 @@
         "editor.formatOnSave": true
     }
 }
+```
