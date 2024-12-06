@@ -11,7 +11,7 @@ use http::{Method, Response};
 use router::Router;
 
 use crate::consts::HTTP_PORT;
-use crate::controllers::auth::{auth_login, auth_logout};
+use crate::controllers::auth::{auth_login, auth_logout, auth_validate};
 use crate::controllers::users::{users_index, users_show, users_store};
 use crate::controllers::{home, not_found};
 use crate::models::{Session, User};
@@ -40,6 +40,7 @@ fn main() {
             .get("/", home)
             // Auth
             .post("/auth/login", auth_login)
+            .get("/auth/validate", auth_validate)
             .post("/auth/logout", auth_logout)
             // Users
             .get("/users", users_index)

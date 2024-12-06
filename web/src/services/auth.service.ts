@@ -5,10 +5,11 @@
  */
 
 import { signal } from '@preact/signals';
+import { Session } from '../models/session.ts';
 import { User } from '../models/user.ts';
+import { Errors } from '../models/index.ts';
 
-export type Errors = Record<string, string[]>;
-
+export const $authSession = signal<(Session | null) | undefined>(undefined);
 export const $authUser = signal<(User | null) | undefined>(undefined);
 
 export class AuthService {
@@ -34,11 +35,11 @@ export class AuthService {
             return false;
         }
 
-        // Save user_id and token
-        const { token, user } = (await res.json()) as { token: string; user: User };
-        $authUser.value = user;
+        // Save token
+        const { token, session, user } = (await res.json()) as { token: string; session: Session; user: User };
         localStorage.setItem('token', token);
-        localStorage.setItem('user_id', user.id);
+        $authSession.value = session;
+        $authUser.value = user;
         return true;
     }
 
@@ -59,16 +60,16 @@ export class AuthService {
     }
 
     async auth(): Promise<string> {
-        // Get token and user_id
+        // Get token
         const token = localStorage.getItem('token');
-        const user_id = localStorage.getItem('user_id');
         if (token === null) {
+            $authSession.value = null;
             $authUser.value = null;
             return 'not_authed';
         }
 
         // Try to get user
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${user_id}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/validate`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
@@ -77,7 +78,9 @@ export class AuthService {
             AuthService.getInstance().logout();
             return 'logout';
         }
-        $authUser.value = await res.json();
+        const { session, user } = (await res.json()) as { session: Session; user: User };
+        $authSession.value = session;
+        $authUser.value = user;
         return 'authed';
     }
 
@@ -94,11 +97,11 @@ export class AuthService {
         }
 
         // Clear stores
+        $authSession.value = null;
         $authUser.value = null;
 
-        // Remove user_id and token
+        // Remove token
         localStorage.removeItem('token');
-        localStorage.removeItem('user_id');
         return true;
     }
 }

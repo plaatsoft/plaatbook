@@ -24,16 +24,18 @@ export function Menu() {
                 </a>
             </div>
             <div className="navbar-menu">
-                <div className="navbar-start">
+                {/* <div className="navbar-start">
                     <a className="navbar-item" href="/about">
                         About
                     </a>
-                </div>
+                </div> */}
 
                 <div className="navbar-end">
                     {$authUser.value !== null && $authUser.value !== undefined && (
                         <>
-                            <div className="navbar-item">{$authUser.value.username}</div>
+                            <div className="navbar-item">
+                                <strong>{$authUser.value.username}</strong>
+                            </div>
                             <div className="navbar-item">
                                 <div className="buttons">
                                     <a className="button is-link" href="#" onClick={logout}>
