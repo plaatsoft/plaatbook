@@ -4,13 +4,14 @@
  * SPDX-License-Identifier: MIT
  */
 
+import { useEffect } from 'preact/hooks';
 import { LocationProvider, Route, Router, useLocation } from 'preact-iso';
-import { Home } from './pages/home.tsx';
 import { Menu } from './components/menu.tsx';
 import { Login } from './pages/auth/login.tsx';
 import { Register } from './pages/auth/register.tsx';
-import { useEffect } from 'preact/hooks';
-import { AuthService } from './services/auth.service.ts';
+import { Home } from './pages/home.tsx';
+import { Settings } from './pages/settings.tsx';
+import { AuthService, $authUser } from './services/auth.service.ts';
 
 export function App() {
     const location = useLocation();
@@ -29,12 +30,15 @@ export function App() {
         <LocationProvider>
             <Menu />
 
-            <Router>
-                <Route path="/" component={Home} />
-                <Route path="/auth/login" component={Login} />
-                <Route path="/auth/register" component={Register} />
-                <Route default component={() => <div>404 Not Found</div>} />
-            </Router>
+            {$authUser.value !== undefined && (
+                <Router>
+                    <Route path="/" component={Home} />
+                    <Route path="/settings" component={Settings} />
+                    <Route path="/auth/login" component={Login} />
+                    <Route path="/auth/register" component={Register} />
+                    <Route default component={() => <div>404 Not Found</div>} />
+                </Router>
+            )}
         </LocationProvider>
     );
 }

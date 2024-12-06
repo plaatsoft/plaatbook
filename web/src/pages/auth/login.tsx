@@ -20,6 +20,7 @@ export function Login() {
     const login = async (event: SubmitEvent) => {
         event.preventDefault();
         setIsLoading(true);
+        setIsError(false);
         if (await authService.login(logon, password)) {
             location.route('/');
         } else {
