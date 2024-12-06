@@ -10,6 +10,7 @@ use router::Path;
 
 use crate::Context;
 
+pub mod auth;
 pub mod users;
 
 pub fn home(_: &Request, _: &Context, _: &Path) -> Result<Response> {

@@ -7,80 +7,40 @@
 use std::net::{Ipv4Addr, TcpListener};
 use std::sync::Arc;
 
-use anyhow::Result;
-use chrono::Utc;
 use http::Response;
 use router::Router;
-use uuid::Uuid;
 
+use crate::consts::HTTP_PORT;
+use crate::controllers::auth::{auth_login, auth_logout};
 use crate::controllers::users::{users_index, users_show, users_store};
 use crate::controllers::{home, not_found};
-use crate::models::User;
+use crate::models::{Session, User};
 
+mod consts;
 mod controllers;
+mod database;
 mod models;
 
-const DATABASE_PATH: &str = "database.db";
-const HTTP_PORT: u16 = 8000;
-
-// MARK: Database
 #[derive(Clone)]
 struct Context {
     database: Arc<sqlite::Connection>,
+    auth_user: Option<User>,
+    auth_session: Option<Session>,
 }
 
-fn open_database() -> Result<sqlite::Connection> {
-    // Open database and create tables
-    let database = sqlite::Connection::open(DATABASE_PATH)?;
-    database.execute(
-        "CREATE TABLE IF NOT EXISTS users (
-            id BLOB PRIMARY KEY,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            created_at TIMESTAMP NOT NULL,
-            updated_at TIMESTAMP NOT NULL
-        )",
-    )?;
-
-    // Seed database
-    let users_count = database
-        .query::<i64>("SELECT COUNT(id) FROM users", ())?
-        .next()
-        .expect("Should be some")?;
-    if users_count == 0 {
-        let admin = User {
-            id: Uuid::now_v7(),
-            username: "admin".to_string(),
-            email: "info@plaatsoft.nl".to_string(),
-            password: "password".to_string(),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        };
-        database
-            .query::<()>(
-                format!(
-                    "INSERT INTO users ({}) VALUES ({})",
-                    User::columns(),
-                    User::params()
-                ),
-                admin,
-            )?
-            .next();
-    }
-
-    Ok(database)
-}
-
-// MARK: Main
 fn main() {
     let ctx = Context {
-        database: Arc::new(open_database().expect("Can't open database")),
+        database: Arc::new(database::open().expect("Can't open database")),
+        auth_user: None,
+        auth_session: None,
     };
 
     let router = Arc::new(
         Router::<Context>::new()
             .get("/", home)
+            // Auth
+            .post("/auth/login", auth_login)
+            .post("/auth/logout", auth_logout)
             // Users
             .get("/users", users_index)
             .post("/users", users_store)
@@ -93,6 +53,60 @@ fn main() {
     let listener = TcpListener::bind((Ipv4Addr::UNSPECIFIED, HTTP_PORT))
         .unwrap_or_else(|_| panic!("Can't bind to port: {}", HTTP_PORT));
     http::serve(listener, move |req| {
+        println!("{} {}", req.method, req.path);
+
+        let mut ctx = ctx.clone();
+
+        // Auth middleware
+        if req.path != "/" && req.path != "/auth/login" {
+            // Get token from Authorization header
+            let authorization = match req.headers.get("Authorization") {
+                Some(authorization) => authorization,
+                None => {
+                    return Response::new()
+                        .status(http::Status::Unauthorized)
+                        .body("401 Unauthorized");
+                }
+            };
+            let token = authorization[7..].trim().to_string();
+
+            // Get active session by token
+            let session = ctx
+                .database
+                .query::<models::Session>(
+                    format!(
+                        "SELECT {} FROM sessions WHERE token = ? AND expires_at > ? LIMIT 1",
+                        Session::columns()
+                    ),
+                    (token, chrono::Utc::now()),
+                )
+                .unwrap()
+                .next();
+            if session.is_none() {
+                return Response::new()
+                    .status(http::Status::Unauthorized)
+                    .body("401 Unauthorized");
+            }
+            let session = session.unwrap().unwrap();
+
+            // Get user by session user_id
+            ctx.auth_user = Some(
+                ctx.database
+                    .query::<models::User>(
+                        format!(
+                            "SELECT {} FROM users WHERE id = ? LIMIT 1",
+                            models::User::columns()
+                        ),
+                        session.user_id,
+                    )
+                    .unwrap()
+                    .next()
+                    .unwrap()
+                    .unwrap(),
+            );
+            ctx.auth_session = Some(session);
+        }
+
         // Error middleware
         let res = match router.next(req, &ctx) {
             Ok(res) => res,
