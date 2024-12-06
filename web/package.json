@@ -14,6 +14,7 @@
         "lint": "prettier --check src *.js *.ts *.json && eslint --max-warnings 0 ."
     },
     "dependencies": {
+        "@preact/signals": "^1.3.1",
         "bulma": "^1.0.2",
         "preact": "^10.25.0",
         "preact-iso": "^2.8.1"

@@ -6,7 +6,7 @@
 
 export function About() {
     return (
-        <div>
+        <div className="section">
             <h2 className="title">About</h2>
         </div>
     );
