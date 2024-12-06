@@ -113,8 +113,8 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
 
     // Return session
     Ok(Response::new().json(json!({
-        "user_id": user.id,
         "token": session.token,
+        "user": user,
     })))
 }
 
