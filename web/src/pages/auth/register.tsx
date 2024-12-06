@@ -7,7 +7,8 @@
 import { useLocation } from 'preact-iso';
 import { useState } from 'preact/hooks';
 import { Field } from '../../components/field.tsx';
-import { AuthService, Errors } from '../../services/auth.service.ts';
+import { AuthService } from '../../services/auth.service.ts';
+import { Errors } from '../../models/index.ts';
 
 export function Register() {
     const authService = AuthService.getInstance();

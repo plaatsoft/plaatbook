@@ -6,7 +6,6 @@
 
 import { LocationProvider, Route, Router, useLocation } from 'preact-iso';
 import { Home } from './pages/home.tsx';
-import { About } from './pages/about.tsx';
 import { Menu } from './components/menu.tsx';
 import { Login } from './pages/auth/login.tsx';
 import { Register } from './pages/auth/register.tsx';
@@ -32,7 +31,6 @@ export function App() {
 
             <Router>
                 <Route path="/" component={Home} />
-                <Route path="/about" component={About} />
                 <Route path="/auth/login" component={Login} />
                 <Route path="/auth/register" component={Register} />
                 <Route default component={() => <div>404 Not Found</div>} />

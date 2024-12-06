@@ -114,7 +114,15 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
     // Return session
     Ok(Response::new().json(json!({
         "token": session.token,
+        "session": session,
         "user": user,
+    })))
+}
+
+pub fn auth_validate(_: &Request, ctx: &Context, _: &Path) -> Result<Response> {
+    Ok(Response::new().json(json!({
+        "session": ctx.auth_session,
+        "user": ctx.auth_user,
     })))
 }
 
