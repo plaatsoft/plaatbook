@@ -7,7 +7,7 @@
 use std::net::{Ipv4Addr, TcpListener};
 use std::sync::Arc;
 
-use http::Response;
+use http::{Method, Response};
 use router::Router;
 
 use crate::consts::HTTP_PORT;
@@ -57,8 +57,18 @@ fn main() {
 
         let mut ctx = ctx.clone();
 
+        // Cors middleware
+        if req.method == Method::Options {
+            return Response::new()
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Headers", "Authorization");
+        }
+
         // Auth middleware
-        if req.path != "/" && req.path != "/auth/login" {
+        if !(req.path == "/"
+            || req.path == "/auth/login"
+            || (req.path == "/users" && req.method == Method::Post))
+        {
             // Get token from Authorization header
             let authorization = match req.headers.get("Authorization") {
                 Some(authorization) => authorization,
@@ -120,5 +130,6 @@ fn main() {
 
         // Cors middleware
         res.header("Access-Control-Allow-Origin", "*")
+            .header("Access-Control-Allow-Headers", "Authorization")
     });
 }
