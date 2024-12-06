@@ -1,0 +1,265 @@
+openapi: 3.0.0
+info:
+  version: 0.1.0
+  title: PlaatBook API
+  description: A X/Twitter like clone example project
+
+servers:
+  - url: "http://localhost:8080"
+
+components:
+  securitySchemes:
+    TokenAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    UserID:
+      name: id
+      in: path
+      description: User ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SessionID:
+      name: id
+      in: path
+      description: Session ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+paths:
+  # PlaatBook
+  /:
+    get:
+      tags: [PlaatBook]
+      description: Get some information about this REST API
+      responses:
+        "200":
+          description: Name and version of this REST API
+
+  # Auth
+  /auth/login:
+    post:
+      tags: [Auth]
+      description: Login with user credentials
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                logon:
+                  type: string
+                password:
+                  type: string
+              required:
+                - logon
+                - password
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+  /auth/validate:
+    get:
+      tags: [Auth]
+      description: Validate your auth token
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+  /auth/logout:
+    put:
+      tags: [Auth]
+      description: Logout your auth token
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+
+  # Users
+  /users:
+    get:
+      tags: [Users]
+      description: Get all users
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+    post:
+      tags: [Users]
+      description: Create new user
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+              required:
+                - username
+                - email
+                - password
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+  /users/{id}:
+    get:
+      tags: [Users]
+      description: Get user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+    put:
+      tags: [Users]
+      description: Change user details
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/change_password:
+    put:
+      tags: [Users]
+      description: Change user password
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                current_password:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/sessions:
+    get:
+      tags: [Users]
+      description: Get a list of sessions of user
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+
+  # Sessions
+  /sessions:
+    get:
+      tags: [Sessions]
+      description: Get a list of all sessions
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+  /sessions/{id}:
+    get:
+      tags: [Sessions]
+      description: Get a session
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+        "404":
+          description: Session not found
+  /sessions/{id}/revoke:
+    put:
+      tags: [Sessions]
+      description: Revoke a session
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SessionID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+        "404":
+          description: Session not found

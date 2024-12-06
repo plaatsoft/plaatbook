@@ -45,18 +45,18 @@ fn main() {
             // Auth
             .post("/auth/login", auth_login)
             .get("/auth/validate", auth_validate)
-            .post("/auth/logout", auth_logout)
+            .put("/auth/logout", auth_logout)
             // Users
             .get("/users", users_index)
             .post("/users", users_create)
             .get("/users/:user_id", users_show)
-            .post("/users/:user_id", users_update)
-            .post("/users/:user_id/change_password", users_change_password)
+            .put("/users/:user_id", users_update)
+            .put("/users/:user_id/change_password", users_change_password)
             .get("/users/:user_id/sessions", users_sessions)
             // Sessions
             .get("/sessions", sessions_index)
             .get("/sessions/:session_id", sessions_show)
-            .post("/sessions/:session_id/revoke", sessions_revoke)
+            .put("/sessions/:session_id/revoke", sessions_revoke)
             // Not found
             .fallback(not_found),
     );

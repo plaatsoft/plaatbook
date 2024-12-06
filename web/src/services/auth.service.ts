@@ -87,7 +87,7 @@ export class AuthService {
     async logout(): Promise<boolean> {
         // Try to logout current token
         await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
@@ -103,7 +103,7 @@ export class AuthService {
     async changeDetails(username: string, email: string): Promise<Errors | undefined> {
         // Try to change user details
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
@@ -126,7 +126,7 @@ export class AuthService {
     async changePassword(current_password: string, password: string): Promise<Errors | undefined> {
         // Try to change user password
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}/change_password`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
