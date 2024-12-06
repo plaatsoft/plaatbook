@@ -4,15 +4,20 @@
  * SPDX-License-Identifier: MIT
  */
 
-use axum::http::StatusCode;
-use axum::response::IntoResponse;
+use anyhow::Result;
+use http::{Request, Response, Status};
+use router::Path;
+
+use crate::Context;
 
 pub mod users;
 
-pub async fn home() -> impl IntoResponse {
-    concat!("PlaatBook v", env!("CARGO_PKG_VERSION"))
+pub fn home(_: &Request, _: &Context, _: &Path) -> Result<Response> {
+    Ok(Response::new().body(concat!("PlaatBook v", env!("CARGO_PKG_VERSION"))))
 }
 
-pub async fn not_found() -> impl IntoResponse {
-    (StatusCode::NOT_FOUND, "404 Not Found")
+pub fn not_found(_: &Request, _: &Context, _: &Path) -> Result<Response> {
+    Ok(Response::new()
+        .status(Status::NotFound)
+        .body("404 Not Found"))
 }

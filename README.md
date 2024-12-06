@@ -10,10 +10,10 @@ PlaatBook is a X/Twitter like clone example project
 ### Server
 
 -   Install the latest Rust toolchain with [rustup](https://rustup.rs/)
--   Install `cargo-udeps`, `cargo-deny`, `sqlx-cli` and `cargo-watch`:
+-   Install `cargo-udeps`, `cargo-deny` and `cargo-watch`:
 
     ```sh
-    cargo install cargo-udeps cargo-deny sqlx-cli cargo-watch
+    cargo install cargo-udeps cargo-deny cargo-watch
     ```
 
 -   Watch, build and run server:

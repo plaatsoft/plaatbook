@@ -30,8 +30,4 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-udeps,cargo-deny
-      # sqlx-cli has problems with direct download
-      - uses: taiki-e/cache-cargo-install-action@v2
-        with:
-          tool: sqlx-cli
       - run: make -C server ci

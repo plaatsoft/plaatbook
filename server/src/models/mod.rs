@@ -4,4 +4,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-pub mod user;
+pub use user::User;
+
+mod user;
