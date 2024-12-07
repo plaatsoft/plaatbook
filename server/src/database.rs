@@ -24,7 +24,8 @@ pub fn open() -> Result<sqlite::Connection> {
             created_at TIMESTAMP NOT NULL,
             updated_at TIMESTAMP NOT NULL
         )",
-    )?;
+        (),
+    );
     database.execute(
         "CREATE TABLE IF NOT EXISTS sessions (
             id BLOB PRIMARY KEY,
@@ -43,13 +44,14 @@ pub fn open() -> Result<sqlite::Connection> {
             updated_at TIMESTAMP NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )",
-    )?;
+        (),
+    );
 
     // Seed database
     let users_count = database
-        .query::<i64>("SELECT COUNT(id) FROM users", ())?
+        .query::<i64>("SELECT COUNT(id) FROM users", ())
         .next()
-        .unwrap()?;
+        .unwrap();
     if users_count == 0 {
         let admin = User {
             id: Uuid::now_v7(),
@@ -60,16 +62,14 @@ pub fn open() -> Result<sqlite::Connection> {
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
-        database
-            .query::<()>(
-                format!(
-                    "INSERT INTO users ({}) VALUES ({})",
-                    User::columns(),
-                    User::values()
-                ),
-                admin,
-            )?
-            .next();
+        database.execute(
+            format!(
+                "INSERT INTO users ({}) VALUES ({})",
+                User::columns(),
+                User::values()
+            ),
+            admin,
+        );
     }
 
     Ok(database)

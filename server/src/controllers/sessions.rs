@@ -20,8 +20,7 @@ fn get_session(ctx: &Context, path: &Path) -> Option<Session> {
         Ok(id) => id,
         Err(_) => return None,
     };
-    match ctx
-        .database
+    ctx.database
         .query::<Session>(
             format!(
                 "SELECT {} FROM sessions WHERE id = ? LIMIT 1",
@@ -29,12 +28,7 @@ fn get_session(ctx: &Context, path: &Path) -> Option<Session> {
             ),
             session_id,
         )
-        .unwrap()
         .next()
-    {
-        Some(Ok(session)) => Some(session),
-        _ => None,
-    }
 }
 
 // MARK: Sessions index
@@ -49,8 +43,8 @@ pub fn sessions_index(_: &Request, ctx: &Context, _: &Path) -> Result<Response> 
 
     let sessions = ctx
         .database
-        .query::<Session>(format!("SELECT {} FROM sessions", Session::columns()), ())?
-        .collect::<Result<Vec<_>, sqlite::Error>>()?;
+        .query::<Session>(format!("SELECT {} FROM sessions", Session::columns()), ())
+        .collect::<Vec<_>>();
     Ok(Response::new().json(sessions))
 }
 
@@ -84,12 +78,10 @@ pub fn sessions_revoke(req: &Request, ctx: &Context, path: &Path) -> Result<Resp
                 .body("401 Unauthorized"));
         }
 
-        ctx.database
-            .query::<()>(
-                "UPDATE sessions SET expired_at = ? WHERE id = ?",
-                (Utc::now(), session.id),
-            )
-            .unwrap();
+        ctx.database.execute(
+            "UPDATE sessions SET expired_at = ? WHERE id = ?",
+            (Utc::now(), session.id),
+        );
         Ok(Response::new().status(Status::Ok))
     } else {
         not_found(req, ctx, path)

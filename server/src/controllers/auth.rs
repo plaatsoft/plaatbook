@@ -42,7 +42,7 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
                 User::columns()
             ),
             (body.logon.clone(), body.logon),
-        )?
+        )
         .next();
     if user.is_none() {
         return Ok(Response::new()
@@ -51,7 +51,7 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
     }
 
     // Check password
-    let user = user.unwrap()?;
+    let user = user.unwrap();
     if !bcrypt::verify(&body.password, &user.password)? {
         return Ok(Response::new()
             .status(Status::Unauthorized)
@@ -101,16 +101,14 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
-    ctx.database
-        .query::<()>(
-            format!(
-                "INSERT INTO sessions ({}) VALUES ({})",
-                Session::columns(),
-                Session::values()
-            ),
-            session.clone(),
-        )?
-        .next();
+    ctx.database.execute(
+        format!(
+            "INSERT INTO sessions ({}) VALUES ({})",
+            Session::columns(),
+            Session::values()
+        ),
+        session.clone(),
+    );
 
     // Return session
     Ok(Response::new().json(json!({
@@ -131,11 +129,9 @@ pub fn auth_validate(_: &Request, ctx: &Context, _: &Path) -> Result<Response> {
 // MARK: Auth logout
 pub fn auth_logout(_: &Request, ctx: &Context, _: &Path) -> Result<Response> {
     // Expire session
-    ctx.database
-        .query::<()>(
-            "UPDATE sessions SET expires_at = ? WHERE token = ?",
-            (Utc::now(), ctx.auth_session.as_ref().unwrap().token.clone()),
-        )?
-        .next();
+    ctx.database.execute(
+        "UPDATE sessions SET expires_at = ? WHERE token = ?",
+        (Utc::now(), ctx.auth_session.as_ref().unwrap().token.clone()),
+    );
     Ok(Response::new().status(Status::Ok))
 }

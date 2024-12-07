@@ -13,13 +13,17 @@ sqlite = { git = "https://github.com/bplaat/crates.git", features = [
     "uuid",
     "chrono",
 ] }
+validate = { git = "https://github.com/bplaat/crates.git", features = [
+    "derive",
+    "email",
+    "serde",
+] }
 
 anyhow = "1.0"
 chrono = { version = "0.4.38", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 uuid = { version = "1.11", features = ["serde", "v7"] }
-garde = { version = "0.20.0", features = ["derive", "email"] }
 serde_urlencoded = "0.7.1"
 bcrypt = "0.16.0"
 woothee = "0.13.0"

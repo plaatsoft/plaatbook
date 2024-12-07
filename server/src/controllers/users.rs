@@ -6,11 +6,11 @@
 
 use anyhow::Result;
 use chrono::Utc;
-use garde::Validate;
 use http::{Request, Response, Status};
 use router::Path;
 use serde::Deserialize;
 use uuid::Uuid;
+use validate::Validate;
 
 use crate::controllers::not_found;
 use crate::models::user::{
@@ -18,7 +18,6 @@ use crate::models::user::{
     is_unique_username_or_auth_user_username,
 };
 use crate::models::{Session, User, UserRole};
-use crate::utils::convert_garde_report;
 use crate::Context;
 
 // MARK: Helpers
@@ -28,18 +27,12 @@ fn get_user(ctx: &Context, path: &Path) -> Option<User> {
         Err(_) => return None,
     };
 
-    match ctx
-        .database
+    ctx.database
         .query::<User>(
             format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
             user_id,
         )
-        .unwrap()
         .next()
-    {
-        Some(Ok(user)) => Some(user),
-        _ => None,
-    }
 }
 
 // MARK: Users revoke
@@ -54,8 +47,8 @@ pub fn users_index(_: &Request, ctx: &Context, _: &Path) -> Result<Response> {
 
     let users = ctx
         .database
-        .query::<User>(format!("SELECT {} FROM users", User::columns()), ())?
-        .collect::<Result<Vec<_>, sqlite::Error>>()?;
+        .query::<User>(format!("SELECT {} FROM users", User::columns()), ())
+        .collect::<Vec<_>>();
     Ok(Response::new().json(users))
 }
 
@@ -66,13 +59,13 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Result<Response> 
 
     // Parse and validate body
     #[derive(Deserialize, Validate)]
-    #[garde(context(Context))]
+    #[validate(context(Context))]
     struct Body {
-        #[garde(ascii, length(min = 1), custom(is_unique_username))]
+        #[validate(ascii, length(min = 1), custom(is_unique_username))]
         username: String,
-        #[garde(email, custom(is_unique_email))]
+        #[validate(email, custom(is_unique_email))]
         email: String,
-        #[garde(ascii, length(min = 6))]
+        #[validate(ascii, length(min = 6))]
         password: String,
     }
     let body = match serde_urlencoded::from_str::<Body>(&req.body) {
@@ -83,10 +76,8 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Result<Response> 
                 .body("400 Bad Request"));
         }
     };
-    if let Err(report) = body.validate_with(ctx) {
-        return Ok(Response::new()
-            .status(Status::BadRequest)
-            .json(convert_garde_report(report)));
+    if let Err(errors) = body.validate_with(ctx) {
+        return Ok(Response::new().status(Status::BadRequest).json(errors));
     }
 
     // Create a new user
@@ -99,16 +90,14 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Result<Response> 
         created_at: Utc::now(),
         updated_at: Utc::now(),
     };
-    ctx.database
-        .query::<()>(
-            format!(
-                "INSERT INTO users ({}) VALUES ({})",
-                User::columns(),
-                User::values()
-            ),
-            user.clone(),
-        )?
-        .next();
+    ctx.database.execute(
+        format!(
+            "INSERT INTO users ({}) VALUES ({})",
+            User::columns(),
+            User::values()
+        ),
+        user.clone(),
+    );
 
     Ok(Response::new().json(user))
 }
@@ -145,15 +134,15 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Result<Respons
 
         // Parse and validate body
         #[derive(Deserialize, Validate)]
-        #[garde(context(Context))]
+        #[validate(context(Context))]
         struct Body {
-            #[garde(
+            #[validate(
                 ascii,
                 length(min = 1),
                 custom(is_unique_username_or_auth_user_username)
             )]
             username: String,
-            #[garde(email, custom(is_unique_email_or_auth_user_email))]
+            #[validate(email, custom(is_unique_email_or_auth_user_email))]
             email: String,
         }
         let body = match serde_urlencoded::from_str::<Body>(&req.body) {
@@ -164,22 +153,18 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Result<Respons
                     .body("400 Bad Request"));
             }
         };
-        if let Err(report) = body.validate_with(ctx) {
-            return Ok(Response::new()
-                .status(Status::BadRequest)
-                .json(convert_garde_report(report)));
+        if let Err(errors) = body.validate_with(ctx) {
+            return Ok(Response::new().status(Status::BadRequest).json(errors));
         }
 
         // Update user
         user.username = body.username;
         user.email = body.email;
         user.updated_at = Utc::now();
-        ctx.database
-            .query::<()>(
-                "UPDATE users SET username = ?, email = ? WHERE id = ?",
-                (user.username.clone(), user.email.clone(), user.id),
-            )?
-            .next();
+        ctx.database.execute(
+            "UPDATE users SET username = ?, email = ? WHERE id = ?",
+            (user.username.clone(), user.email.clone(), user.id),
+        );
 
         Ok(Response::new().json(user))
     } else {
@@ -201,11 +186,11 @@ pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Resul
 
         // Parse and validate body
         #[derive(Deserialize, Validate)]
-        #[garde(context(Context))]
+        #[validate(context(Context))]
         struct Body {
-            #[garde(ascii, custom(is_current_password))]
+            #[validate(ascii, custom(is_current_password))]
             current_password: String,
-            #[garde(ascii, length(min = 6))]
+            #[validate(ascii, length(min = 6))]
             password: String,
         }
         let body = match serde_urlencoded::from_str::<Body>(&req.body) {
@@ -216,21 +201,17 @@ pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Resul
                     .body("400 Bad Request"));
             }
         };
-        if let Err(report) = body.validate_with(ctx) {
-            return Ok(Response::new()
-                .status(Status::BadRequest)
-                .json(convert_garde_report(report)));
+        if let Err(errors) = body.validate_with(ctx) {
+            return Ok(Response::new().status(Status::BadRequest).json(errors));
         }
 
         // Update user
         user.password = bcrypt::hash(body.password, bcrypt::DEFAULT_COST)?;
         user.updated_at = Utc::now();
-        ctx.database
-            .query::<()>(
-                "UPDATE users SET password = ? WHERE id = ?",
-                (user.password.clone(), user.id),
-            )?
-            .next();
+        ctx.database.execute(
+            "UPDATE users SET password = ? WHERE id = ?",
+            (user.password.clone(), user.id),
+        );
 
         Ok(Response::new().json(user))
     } else {
@@ -258,8 +239,8 @@ pub fn users_sessions(req: &Request, ctx: &Context, path: &Path) -> Result<Respo
                     Session::columns()
                 ),
                 user.id,
-            )?
-            .collect::<Result<Vec<_>, sqlite::Error>>()?;
+            )
+            .collect::<Vec<_>>();
         Ok(Response::new().json(user_sessions))
     } else {
         not_found(req, ctx, path)

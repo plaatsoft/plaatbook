@@ -23,18 +23,17 @@ mod consts;
 mod controllers;
 mod database;
 mod models;
-mod utils;
 
 #[derive(Clone)]
 struct Context {
-    database: Arc<sqlite::Connection>,
+    database: sqlite::Connection,
     auth_user: Option<User>,
     auth_session: Option<Session>,
 }
 
 fn main() {
     let ctx = Context {
-        database: Arc::new(database::open().expect("Can't open database")),
+        database: database::open().expect("Can't open database"),
         auth_user: None,
         auth_session: None,
     };
@@ -102,7 +101,6 @@ fn main() {
                     ),
                     (token, chrono::Utc::now()),
                 )
-                .unwrap()
                 .next();
             if session.is_none() {
                 return Response::new()
@@ -112,23 +110,19 @@ fn main() {
                     .header("Access-Control-Allow-Origin", "*")
                     .header("Access-Control-Allow-Headers", "Authorization");
             }
-            let session = session.unwrap().unwrap();
+            let session = session.unwrap();
 
             // Get user by session user_id
-            ctx.auth_user = Some(
-                ctx.database
-                    .query::<models::User>(
-                        format!(
-                            "SELECT {} FROM users WHERE id = ? LIMIT 1",
-                            models::User::columns()
-                        ),
-                        session.user_id,
-                    )
-                    .unwrap()
-                    .next()
-                    .unwrap()
-                    .unwrap(),
-            );
+            ctx.auth_user = ctx
+                .database
+                .query::<models::User>(
+                    format!(
+                        "SELECT {} FROM users WHERE id = ? LIMIT 1",
+                        models::User::columns()
+                    ),
+                    session.user_id,
+                )
+                .next();
             ctx.auth_session = Some(session);
         }
 

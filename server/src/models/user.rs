@@ -36,69 +36,68 @@ impl From<UserRole> for sqlite::Value {
     }
 }
 impl TryFrom<sqlite::Value> for UserRole {
-    type Error = sqlite::Error;
+    type Error = sqlite::ValueError;
     fn try_from(value: sqlite::Value) -> Result<Self, Self::Error> {
         match value {
             sqlite::Value::Integer(0) => Ok(UserRole::Normal),
             sqlite::Value::Integer(1) => Ok(UserRole::Admin),
-            _ => Err(sqlite::Error::new("Value is invalid user role")),
+            _ => Err(sqlite::ValueError),
         }
     }
 }
 
 // MARK: Validators
-pub fn is_unique_username(value: &str, context: &Context) -> garde::Result {
+pub fn is_unique_username(value: &str, context: &Context) -> validate::Result {
     let count = context
         .database
         .query::<i64>(
             "SELECT COUNT(*) FROM users WHERE username = ?",
             value.to_string(),
         )
-        .unwrap()
         .next()
-        .unwrap()
         .unwrap();
     if count != 0 {
-        return Err(garde::Error::new("username is not unique"));
+        return Err(validate::Error::new("username is not unique"));
     }
     Ok(())
 }
 
-pub fn is_unique_username_or_auth_user_username(value: &str, context: &Context) -> garde::Result {
+pub fn is_unique_username_or_auth_user_username(
+    value: &str,
+    context: &Context,
+) -> validate::Result {
     if value == context.auth_user.as_ref().unwrap().username {
         return Ok(());
     }
     is_unique_username(value, context)
 }
 
-pub fn is_unique_email(value: &str, context: &Context) -> garde::Result {
+pub fn is_unique_email(value: &str, context: &Context) -> validate::Result {
     let count = context
         .database
         .query::<i64>(
             "SELECT COUNT(*) FROM users WHERE email = ?",
             value.to_string(),
         )
-        .unwrap()
         .next()
-        .unwrap()
         .unwrap();
     if count != 0 {
-        return Err(garde::Error::new("email is not unique"));
+        return Err(validate::Error::new("email is not unique"));
     }
     Ok(())
 }
 
-pub fn is_unique_email_or_auth_user_email(value: &str, context: &Context) -> garde::Result {
+pub fn is_unique_email_or_auth_user_email(value: &str, context: &Context) -> validate::Result {
     if value == context.auth_user.as_ref().unwrap().email {
         return Ok(());
     }
     is_unique_email(value, context)
 }
 
-pub fn is_current_password(value: &str, context: &Context) -> garde::Result {
+pub fn is_current_password(value: &str, context: &Context) -> validate::Result {
     let user = context.auth_user.as_ref().unwrap();
     if !bcrypt::verify(value, &user.password).unwrap() {
-        return Err(garde::Error::new("password is incorrect"));
+        return Err(validate::Error::new("password is incorrect"));
     }
     Ok(())
 }
