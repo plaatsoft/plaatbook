@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: MIT
  */
 
+import { User } from './user.ts';
+
 export interface Session {
     id: string;
-    user_id: string;
     token: string;
     ip_address: string;
     ip_latitude?: number;
@@ -19,4 +20,5 @@ export interface Session {
     expires_at: Date;
     created_at: Date;
     updated_at: Date;
+    user?: User;
 }

@@ -24,7 +24,7 @@ export function Register() {
         setIsLoading(true);
         setErrors({});
         const errors = await authService.register(username, email, password);
-        if (errors === undefined) {
+        if (errors === null) {
             await authService.login(email, password);
             location.route('/');
         } else {

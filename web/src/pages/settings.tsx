@@ -34,7 +34,7 @@ function ChangeDetailsForm() {
         setErrors({});
         const errors = await authService.changeDetails(username, email);
         setIsLoading(false);
-        if (errors === undefined) {
+        if (errors === null) {
             setIsDone(true);
         } else {
             setErrors(errors);
@@ -96,7 +96,7 @@ function ChangePasswordForm() {
         setErrors({});
         const errors = await authService.changePassword(currentPassword, password);
         setIsLoading(false);
-        if (errors === undefined) {
+        if (errors === null) {
             setIsDone(true);
         } else {
             if (password !== confirmPassword) {
