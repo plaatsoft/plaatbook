@@ -11,7 +11,7 @@ use router::Path;
 use uuid::Uuid;
 
 use crate::controllers::not_found;
-use crate::models::{Session, UserRole};
+use crate::models::{Session, User, UserRole};
 use crate::Context;
 
 // MARK: Helpers
@@ -44,6 +44,16 @@ pub fn sessions_index(_: &Request, ctx: &Context, _: &Path) -> Result<Response> 
     let sessions = ctx
         .database
         .query::<Session>(format!("SELECT {} FROM sessions", Session::columns()), ())
+        .map(|mut session| {
+            session.user = ctx
+                .database
+                .query::<User>(
+                    format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
+                    session.user_id,
+                )
+                .next();
+            session
+        })
         .collect::<Vec<_>>();
     Ok(Response::new().json(sessions))
 }
@@ -51,7 +61,7 @@ pub fn sessions_index(_: &Request, ctx: &Context, _: &Path) -> Result<Response> 
 // MARK: Sessions show
 pub fn sessions_show(req: &Request, ctx: &Context, path: &Path) -> Result<Response> {
     let session = get_session(ctx, path);
-    if let Some(session) = session {
+    if let Some(mut session) = session {
         // Authorization
         let auth_user = ctx.auth_user.as_ref().unwrap();
         if !(session.user_id == auth_user.id || auth_user.role == UserRole::Admin) {
@@ -59,6 +69,14 @@ pub fn sessions_show(req: &Request, ctx: &Context, path: &Path) -> Result<Respon
                 .status(Status::Unauthorized)
                 .body("401 Unauthorized"));
         }
+
+        session.user = ctx
+            .database
+            .query::<User>(
+                format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
+                session.user_id,
+            )
+            .next();
 
         Ok(Response::new().json(session))
     } else {

@@ -30,18 +30,26 @@ components:
       schema:
         type: string
         format: uuid
+    PostID:
+      name: id
+      in: path
+      description: Post ID
+      required: true
+      schema:
+        type: string
+        format: uuid
 
 paths:
-  # PlaatBook
+  # MARK: Misc
   /:
     get:
-      tags: [PlaatBook]
+      tags: [Misc]
       description: Get some information about this REST API
       responses:
         "200":
           description: Name and version of this REST API
 
-  # Auth
+  # MARK: Auth
   /auth/login:
     post:
       tags: [Auth]
@@ -88,7 +96,95 @@ paths:
         "401":
           description: Authorization error
 
-  # Users
+  # MARK: Posts
+  /posts:
+    get:
+      tags: [Posts]
+      description: Get all posts
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+    post:
+      tags: [Posts]
+      description: Create new post
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+              required:
+                - text
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+  /posts/{id}:
+    get:
+      tags: [Posts]
+      description: Get post
+      parameters:
+        - $ref: "#/components/parameters/PostID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+        "404":
+          description: Post not found
+    put:
+      tags: [Posts]
+      description: Update post
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PostID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: Post not found
+    delete:
+      tags: [Posts]
+      description: Delete post
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PostID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+        "404":
+          description: Post not found
+
+  # MARK: Users
   /users:
     get:
       tags: [Users]
@@ -219,7 +315,7 @@ paths:
         "404":
           description: User not found
 
-  # Sessions
+  # MARK: Sessions
   /sessions:
     get:
       tags: [Sessions]

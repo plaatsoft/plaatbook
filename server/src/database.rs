@@ -46,6 +46,17 @@ pub fn open() -> Result<sqlite::Connection> {
         )",
         (),
     );
+    database.execute(
+        "CREATE TABLE IF NOT EXISTS posts (
+            id BLOB PRIMARY KEY,
+            user_id BLOB NOT NULL,
+            text TEXT NOT NULL,
+            created_at TIMESTAMP NOT NULL,
+            updated_at TIMESTAMP NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )",
+        (),
+    );
 
     // Seed database
     let users_count = database

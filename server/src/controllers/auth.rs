@@ -12,7 +12,6 @@ use router::Path;
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::consts::SESSION_EXPIRE_DURATION;
 use crate::models::{Session, User};
 use crate::Context;
 
@@ -82,7 +81,6 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
 
     // Create new session
     let session = Session {
-        id: uuid::Uuid::now_v7(),
         user_id: user.id,
         token,
         ip_address: req.client_addr.unwrap().ip().to_string(),
@@ -97,9 +95,7 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
         client_name: user_agent.as_ref().map(|ua| ua.name.to_string()),
         client_version: user_agent.as_ref().map(|ua| ua.version.to_string()),
         client_os: user_agent.as_ref().map(|ua| ua.os.to_string()),
-        expires_at: Utc::now() + SESSION_EXPIRE_DURATION,
-        created_at: Utc::now(),
-        updated_at: Utc::now(),
+        ..Default::default()
     };
     ctx.database.execute(
         format!(
