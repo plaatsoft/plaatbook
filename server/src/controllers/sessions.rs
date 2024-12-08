@@ -43,7 +43,13 @@ pub fn sessions_index(_: &Request, ctx: &Context, _: &Path) -> Result<Response> 
 
     let sessions = ctx
         .database
-        .query::<Session>(format!("SELECT {} FROM sessions", Session::columns()), ())
+        .query::<Session>(
+            format!(
+                "SELECT {} FROM sessions ORDER BY expires_at DESC",
+                Session::columns()
+            ),
+            (),
+        )
         .map(|mut session| {
             session.user = ctx
                 .database
@@ -97,10 +103,10 @@ pub fn sessions_revoke(req: &Request, ctx: &Context, path: &Path) -> Result<Resp
         }
 
         ctx.database.execute(
-            "UPDATE sessions SET expired_at = ? WHERE id = ?",
+            "UPDATE sessions SET expires_at = ? WHERE id = ?",
             (Utc::now(), session.id),
         );
-        Ok(Response::new().status(Status::Ok))
+        Ok(Response::new())
     } else {
         not_found(req, ctx, path)
     }

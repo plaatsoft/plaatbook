@@ -64,7 +64,7 @@ fn main() {
             // Sessions
             .get("/sessions", sessions_index)
             .get("/sessions/:session_id", sessions_show)
-            .put("/sessions/:session_id/revoke", sessions_revoke)
+            .delete("/sessions/:session_id", sessions_revoke)
             // Not found
             .fallback(not_found),
     );
