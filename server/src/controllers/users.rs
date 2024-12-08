@@ -235,10 +235,10 @@ pub fn users_sessions(req: &Request, ctx: &Context, path: &Path) -> Result<Respo
             .database
             .query::<Session>(
                 format!(
-                    "SELECT {} FROM sessions WHERE user_id = ?",
+                    "SELECT {} FROM sessions WHERE user_id = ? AND expires_at > ? ORDER BY expires_at DESC",
                     Session::columns()
                 ),
-                user.id,
+                (user.id, Utc::now()),
             )
             .collect::<Vec<_>>();
         Ok(Response::new().json(user_sessions))

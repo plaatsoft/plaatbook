@@ -302,7 +302,7 @@ paths:
   /users/{id}/sessions:
     get:
       tags: [Users]
-      description: Get a list of sessions of user
+      description: Get a list of active user sessions
       security:
         - TokenAuth: []
       parameters:
@@ -344,8 +344,7 @@ paths:
           description: Authorization error
         "404":
           description: Session not found
-  /sessions/{id}/revoke:
-    put:
+    delete:
       tags: [Sessions]
       description: Revoke a session
       security:
