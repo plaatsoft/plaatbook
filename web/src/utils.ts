@@ -4,7 +4,19 @@
  * SPDX-License-Identifier: MIT
  */
 
-export function prettyDate(time: string): string | null {
+export function dateFormat(time: string): string {
+    const date = new Date(time);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+    });
+}
+
+export function dateFormatAgo(time: string): string {
     const date = new Date(time);
     const diff = (new Date().getTime() - date.getTime()) / 1000;
     const day_diff = Math.floor(diff / 86400);

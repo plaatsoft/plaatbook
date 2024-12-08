@@ -18,9 +18,7 @@ export function Menu() {
 
     const logout = async (event: MouseEvent) => {
         event.preventDefault();
-        if (await AuthService.getInstance().logout()) {
-            location.route('/auth/login');
-        }
+        await AuthService.getInstance().logout(location);
     };
 
     return (
