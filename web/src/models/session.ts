@@ -17,8 +17,8 @@ export interface Session {
     client_name?: string;
     client_version?: string;
     client_os?: string;
-    expires_at: Date;
-    created_at: Date;
-    updated_at: Date;
+    expires_at: string;
+    created_at: string;
+    updated_at: string;
     user?: User;
 }

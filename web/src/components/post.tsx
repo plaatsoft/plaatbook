@@ -5,7 +5,7 @@
  */
 
 import { Post } from '../models/post.ts';
-import { prettyDate } from '../utils.ts';
+import { dateFormatAgo } from '../utils.ts';
 
 export function PostComponent({ post }: { post: Post }) {
     return (
@@ -15,7 +15,7 @@ export function PostComponent({ post }: { post: Post }) {
             </div>
             <div className="media-content">
                 <p>
-                    <strong>@{post.user!.username}</strong> <small>{prettyDate(post.created_at)}</small>
+                    <strong>@{post.user!.username}</strong> <small>{dateFormatAgo(post.created_at)}</small>
                     <br /> {post.text}
                 </p>
             </div>

@@ -4,18 +4,28 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { useState } from 'preact/hooks';
-import { $authUser, AuthService } from '../services/auth.service.ts';
+import { useState, useEffect } from 'preact/hooks';
+import { $authSession, $authUser, AuthService } from '../services/auth.service.ts';
 import { Errors } from '../models/errors.ts';
 import { Field } from '../components/field.tsx';
 import { Notification } from '../components/notification.tsx';
+import { Session } from '../models/session.ts';
+import { dateFormat } from '../utils.ts';
+import { useLocation } from 'preact-iso';
 
 export function Settings() {
     return (
         <div className="section">
             <h2 className="title">Settings</h2>
-            <ChangeDetailsForm />
-            <ChangePasswordForm />
+            <div className="columns">
+                <div className="column">
+                    <SessionsManagement />
+                </div>
+                <div className="column">
+                    <ChangeDetailsForm />
+                    <ChangePasswordForm />
+                </div>
+            </div>
         </div>
     );
 }
@@ -148,5 +158,58 @@ function ChangePasswordForm() {
                 </button>
             </div>
         </form>
+    );
+}
+
+function SessionsManagement() {
+    const location = useLocation();
+    const [sessions, setSessions] = useState<Session[]>([]);
+
+    const fetchSessions = async () => {
+        setSessions(await AuthService.getInstance().getActiveSessions());
+    };
+    useEffect(() => {
+        fetchSessions();
+    }, []);
+
+    const revokeSession = async (session: Session) => {
+        if (await AuthService.getInstance().revokeSession(location, session)) {
+            setSessions(sessions.filter((s) => s.id !== session.id));
+        }
+    };
+
+    return (
+        <div className="box">
+            <h2 className="title is-5">Active sessions</h2>
+            {sessions.map((session) => (
+                <div className="box" key={session.id}>
+                    <span className="is-pulled-right">
+                        {session.id === $authSession.value!.id && (
+                            <span className="tag is-link mr-2" style="text-transform: uppercase;">
+                                Current
+                            </span>
+                        )}
+                        <button
+                            className="delete"
+                            title="Logout session"
+                            onClick={() => revokeSession(session)}
+                        ></button>
+                    </span>
+
+                    <h3 className="subtitle mb-2">
+                        {session.client_name} on {session.client_os}
+                    </h3>
+                    <p>
+                        <strong>Location</strong> with {session.ip_address} at {session.ip_city}, {session.ip_country}
+                    </p>
+                    <p>
+                        <strong>Logged in</strong> on {dateFormat(session.created_at)}
+                    </p>
+                    <p>
+                        <strong>Expires</strong> om {dateFormat(session.expires_at)}
+                    </p>
+                </div>
+            ))}
+        </div>
     );
 }

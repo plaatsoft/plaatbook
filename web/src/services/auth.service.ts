@@ -5,6 +5,8 @@
  */
 
 import { signal } from '@preact/signals';
+// eslint-disable-next-line import/named
+import { LocationHook } from 'preact-iso';
 import { Session } from '../models/session.ts';
 import { User } from '../models/user.ts';
 import { Errors } from '../models/errors.ts';
@@ -59,13 +61,13 @@ export class AuthService {
         return null;
     }
 
-    async auth(): Promise<string> {
+    async auth(location: LocationHook): Promise<void> {
         // Get token
         const token = localStorage.getItem('token');
         if (token === null) {
             $authSession.value = null;
             $authUser.value = null;
-            return 'not_authed';
+            return;
         }
 
         // Try to get user
@@ -75,16 +77,14 @@ export class AuthService {
             },
         });
         if (res.status != 200) {
-            AuthService.getInstance().logout();
-            return 'logout';
+            await this.logout(location);
         }
         const { session, user } = (await res.json()) as { session: Session; user: User };
         $authSession.value = session;
         $authUser.value = user;
-        return 'authed';
     }
 
-    async logout(): Promise<boolean> {
+    async logout(location: LocationHook): Promise<boolean> {
         // Try to logout current token
         await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
             method: 'PUT',
@@ -97,6 +97,37 @@ export class AuthService {
         localStorage.removeItem('token');
         $authSession.value = null;
         $authUser.value = null;
+
+        // Redirect to login
+        location.route('/auth/login');
+        return true;
+    }
+
+    async getActiveSessions(): Promise<Session[]> {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}/sessions`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+        if (res.status != 200) {
+            return [];
+        }
+        return (await res.json()) as Session[];
+    }
+
+    async revokeSession(location: LocationHook, session: Session): Promise<boolean> {
+        if (session.id === $authSession.value!.id) {
+            return this.logout(location);
+        }
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/sessions/${session.id}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+        if (res.status != 200) {
+            return false;
+        }
         return true;
     }
 

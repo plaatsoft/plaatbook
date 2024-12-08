@@ -18,9 +18,7 @@ export function App() {
 
     // Auth user
     const auth = async () => {
-        if ((await AuthService.getInstance().auth()) === 'logout') {
-            location.route('/');
-        }
+        await AuthService.getInstance().auth(location);
     };
     useEffect(() => {
         auth();

@@ -79,10 +79,10 @@ function CreatePostForm() {
 function PostsList() {
     const [posts, setPosts] = useState<Post[]>([]);
 
+    const fetchPosts = async () => {
+        setPosts(await PostsService.getInstance().getAll());
+    };
     useEffect(() => {
-        const fetchPosts = async () => {
-            setPosts(await PostsService.getInstance().getAll());
-        };
         fetchPosts();
     }, []);
 
