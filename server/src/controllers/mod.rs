@@ -11,6 +11,7 @@ use router::Path;
 use crate::Context;
 
 pub mod auth;
+pub mod posts;
 pub mod sessions;
 pub mod users;
 

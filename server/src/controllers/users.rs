@@ -35,7 +35,7 @@ fn get_user(ctx: &Context, path: &Path) -> Option<User> {
         .next()
 }
 
-// MARK: Users revoke
+// MARK: Users index
 pub fn users_index(_: &Request, ctx: &Context, _: &Path) -> Result<Response> {
     // Authorization
     let auth_user = ctx.auth_user.as_ref().unwrap();
