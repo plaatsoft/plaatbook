@@ -65,7 +65,6 @@ function ChangeDetailsForm() {
                 setValue={setUsername}
                 error={errors.username?.join(', ')}
                 disabled={isLoading}
-                autofocus
             />
 
             <Field

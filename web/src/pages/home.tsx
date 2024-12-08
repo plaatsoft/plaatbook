@@ -10,6 +10,7 @@ import { PostsService } from '../services/posts.service.ts';
 import { Errors } from '../models/errors.ts';
 import { Post } from '../models/post.ts';
 import { PostComponent } from '../components/post.tsx';
+import { signal } from '@preact/signals';
 
 export function Home() {
     return (
@@ -27,6 +28,8 @@ export function Home() {
     );
 }
 
+const refreshPosts = signal<number>(0);
+
 function CreatePostForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [text, setText] = useState('');
@@ -40,6 +43,7 @@ function CreatePostForm() {
         setIsLoading(false);
         if (errors === null) {
             setText('');
+            refreshPosts.value = Date.now();
         } else {
             setErrors(errors);
         }
@@ -84,7 +88,7 @@ function PostsList() {
     };
     useEffect(() => {
         fetchPosts();
-    }, []);
+    }, [refreshPosts.value]);
 
     return (
         <div>
