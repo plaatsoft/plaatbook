@@ -81,6 +81,7 @@ fn main() {
         if req.method == Method::Options {
             return Response::new()
                 .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
                 .header("Access-Control-Allow-Headers", "Authorization");
         }
 
@@ -151,6 +152,7 @@ fn main() {
 
         // Cors middleware
         res.header("Access-Control-Allow-Origin", "*")
+            .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
             .header("Access-Control-Allow-Headers", "Authorization")
     });
 }
