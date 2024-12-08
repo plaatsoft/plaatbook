@@ -43,7 +43,7 @@ export class AuthService {
         return true;
     }
 
-    async register(username: string, email: string, password: string): Promise<Errors | undefined> {
+    async register(username: string, email: string, password: string): Promise<Errors | null> {
         // Try to register with username, email and password
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
             method: 'POST',
@@ -56,7 +56,7 @@ export class AuthService {
         if (res.status != 200) {
             return (await res.json()) as Errors;
         }
-        return undefined;
+        return null;
     }
 
     async auth(): Promise<string> {
@@ -100,7 +100,7 @@ export class AuthService {
         return true;
     }
 
-    async changeDetails(username: string, email: string): Promise<Errors | undefined> {
+    async changeDetails(username: string, email: string): Promise<Errors | null> {
         // Try to change user details
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}`, {
             method: 'PUT',
@@ -120,10 +120,10 @@ export class AuthService {
             username,
             email,
         };
-        return undefined;
+        return null;
     }
 
-    async changePassword(current_password: string, password: string): Promise<Errors | undefined> {
+    async changePassword(current_password: string, password: string): Promise<Errors | null> {
         // Try to change user password
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}/change_password`, {
             method: 'PUT',
@@ -138,6 +138,6 @@ export class AuthService {
         if (res.status != 200) {
             return (await res.json()) as Errors;
         }
-        return undefined;
+        return null;
     }
 }
