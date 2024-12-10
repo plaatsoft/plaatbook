@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-use anyhow::Result;
 use chrono::Utc;
 use http::{Request, Response, Status};
 use router::Path;
@@ -17,43 +16,47 @@ use crate::models::user::{
     is_current_password, is_unique_email, is_unique_email_or_auth_user_email, is_unique_username,
     is_unique_username_or_auth_user_username,
 };
-use crate::models::{Session, User, UserRole};
+use crate::models::{Post, Session, User, UserRole};
 use crate::Context;
 
 // MARK: Helpers
 fn get_user(ctx: &Context, path: &Path) -> Option<User> {
-    let user_id = match path.get("user_id").unwrap().parse::<Uuid>() {
+    let user_id = path.get("user_id").unwrap();
+    let parsed_user_id = match user_id.parse::<Uuid>() {
         Ok(id) => id,
-        Err(_) => return None,
+        Err(_) => Uuid::nil(),
     };
 
     ctx.database
         .query::<User>(
-            format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
-            user_id,
+            format!(
+                "SELECT {} FROM users WHERE id = ? OR username = ? LIMIT 1",
+                User::columns()
+            ),
+            (parsed_user_id, user_id.clone()),
         )
         .next()
 }
 
 // MARK: Users index
-pub fn users_index(_: &Request, ctx: &Context, _: &Path) -> Result<Response> {
+pub fn users_index(_: &Request, ctx: &Context, _: &Path) -> Response {
     // Authorization
     let auth_user = ctx.auth_user.as_ref().unwrap();
     if !(auth_user.role == UserRole::Admin) {
-        return Ok(Response::new()
+        return Response::new()
             .status(Status::Unauthorized)
-            .body("401 Unauthorized"));
+            .body("401 Unauthorized");
     }
 
     let users = ctx
         .database
         .query::<User>(format!("SELECT {} FROM users", User::columns()), ())
         .collect::<Vec<_>>();
-    Ok(Response::new().json(users))
+    Response::new().json(users)
 }
 
 // MARK: Users create
-pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
+pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Response {
     // Authorization
     // -
 
@@ -71,13 +74,13 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Result<Response> 
     let body = match serde_urlencoded::from_str::<Body>(&req.body) {
         Ok(body) => body,
         Err(_) => {
-            return Ok(Response::new()
+            return Response::new()
                 .status(Status::BadRequest)
-                .body("400 Bad Request"));
+                .body("400 Bad Request");
         }
     };
     if let Err(errors) = body.validate_with(ctx) {
-        return Ok(Response::new().status(Status::BadRequest).json(errors));
+        return Response::new().status(Status::BadRequest).json(errors);
     }
 
     // Create a new user
@@ -85,7 +88,7 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Result<Response> 
         id: Uuid::now_v7(),
         username: body.username,
         email: body.email,
-        password: bcrypt::hash(body.password, bcrypt::DEFAULT_COST)?,
+        password: bcrypt::hash(body.password, bcrypt::DEFAULT_COST).unwrap(),
         role: UserRole::Normal,
         created_at: Utc::now(),
         updated_at: Utc::now(),
@@ -99,37 +102,32 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Result<Response> 
         user.clone(),
     );
 
-    Ok(Response::new().json(user))
+    Response::new().json(user)
 }
 
 // MARK: Users show
-pub fn users_show(req: &Request, ctx: &Context, path: &Path) -> Result<Response> {
+pub fn users_show(req: &Request, ctx: &Context, path: &Path) -> Response {
     let user = get_user(ctx, path);
     if let Some(user) = user {
         // Authorization
-        let auth_user = ctx.auth_user.as_ref().unwrap();
-        if !(user.id == auth_user.id || auth_user.role == UserRole::Admin) {
-            return Ok(Response::new()
-                .status(Status::Unauthorized)
-                .body("401 Unauthorized"));
-        }
+        // -
 
-        Ok(Response::new().json(user))
+        Response::new().json(user)
     } else {
         not_found(req, ctx, path)
     }
 }
 
 // MARK: Users update
-pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Result<Response> {
+pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Response {
     let user = get_user(ctx, path);
     if let Some(mut user) = user {
         // Authorization
         let auth_user = ctx.auth_user.as_ref().unwrap();
         if !(user.id == auth_user.id || auth_user.role == UserRole::Admin) {
-            return Ok(Response::new()
+            return Response::new()
                 .status(Status::Unauthorized)
-                .body("401 Unauthorized"));
+                .body("401 Unauthorized");
         }
 
         // Parse and validate body
@@ -148,13 +146,13 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Result<Respons
         let body = match serde_urlencoded::from_str::<Body>(&req.body) {
             Ok(body) => body,
             Err(_) => {
-                return Ok(Response::new()
+                return Response::new()
                     .status(Status::BadRequest)
-                    .body("400 Bad Request"));
+                    .body("400 Bad Request");
             }
         };
         if let Err(errors) = body.validate_with(ctx) {
-            return Ok(Response::new().status(Status::BadRequest).json(errors));
+            return Response::new().status(Status::BadRequest).json(errors);
         }
 
         // Update user
@@ -166,22 +164,22 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Result<Respons
             (user.username.clone(), user.email.clone(), user.id),
         );
 
-        Ok(Response::new().json(user))
+        Response::new().json(user)
     } else {
         not_found(req, ctx, path)
     }
 }
 
 // MARK: Users change password
-pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Result<Response> {
+pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Response {
     let user = get_user(ctx, path);
     if let Some(mut user) = user {
         // Authorization
         let auth_user = ctx.auth_user.as_ref().unwrap();
         if !(user.id == auth_user.id || auth_user.role == UserRole::Admin) {
-            return Ok(Response::new()
+            return Response::new()
                 .status(Status::Unauthorized)
-                .body("401 Unauthorized"));
+                .body("401 Unauthorized");
         }
 
         // Parse and validate body
@@ -196,39 +194,39 @@ pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Resul
         let body = match serde_urlencoded::from_str::<Body>(&req.body) {
             Ok(body) => body,
             Err(_) => {
-                return Ok(Response::new()
+                return Response::new()
                     .status(Status::BadRequest)
-                    .body("400 Bad Request"));
+                    .body("400 Bad Request");
             }
         };
         if let Err(errors) = body.validate_with(ctx) {
-            return Ok(Response::new().status(Status::BadRequest).json(errors));
+            return Response::new().status(Status::BadRequest).json(errors);
         }
 
         // Update user
-        user.password = bcrypt::hash(body.password, bcrypt::DEFAULT_COST)?;
+        user.password = bcrypt::hash(body.password, bcrypt::DEFAULT_COST).unwrap();
         user.updated_at = Utc::now();
         ctx.database.execute(
             "UPDATE users SET password = ? WHERE id = ?",
             (user.password.clone(), user.id),
         );
 
-        Ok(Response::new().json(user))
+        Response::new().json(user)
     } else {
         not_found(req, ctx, path)
     }
 }
 
 // MARK: Users sessions
-pub fn users_sessions(req: &Request, ctx: &Context, path: &Path) -> Result<Response> {
+pub fn users_sessions(req: &Request, ctx: &Context, path: &Path) -> Response {
     let user = get_user(ctx, path);
     if let Some(user) = user {
         // Authorization
         let auth_user = ctx.auth_user.as_ref().unwrap();
         if !(user.id == auth_user.id || auth_user.role == UserRole::Admin) {
-            return Ok(Response::new()
+            return Response::new()
                 .status(Status::Unauthorized)
-                .body("401 Unauthorized"));
+                .body("401 Unauthorized");
         }
 
         let user_sessions = ctx
@@ -241,7 +239,35 @@ pub fn users_sessions(req: &Request, ctx: &Context, path: &Path) -> Result<Respo
                 (user.id, Utc::now()),
             )
             .collect::<Vec<_>>();
-        Ok(Response::new().json(user_sessions))
+        Response::new().json(user_sessions)
+    } else {
+        not_found(req, ctx, path)
+    }
+}
+
+// MARK: Users posts
+pub fn users_posts(req: &Request, ctx: &Context, path: &Path) -> Response {
+    let user = get_user(ctx, path);
+    if let Some(user) = user {
+        // Authorization
+        let auth_user = ctx.auth_user.as_ref().unwrap();
+        if !(user.id == auth_user.id || auth_user.role == UserRole::Admin) {
+            return Response::new()
+                .status(Status::Unauthorized)
+                .body("401 Unauthorized");
+        }
+
+        let user_posts = ctx
+            .database
+            .query::<Post>(
+                format!(
+                    "SELECT {} FROM posts WHERE user_id = ? ORDER BY created_at DESC",
+                    Post::columns()
+                ),
+                user.id,
+            )
+            .collect::<Vec<_>>();
+        Response::new().json(user_posts)
     } else {
         not_found(req, ctx, path)
     }

@@ -17,11 +17,10 @@ components:
     UserID:
       name: id
       in: path
-      description: User ID
+      description: User ID or username
       required: true
       schema:
         type: string
-        format: uuid
     SessionID:
       name: id
       in: path
@@ -303,6 +302,21 @@ paths:
     get:
       tags: [Users]
       description: Get a list of active user sessions
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/UserID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+        "404":
+          description: User not found
+  /users/{id}/posts:
+    get:
+      tags: [Users]
+      description: Get a list of all user posts
       security:
         - TokenAuth: []
       parameters:

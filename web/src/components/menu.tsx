@@ -45,9 +45,9 @@ export function Menu() {
                 <div className="navbar-end">
                     {$authUser.value !== null && $authUser.value !== undefined && (
                         <>
-                            <div className="navbar-item">
-                                <strong>{$authUser.value.username}</strong>
-                            </div>
+                            <a className="navbar-item" href={`/users/${$authUser.value.username}`}>
+                                <strong>@{$authUser.value.username}</strong>
+                            </a>
                             <div className="navbar-item">
                                 <div className="buttons">
                                     <a className="button" href="/settings">

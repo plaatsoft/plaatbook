@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-use anyhow::Result;
 use chrono::Utc;
 use uuid::Uuid;
 
 use crate::consts::DATABASE_PATH;
 use crate::models::{User, UserRole};
 
-pub fn open() -> Result<sqlite::Connection> {
+pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
     // Open database and create tables
     let database = sqlite::Connection::open(DATABASE_PATH)?;
     database.execute(
@@ -68,7 +67,7 @@ pub fn open() -> Result<sqlite::Connection> {
             id: Uuid::now_v7(),
             username: "admin".to_string(),
             email: "admin@plaatsoft.nl".to_string(),
-            password: bcrypt::hash("admin", bcrypt::DEFAULT_COST)?,
+            password: bcrypt::hash("admin", bcrypt::DEFAULT_COST).unwrap(),
             role: UserRole::Admin,
             created_at: Utc::now(),
             updated_at: Utc::now(),

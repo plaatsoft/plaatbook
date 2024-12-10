@@ -91,10 +91,10 @@ function PostsList() {
     }, [refreshPosts.value]);
 
     return (
-        <div>
+        <>
             {posts.map((post) => (
                 <PostComponent post={post} key={post.id} />
             ))}
-        </div>
+        </>
     );
 }
