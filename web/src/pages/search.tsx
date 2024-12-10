@@ -47,6 +47,7 @@ export function Search() {
                     placeholder="Type to search for something..."
                     value={query}
                     setValue={setQuery}
+                    autofocus
                 />
             </form>
             <hr />
