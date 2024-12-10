@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
+import { useLocation } from 'preact-iso';
 import { Field } from '../components/field.tsx';
 import { SearchService } from '../services/search.service.ts';
 import { UserComponent } from '../components/user.tsx';
@@ -13,16 +14,17 @@ import { User } from '../models/user.ts';
 import { Post } from '../models/post.ts';
 
 export function Search() {
-    const [query, setQuery] = useState('');
+    const location = useLocation();
+    const [query, setQuery] = useState(location.query.q || '');
     const [users, setUsers] = useState<User[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
 
-    const search = async (event: SubmitEvent) => {
-        event.preventDefault();
+    const search = async (event?: SubmitEvent) => {
+        if (event) event.preventDefault();
+        location.route(`/search?q=${query}`);
         if (query.length < 1) {
             return;
         }
-
         const res = await SearchService.getInstance().search(query);
         if (res !== null) {
             const { posts, users } = res;
@@ -30,6 +32,10 @@ export function Search() {
             setPosts(posts);
         }
     };
+
+    useEffect(() => {
+        search();
+    }, []);
 
     return (
         <div className="section">
@@ -54,7 +60,6 @@ export function Search() {
                     {posts.length > 0 && <hr />}
                 </>
             )}
-
             {posts.length > 0 && (
                 <>
                     <h3 className="subtitle">Posts</h3>
@@ -63,7 +68,6 @@ export function Search() {
                     ))}
                 </>
             )}
-
             {users.length === 0 && posts.length === 0 && <p>Type you query to search stuff!</p>}
         </div>
     );
