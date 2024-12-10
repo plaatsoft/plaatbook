@@ -78,7 +78,7 @@ fn main() {
     let listener = TcpListener::bind((Ipv4Addr::UNSPECIFIED, HTTP_PORT))
         .unwrap_or_else(|_| panic!("Can't bind to port: {}", HTTP_PORT));
     http::serve(listener, move |req| {
-        println!("{} {}", req.method, req.path);
+        println!("{} {}", req.method, req.url.path);
 
         let mut ctx = ctx.clone();
 
@@ -93,11 +93,11 @@ fn main() {
 
         // Auth middleware
         if !(
-            req.path == "/"
-                || req.path == "/auth/login"
-                || (req.path == "/users" && req.method == Method::Post)
-                || (req.path == "/posts" && req.method == Method::Get)
-                || (req.path == "/search" && req.method == Method::Get)
+            req.url.path == "/"
+                || req.url.path == "/auth/login"
+                || (req.url.path == "/users" && req.method == Method::Post)
+                || (req.url.path == "/posts" && req.method == Method::Get)
+                || (req.url.path == "/search" && req.method == Method::Get)
             // FIXME: Posts show
             // FIXME: Users show
         ) {

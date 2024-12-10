@@ -63,7 +63,7 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
         country: String,
         loc: String,
     }
-    let ip_info = match http::fetch(Request::new().host("ipinfo.io").path("/json")) {
+    let ip_info = match http::fetch(Request::with_url("http://ipinfo.io/json")) {
         Ok(res) => serde_json::from_str::<IpInfo>(&res.body).ok(),
         Err(_) => None,
     };

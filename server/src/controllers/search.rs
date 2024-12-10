@@ -21,16 +21,16 @@ pub fn search(req: &Request, ctx: &Context, _: &Path) -> Response {
         #[validate(length(min = 1, max = 255))]
         query: String,
     }
-    let query = match req.path.find('?') {
-        Some(i) => match serde_urlencoded::from_str::<Query>(&req.path[i + 1..]) {
-            Ok(query) => query,
-            Err(_) => {
-                return Response::new()
-                    .status(Status::BadRequest)
-                    .body("400 Bad Request")
-            }
-        },
+    let query = match serde_urlencoded::from_str::<Query>(match req.url.query.as_ref() {
+        Some(query) => query,
         None => {
+            return Response::new()
+                .status(Status::BadRequest)
+                .body("400 Bad Request")
+        }
+    }) {
+        Ok(query) => query,
+        Err(_) => {
             return Response::new()
                 .status(Status::BadRequest)
                 .body("400 Bad Request")
