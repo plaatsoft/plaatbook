@@ -15,6 +15,7 @@ use crate::controllers::auth::{auth_login, auth_logout, auth_validate};
 use crate::controllers::posts::{
     posts_create, posts_delete, posts_index, posts_show, posts_update,
 };
+use crate::controllers::search::search;
 use crate::controllers::sessions::{sessions_index, sessions_revoke, sessions_show};
 use crate::controllers::users::{
     users_change_password, users_create, users_index, users_posts, users_sessions, users_show,
@@ -55,6 +56,8 @@ fn main() {
             .get("/posts/:post_id", posts_show)
             .put("/posts/:post_id", posts_update)
             .delete("/posts/:post_id", posts_delete)
+            // Search
+            .get("/search", search)
             // Users
             .get("/users", users_index)
             .post("/users", users_create)
@@ -94,8 +97,9 @@ fn main() {
                 || req.path == "/auth/login"
                 || (req.path == "/users" && req.method == Method::Post)
                 || (req.path == "/posts" && req.method == Method::Get)
-            // FIXME: Users show
+                || (req.path == "/search" && req.method == Method::Get)
             // FIXME: Posts show
+            // FIXME: Users show
         ) {
             // Get token from Authorization header
             let authorization = match req

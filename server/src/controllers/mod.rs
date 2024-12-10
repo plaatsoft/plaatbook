@@ -11,6 +11,7 @@ use crate::Context;
 
 pub mod auth;
 pub mod posts;
+pub mod search;
 pub mod sessions;
 pub mod users;
 

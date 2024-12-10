@@ -20,3 +20,12 @@
 @use 'bulma/sass/helpers';
 @use 'bulma/sass/layout/media';
 @use 'bulma/sass/layout/section';
+
+// Icons
+.icon {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+    transform: translateY(1px);
+}

@@ -12,8 +12,9 @@ import { Register } from './pages/auth/register.tsx';
 import { Home } from './pages/home.tsx';
 import { Settings } from './pages/settings.tsx';
 import { AuthService, $authUser } from './services/auth.service.ts';
-import { NotFound } from './pages/notfound.tsx';
+import { NotFound } from './pages/not-found.tsx';
 import { UsersShow } from './pages/users/show.tsx';
+import { Search } from './pages/search.tsx';
 
 export function App() {
     const location = useLocation();
@@ -33,6 +34,7 @@ export function App() {
             {$authUser.value !== undefined && $authUser.value !== null && (
                 <Router>
                     <Route path="/" component={Home} />
+                    <Route path="/search" component={Search} />
                     <Route path="/users/:user_id" component={UsersShow} />
                     <Route path="/settings" component={Settings} />
                     <Route default component={NotFound} />
@@ -41,6 +43,7 @@ export function App() {
             {$authUser.value !== undefined && $authUser.value === null && (
                 <Router>
                     <Route path="/" component={Home} />
+                    <Route path="/search" component={Search} />
                     <Route path="/users/:user_id" component={UsersShow} />
                     <Route path="/auth/login" component={Login} />
                     <Route path="/auth/register" component={Register} />
