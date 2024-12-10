@@ -22,7 +22,7 @@ export function Field({
 }: {
     name: string;
     type: string;
-    label: string;
+    label?: string;
     placeholder?: string;
     value: string;
     onInput?: (event: InputEvent) => void;
@@ -41,9 +41,11 @@ export function Field({
 
     return (
         <div className="field">
-            <label className="label" htmlFor={name}>
-                {label}
-            </label>
+            {label !== undefined && (
+                <label className="label" htmlFor={name}>
+                    {label}
+                </label>
+            )}
             <input
                 ref={input}
                 id={name}
