@@ -1,6 +1,10 @@
 .PHONY: all
 all: ci
 
+.PHONY: clean
+clean:
+	rm -rf node_modules dist
+
 .PHONY: start
 start:
 	@if [ ! -d "node_modules" ]; then npm ci; fi
