@@ -17,7 +17,8 @@ use crate::controllers::posts::{
 };
 use crate::controllers::sessions::{sessions_index, sessions_revoke, sessions_show};
 use crate::controllers::users::{
-    users_change_password, users_create, users_index, users_sessions, users_show, users_update,
+    users_change_password, users_create, users_index, users_posts, users_sessions, users_show,
+    users_update,
 };
 use crate::controllers::{home, not_found};
 use crate::models::{Session, User};
@@ -61,6 +62,7 @@ fn main() {
             .put("/users/:user_id", users_update)
             .put("/users/:user_id/change_password", users_change_password)
             .get("/users/:user_id/sessions", users_sessions)
+            .get("/users/:user_id/posts", users_posts)
             // Sessions
             .get("/sessions", sessions_index)
             .get("/sessions/:session_id", sessions_show)
@@ -82,7 +84,8 @@ fn main() {
             return Response::new()
                 .header("Access-Control-Allow-Origin", "*")
                 .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
-                .header("Access-Control-Allow-Headers", "Authorization");
+                .header("Access-Control-Allow-Headers", "Authorization")
+                .header("Access-Control-Max-Age", "86400");
         }
 
         // Auth middleware
@@ -91,15 +94,25 @@ fn main() {
                 || req.path == "/auth/login"
                 || (req.path == "/users" && req.method == Method::Post)
                 || (req.path == "/posts" && req.method == Method::Get)
+            // FIXME: Users show
             // FIXME: Posts show
         ) {
             // Get token from Authorization header
-            let authorization = match req.headers.get("Authorization") {
+            let authorization = match req
+                .headers
+                .get("Authorization")
+                .or(req.headers.get("authorization"))
+            {
                 Some(authorization) => authorization,
                 None => {
                     return Response::new()
                         .status(http::Status::Unauthorized)
-                        .body("401 Unauthorized");
+                        .body("401 Unauthorized")
+                        // Cors middleware
+                        .header("Access-Control-Allow-Origin", "*")
+                        .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+                        .header("Access-Control-Allow-Headers", "Authorization")
+                        .header("Access-Control-Max-Age", "86400");
                 }
             };
             let token = authorization[7..].trim().to_string();
@@ -121,7 +134,9 @@ fn main() {
                     .body("401 Unauthorized")
                     // Cors middleware
                     .header("Access-Control-Allow-Origin", "*")
-                    .header("Access-Control-Allow-Headers", "Authorization");
+                    .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+                    .header("Access-Control-Allow-Headers", "Authorization")
+                    .header("Access-Control-Max-Age", "86400");
             }
             let session = session.unwrap();
 
@@ -139,20 +154,13 @@ fn main() {
             ctx.auth_session = Some(session);
         }
 
-        // Error middleware
-        let res = match router.next(req, &ctx) {
-            Ok(res) => res,
-            Err(err) => {
-                println!("Error: {:?}", err);
-                Response::new()
-                    .status(http::Status::InternalServerError)
-                    .body("500 Internal Server Error")
-            }
-        };
+        // Router
+        let res = router.next(req, &ctx);
 
         // Cors middleware
         res.header("Access-Control-Allow-Origin", "*")
             .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
             .header("Access-Control-Allow-Headers", "Authorization")
+            .header("Access-Control-Max-Age", "86400")
     });
 }

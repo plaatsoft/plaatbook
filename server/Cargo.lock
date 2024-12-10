@@ -27,12 +27,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anyhow"
-version = "1.0.94"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1fd03a028ef38ba2276dce7e33fcd6369c158a1bca17946c4b1b701891c1ff7"
-
-[[package]]
 name = "autocfg"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -96,9 +90,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.38"
+version = "0.4.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a21f936df1771bf62b77f047b726c4625ff2e8aa607c01ec06e5a05bd8463401"
+checksum = "7e36cc9d416881d2e24f9a963be5fb1cd90966419ac844274161d10488b3e825"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
@@ -168,7 +162,7 @@ dependencies = [
 [[package]]
 name = "http"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#a7bbe3261bbe69e67093872697895baff8cad833"
+source = "git+https://github.com/bplaat/crates.git#37c07d7bbcf0943201aabdd810a707b17e4e036a"
 dependencies = [
  "serde",
  "serde_json",
@@ -231,9 +225,9 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "libc"
-version = "0.2.167"
+version = "0.2.168"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09d6582e104315a817dff97f75133544b2e094ee22447d2acf4a74e189ba06fc"
+checksum = "5aaeb2981e0606ca11d79718f8bb01164f1d6ed75080182d3abf017e6d244b6d"
 
 [[package]]
 name = "log"
@@ -272,7 +266,6 @@ checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 name = "plaatbook"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "base64",
  "bcrypt",
  "chrono",
@@ -338,12 +331,9 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 [[package]]
 name = "router"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#a7bbe3261bbe69e67093872697895baff8cad833"
+source = "git+https://github.com/bplaat/crates.git#37c07d7bbcf0943201aabdd810a707b17e4e036a"
 dependencies = [
- "anyhow",
  "http",
- "lazy_static",
- "regex",
 ]
 
 [[package]]
@@ -405,7 +395,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "sqlite"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#a7bbe3261bbe69e67093872697895baff8cad833"
+source = "git+https://github.com/bplaat/crates.git#37c07d7bbcf0943201aabdd810a707b17e4e036a"
 dependencies = [
  "chrono",
  "sqlite_derive",
@@ -415,7 +405,7 @@ dependencies = [
 [[package]]
 name = "sqlite_derive"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#a7bbe3261bbe69e67093872697895baff8cad833"
+source = "git+https://github.com/bplaat/crates.git#37c07d7bbcf0943201aabdd810a707b17e4e036a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -442,7 +432,7 @@ dependencies = [
 [[package]]
 name = "threadpool"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#a7bbe3261bbe69e67093872697895baff8cad833"
+source = "git+https://github.com/bplaat/crates.git#37c07d7bbcf0943201aabdd810a707b17e4e036a"
 
 [[package]]
 name = "typenum"
@@ -458,9 +448,8 @@ checksum = "adb9e6ca4f869e1180728b7950e35922a7fc6397f7b641499e8f3ef06e50dc83"
 
 [[package]]
 name = "uuid"
-version = "1.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8c5f0a0af699448548ad1a2fbf920fb4bee257eae39953ba95cb84891a0446a"
+version = "0.1.0"
+source = "git+https://github.com/bplaat/crates.git#37c07d7bbcf0943201aabdd810a707b17e4e036a"
 dependencies = [
  "getrandom",
  "serde",
@@ -469,7 +458,7 @@ dependencies = [
 [[package]]
 name = "validate"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#a7bbe3261bbe69e67093872697895baff8cad833"
+source = "git+https://github.com/bplaat/crates.git#37c07d7bbcf0943201aabdd810a707b17e4e036a"
 dependencies = [
  "regex",
  "serde",
@@ -479,7 +468,7 @@ dependencies = [
 [[package]]
 name = "validate_derive"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#a7bbe3261bbe69e67093872697895baff8cad833"
+source = "git+https://github.com/bplaat/crates.git#37c07d7bbcf0943201aabdd810a707b17e4e036a"
 dependencies = [
  "proc-macro2",
  "quote",

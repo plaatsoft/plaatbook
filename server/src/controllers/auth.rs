@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-use anyhow::Result;
 use base64::prelude::*;
 use chrono::Utc;
 use http::{Request, Response, Status};
@@ -16,7 +15,7 @@ use crate::models::{Session, User};
 use crate::Context;
 
 // MARK: Auth login
-pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
+pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
     // Parse body
     #[derive(Deserialize)]
     struct Body {
@@ -26,9 +25,9 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
     let body = match serde_urlencoded::from_str::<Body>(&req.body) {
         Ok(body) => body,
         Err(_) => {
-            return Ok(Response::new()
+            return Response::new()
                 .status(Status::BadRequest)
-                .body("400 Bad Request"));
+                .body("400 Bad Request");
         }
     };
 
@@ -44,17 +43,17 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
         )
         .next();
     if user.is_none() {
-        return Ok(Response::new()
+        return Response::new()
             .status(Status::Unauthorized)
-            .body("Wrong username, email address or password"));
+            .body("Wrong username, email address or password");
     }
 
     // Check password
     let user = user.unwrap();
-    if !bcrypt::verify(&body.password, &user.password)? {
-        return Ok(Response::new()
+    if !bcrypt::verify(&body.password, &user.password).unwrap() {
+        return Response::new()
             .status(Status::Unauthorized)
-            .body("Wrong username, email address or password"));
+            .body("Wrong username, email address or password");
     }
 
     // Get IP information from ipinfo.io
@@ -64,8 +63,10 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
         country: String,
         loc: String,
     }
-    let ip_res = http::fetch(Request::new().host("ipinfo.io").path("/json"))?;
-    let ip_info = serde_json::from_str::<IpInfo>(&ip_res.body).ok();
+    let ip_info = match http::fetch(Request::new().host("ipinfo.io").path("/json")) {
+        Ok(res) => serde_json::from_str::<IpInfo>(&res.body).ok(),
+        Err(_) => None,
+    };
 
     // Parse user agent info
     let user_agent_parser = woothee::parser::Parser::new();
@@ -76,7 +77,7 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
 
     // Generate token
     let mut token_bytes = [0u8; 256];
-    getrandom::getrandom(&mut token_bytes)?;
+    getrandom::getrandom(&mut token_bytes).unwrap();
     let token = BASE64_STANDARD.encode(token_bytes);
 
     // Create new session
@@ -107,27 +108,27 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Result<Response> {
     );
 
     // Return session
-    Ok(Response::new().json(json!({
+    Response::new().json(json!({
         "token": session.token,
         "session": session,
         "user": user,
-    })))
+    }))
 }
 
 // MARK: Auth validate
-pub fn auth_validate(_: &Request, ctx: &Context, _: &Path) -> Result<Response> {
-    Ok(Response::new().json(json!({
+pub fn auth_validate(_: &Request, ctx: &Context, _: &Path) -> Response {
+    Response::new().json(json!({
         "session": ctx.auth_session,
         "user": ctx.auth_user,
-    })))
+    }))
 }
 
 // MARK: Auth logout
-pub fn auth_logout(_: &Request, ctx: &Context, _: &Path) -> Result<Response> {
+pub fn auth_logout(_: &Request, ctx: &Context, _: &Path) -> Response {
     // Expire session
     ctx.database.execute(
         "UPDATE sessions SET expires_at = ? WHERE token = ?",
         (Utc::now(), ctx.auth_session.as_ref().unwrap().token.clone()),
     );
-    Ok(Response::new().status(Status::Ok))
+    Response::new().status(Status::Ok)
 }

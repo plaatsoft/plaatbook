@@ -21,7 +21,7 @@ export class PostsService {
     async getAll(): Promise<Post[]> {
         const headers = new Headers();
         if ($authUser.value !== null) {
-            headers.set('Authorization', `Bearer ${localStorage.getItem('token')}`);
+            headers.append('Authorization', `Bearer ${localStorage.getItem('token')}`);
         }
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`, { headers });
         return (await res.json()) as Post[];

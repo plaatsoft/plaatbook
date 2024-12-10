@@ -15,7 +15,10 @@ export function PostComponent({ post }: { post: Post }) {
             </div>
             <div className="media-content">
                 <p>
-                    <strong>@{post.user!.username}</strong> <small>{dateFormatAgo(post.created_at)}</small>
+                    <a href={`/users/${post.user!.username}`}>
+                        <strong>@{post.user!.username}</strong>
+                    </a>{' '}
+                    <small>{dateFormatAgo(post.created_at)}</small>
                     <br /> {post.text}
                 </p>
             </div>
