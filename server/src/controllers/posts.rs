@@ -160,8 +160,8 @@ pub fn posts_update(req: &Request, ctx: &Context, path: &Path) -> Response {
         post.text = body.text;
         post.updated_at = Utc::now();
         ctx.database.execute(
-            "UPDATE posts SET text = ? WHERE id = ?",
-            (post.text.clone(), post.id),
+            "UPDATE posts SET text = ?, updated_at = ? WHERE id = ?",
+            (post.text.clone(), post.updated_at, post.id),
         );
 
         Response::new().json(post)

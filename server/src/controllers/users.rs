@@ -84,14 +84,15 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Response {
     }
 
     // Create a new user
+    let now = Utc::now();
     let user = User {
         id: Uuid::now_v7(),
         username: body.username,
         email: body.email,
         password: bcrypt::hash(body.password, bcrypt::DEFAULT_COST).unwrap(),
         role: UserRole::Normal,
-        created_at: Utc::now(),
-        updated_at: Utc::now(),
+        created_at: now,
+        updated_at: now,
     };
     ctx.database.execute(
         format!(
@@ -160,8 +161,13 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Response {
         user.email = body.email;
         user.updated_at = Utc::now();
         ctx.database.execute(
-            "UPDATE users SET username = ?, email = ? WHERE id = ?",
-            (user.username.clone(), user.email.clone(), user.id),
+            "UPDATE users SET username = ?, email = ?, updated_at = ? WHERE id = ?",
+            (
+                user.username.clone(),
+                user.email.clone(),
+                user.updated_at,
+                user.id,
+            ),
         );
 
         Response::new().json(user)
@@ -207,8 +213,8 @@ pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Respo
         user.password = bcrypt::hash(body.password, bcrypt::DEFAULT_COST).unwrap();
         user.updated_at = Utc::now();
         ctx.database.execute(
-            "UPDATE users SET password = ? WHERE id = ?",
-            (user.password.clone(), user.id),
+            "UPDATE users SET password = ?, updated_at = ? WHERE id = ?",
+            (user.password.clone(), user.updated_at, user.id),
         );
 
         Response::new().json(user)
@@ -250,12 +256,7 @@ pub fn users_posts(req: &Request, ctx: &Context, path: &Path) -> Response {
     let user = get_user(ctx, path);
     if let Some(user) = user {
         // Authorization
-        let auth_user = ctx.auth_user.as_ref().unwrap();
-        if !(user.id == auth_user.id || auth_user.role == UserRole::Admin) {
-            return Response::new()
-                .status(Status::Unauthorized)
-                .body("401 Unauthorized");
-        }
+        // -
 
         let user_posts = ctx
             .database

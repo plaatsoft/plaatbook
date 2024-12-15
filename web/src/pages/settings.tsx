@@ -31,7 +31,6 @@ export function Settings() {
 }
 
 function ChangeDetailsForm() {
-    const authService = AuthService.getInstance();
     const [isLoading, setIsLoading] = useState(false);
     const [isDone, setIsDone] = useState(false);
     const [username, setUsername] = useState($authUser.value?.username ?? '');
@@ -42,7 +41,7 @@ function ChangeDetailsForm() {
         event.preventDefault();
         setIsLoading(true);
         setErrors({});
-        const errors = await authService.changeDetails(username, email);
+        const errors = await AuthService.getInstance().changeDetails(username, email);
         setIsLoading(false);
         if (errors === null) {
             setIsDone(true);

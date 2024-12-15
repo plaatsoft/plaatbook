@@ -10,7 +10,6 @@ import { Field } from '../../components/field.tsx';
 import { AuthService } from '../../services/auth.service.ts';
 
 export function Login() {
-    const authService = AuthService.getInstance();
     const location = useLocation();
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
@@ -21,7 +20,7 @@ export function Login() {
         event.preventDefault();
         setIsLoading(true);
         setIsError(false);
-        if (await authService.login(logon, password)) {
+        if (await AuthService.getInstance().login(logon, password)) {
             location.route('/');
         } else {
             setIsLoading(false);

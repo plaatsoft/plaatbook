@@ -18,9 +18,8 @@ export function UserComponent({ user }: { user: User }) {
                     <a href={`/users/${user.username}`}>
                         <strong>@{user.username}</strong>
                     </a>
-                    <br />
-                    Joined {dateFormatAgo(user.created_at)}
                 </p>
+                <p>Joined {dateFormatAgo(user.created_at)}</p>
             </div>
         </div>
     );

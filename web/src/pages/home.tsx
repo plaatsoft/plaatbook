@@ -6,11 +6,11 @@
 
 import { useState, useEffect } from 'preact/hooks';
 import { $authUser } from '../services/auth.service.ts';
-import { PostsService } from '../services/posts.service.ts';
+import { PostsService, refreshPosts$ } from '../services/posts.service.ts';
 import { Errors } from '../models/errors.ts';
 import { Post } from '../models/post.ts';
 import { PostComponent } from '../components/post.tsx';
-import { signal } from '@preact/signals';
+import { Field } from '../components/field.tsx';
 
 export function Home() {
     return (
@@ -28,8 +28,6 @@ export function Home() {
     );
 }
 
-const refreshPosts = signal<number>(0);
-
 function CreatePostForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [text, setText] = useState('');
@@ -43,7 +41,7 @@ function CreatePostForm() {
         setIsLoading(false);
         if (errors === null) {
             setText('');
-            refreshPosts.value = Date.now();
+            refreshPosts$.value = Date.now();
         } else {
             setErrors(errors);
         }
@@ -56,17 +54,15 @@ function CreatePostForm() {
                     <img className="image is-64x64" src="/images/avatar.svg" />
                 </div>
                 <div className="media-content">
-                    <div className="field">
-                        <textarea
-                            className={`textarea ${errors.text !== undefined ? 'is-danger' : ''}`}
-                            placeholder="What's on your mind?"
-                            rows={3}
-                            value={text}
-                            onInput={(event) => setText((event.target as HTMLTextAreaElement).value)}
-                            disabled={isLoading}
-                        />
-                        {errors.text !== undefined && <p className="help is-danger">{errors.text.join(', ')}</p>}
-                    </div>
+                    <Field
+                        name="text"
+                        type="textarea"
+                        placeholder="What's on your mind?"
+                        value={text}
+                        setValue={setText}
+                        error={errors.text?.join(', ')}
+                        disabled={isLoading}
+                    />
 
                     <div className="field">
                         <button className="button is-link" type="submit">
@@ -88,7 +84,7 @@ function PostsList() {
     };
     useEffect(() => {
         fetchPosts();
-    }, [refreshPosts.value]);
+    }, [refreshPosts$.value]);
 
     return (
         <>
