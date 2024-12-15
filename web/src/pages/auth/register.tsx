@@ -11,7 +11,6 @@ import { AuthService } from '../../services/auth.service.ts';
 import { Errors } from '../../models/errors.ts';
 
 export function Register() {
-    const authService = AuthService.getInstance();
     const location = useLocation();
     const [isLoading, setIsLoading] = useState(false);
     const [username, setUsername] = useState('');
@@ -23,9 +22,9 @@ export function Register() {
         event.preventDefault();
         setIsLoading(true);
         setErrors({});
-        const errors = await authService.register(username, email, password);
+        const errors = await AuthService.getInstance().register(username, email, password);
         if (errors === null) {
-            await authService.login(email, password);
+            await AuthService.getInstance().login(email, password);
             location.route('/');
         } else {
             setIsLoading(false);

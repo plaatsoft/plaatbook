@@ -36,6 +36,7 @@ pub struct Session {
 
 impl Default for Session {
     fn default() -> Self {
+        let now = Utc::now();
         Self {
             id: Uuid::now_v7(),
             user_id: Uuid::now_v7(),
@@ -48,9 +49,9 @@ impl Default for Session {
             client_name: None,
             client_version: None,
             client_os: None,
-            expires_at: Utc::now() + SESSION_EXPIRE_DURATION,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            expires_at: now + SESSION_EXPIRE_DURATION,
+            created_at: now,
+            updated_at: now,
             user: None,
         }
     }

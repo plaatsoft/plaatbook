@@ -63,14 +63,15 @@ pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
         .next()
         .unwrap();
     if users_count == 0 {
+        let now = Utc::now();
         let admin = User {
             id: Uuid::now_v7(),
             username: "admin".to_string(),
             email: "admin@plaatsoft.nl".to_string(),
             password: bcrypt::hash("admin", bcrypt::DEFAULT_COST).unwrap(),
             role: UserRole::Admin,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: now,
+            updated_at: now,
         };
         database.execute(
             format!(

@@ -25,12 +25,13 @@ pub struct Post {
 
 impl Default for Post {
     fn default() -> Self {
+        let now = Utc::now();
         Self {
             id: Uuid::now_v7(),
             user_id: Uuid::now_v7(),
             text: String::new(),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+            created_at: now,
+            updated_at: now,
             user: None,
         }
     }

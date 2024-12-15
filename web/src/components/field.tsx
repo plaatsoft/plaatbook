@@ -13,6 +13,7 @@ export function Field({
     type,
     label,
     placeholder,
+    rows,
     value,
     onInput,
     setValue,
@@ -24,6 +25,7 @@ export function Field({
     type: string;
     label?: string;
     placeholder?: string;
+    rows?: number;
     value: string;
     onInput?: (event: InputEvent) => void;
     setValue?: Dispatch<StateUpdater<string>>;
@@ -46,18 +48,33 @@ export function Field({
                     {label}
                 </label>
             )}
-            <input
-                ref={input}
-                id={name}
-                className={`input ${error !== undefined ? 'is-danger' : ''}`}
-                type={type}
-                placeholder={placeholder || label}
-                value={value}
-                onInput={
-                    onInput !== undefined ? onInput : (event) => setValue!((event.target as HTMLInputElement).value)
-                }
-                disabled={disabled}
-            />
+            {type === 'textarea' ? (
+                <textarea
+                    className={`textarea ${error !== undefined ? 'is-danger' : ''}`}
+                    placeholder={placeholder || label}
+                    rows={rows || 3}
+                    value={value}
+                    onInput={
+                        onInput !== undefined
+                            ? onInput
+                            : (event) => setValue!((event.target as HTMLTextAreaElement).value)
+                    }
+                    disabled={disabled}
+                />
+            ) : (
+                <input
+                    ref={input}
+                    id={name}
+                    className={`input ${error !== undefined ? 'is-danger' : ''}`}
+                    type={type}
+                    placeholder={placeholder || label}
+                    value={value}
+                    onInput={
+                        onInput !== undefined ? onInput : (event) => setValue!((event.target as HTMLInputElement).value)
+                    }
+                    disabled={disabled}
+                />
+            )}
             {error !== undefined && error !== '' && <p className="help is-danger">{error}</p>}
         </div>
     );
