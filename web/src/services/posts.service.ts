@@ -73,4 +73,40 @@ export class PostsService {
             },
         });
     }
+
+    async like(id: string): Promise<void> {
+        await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/like`, {
+            method: 'PUT',
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+    }
+
+    async remove_like(id: string): Promise<void> {
+        await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/like`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+    }
+
+    async dislike(id: string): Promise<void> {
+        await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/dislike`, {
+            method: 'PUT',
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+    }
+
+    async remove_dislike(id: string): Promise<void> {
+        await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/dislike`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+    }
 }

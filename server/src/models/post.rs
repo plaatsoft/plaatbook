@@ -21,6 +21,14 @@ pub struct Post {
     pub updated_at: DateTime<Utc>,
     #[sqlite(skip)]
     pub user: Option<User>,
+    #[sqlite(skip)]
+    pub likes_count: i64,
+    #[sqlite(skip)]
+    pub dislikes_count: i64,
+    #[sqlite(skip)]
+    pub auth_user_liked: Option<bool>,
+    #[sqlite(skip)]
+    pub auth_user_disliked: Option<bool>,
 }
 
 impl Default for Post {
@@ -33,6 +41,10 @@ impl Default for Post {
             created_at: now,
             updated_at: now,
             user: None,
+            likes_count: 0,
+            dislikes_count: 0,
+            auth_user_liked: None,
+            auth_user_disliked: None,
         }
     }
 }

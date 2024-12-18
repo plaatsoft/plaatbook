@@ -6,7 +6,7 @@
 
 use http::{Method, Request, Response};
 
-pub use crate::layers::auth::auth_layer;
+pub use crate::layers::auth::{auth_optional_layer, auth_required_layer};
 use crate::Context;
 
 mod auth;

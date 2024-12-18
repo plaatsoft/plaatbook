@@ -51,7 +51,7 @@ pub fn is_unique_username(value: &str, context: &Context) -> validate::Result {
     let count = context
         .database
         .query::<i64>(
-            "SELECT COUNT(*) FROM users WHERE username = ?",
+            "SELECT COUNT(id) FROM users WHERE username = ?",
             value.to_string(),
         )
         .next()
@@ -76,7 +76,7 @@ pub fn is_unique_email(value: &str, context: &Context) -> validate::Result {
     let count = context
         .database
         .query::<i64>(
-            "SELECT COUNT(*) FROM users WHERE email = ?",
+            "SELECT COUNT(id) FROM users WHERE email = ?",
             value.to_string(),
         )
         .next()

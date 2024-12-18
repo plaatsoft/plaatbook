@@ -12,4 +12,8 @@ export interface Post {
     created_at: string;
     updated_at: string;
     user?: User;
+    likes_count: number;
+    dislikes_count: number;
+    auth_user_liked?: boolean;
+    auth_user_disliked?: boolean;
 }
