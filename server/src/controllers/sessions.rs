@@ -14,7 +14,7 @@ use crate::models::{Session, User, UserRole};
 use crate::Context;
 
 // MARK: Helpers
-fn get_session(ctx: &Context, path: &Path) -> Option<Session> {
+fn find_session(ctx: &Context, path: &Path) -> Option<Session> {
     let session_id = match path.get("session_id").unwrap().parse::<Uuid>() {
         Ok(id) => id,
         Err(_) => return None,
@@ -28,6 +28,17 @@ fn get_session(ctx: &Context, path: &Path) -> Option<Session> {
             session_id,
         )
         .next()
+}
+
+fn fetch_session_user(ctx: &Context, mut session: Session) -> Session {
+    session.user = ctx
+        .database
+        .query::<User>(
+            format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
+            session.user_id,
+        )
+        .next();
+    session
 }
 
 // MARK: Sessions index
@@ -65,48 +76,40 @@ pub fn sessions_index(_: &Request, ctx: &Context, _: &Path) -> Response {
 
 // MARK: Sessions show
 pub fn sessions_show(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let session = get_session(ctx, path);
-    if let Some(mut session) = session {
-        // Authorization
-        let auth_user = ctx.auth_user.as_ref().unwrap();
-        if !(session.user_id == auth_user.id || auth_user.role == UserRole::Admin) {
-            return Response::new()
-                .status(Status::Unauthorized)
-                .body("401 Unauthorized");
-        }
+    let session = match find_session(ctx, path) {
+        Some(session) => session,
+        None => return not_found(req, ctx, path),
+    };
 
-        session.user = ctx
-            .database
-            .query::<User>(
-                format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
-                session.user_id,
-            )
-            .next();
-
-        Response::new().json(session)
-    } else {
-        not_found(req, ctx, path)
+    // Authorization
+    let auth_user = ctx.auth_user.as_ref().unwrap();
+    if !(session.user_id == auth_user.id || auth_user.role == UserRole::Admin) {
+        return Response::new()
+            .status(Status::Unauthorized)
+            .body("401 Unauthorized");
     }
+
+    Response::new().json(fetch_session_user(ctx, session))
 }
 
 // MARK: Sessions revoke
 pub fn sessions_revoke(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let session = get_session(ctx, path);
-    if let Some(session) = session {
-        // Authorization
-        let auth_user = ctx.auth_user.as_ref().unwrap();
-        if !(session.user_id == auth_user.id || auth_user.role == UserRole::Admin) {
-            return Response::new()
-                .status(Status::Unauthorized)
-                .body("401 Unauthorized");
-        }
+    let session = match find_session(ctx, path) {
+        Some(session) => session,
+        None => return not_found(req, ctx, path),
+    };
 
-        ctx.database.execute(
-            "UPDATE sessions SET expires_at = ? WHERE id = ?",
-            (Utc::now(), session.id),
-        );
-        Response::new()
-    } else {
-        not_found(req, ctx, path)
+    // Authorization
+    let auth_user = ctx.auth_user.as_ref().unwrap();
+    if !(session.user_id == auth_user.id || auth_user.role == UserRole::Admin) {
+        return Response::new()
+            .status(Status::Unauthorized)
+            .body("401 Unauthorized");
     }
+
+    ctx.database.execute(
+        "UPDATE sessions SET expires_at = ? WHERE id = ?",
+        (Utc::now(), session.id),
+    );
+    Response::new()
 }

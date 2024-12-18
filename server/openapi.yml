@@ -178,6 +178,64 @@ paths:
           description: Authorization error
         "404":
           description: Post not found
+  /posts/{id}/like:
+    put:
+      tags: [Posts]
+      description: Like post
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PostID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+        "404":
+          description: Post not found
+    delete:
+      tags: [Posts]
+      description: Remove post like
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PostID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+        "404":
+          description: Post not found
+  /posts/{id}/dislike:
+    put:
+      tags: [Posts]
+      description: Dislike post
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PostID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+        "404":
+          description: Post not found
+    delete:
+      tags: [Posts]
+      description: Remove post dislike
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PostID"
+      responses:
+        "200":
+          description: Successful response
+        "401":
+          description: Authorization error
+        "404":
+          description: Post not found
 
   # MARK: Search
   /search:

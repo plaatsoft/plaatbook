@@ -6,13 +6,13 @@
 
 use std::net::{Ipv4Addr, TcpListener};
 
-use layers::auth_layer;
 use router::Router;
 
 use crate::consts::HTTP_PORT;
 use crate::controllers::auth::{auth_login, auth_logout, auth_validate};
 use crate::controllers::posts::{
-    posts_create, posts_delete, posts_index, posts_show, posts_update,
+    posts_create, posts_delete, posts_dislike, posts_dislike_delete, posts_index, posts_like,
+    posts_like_delete, posts_show, posts_update,
 };
 use crate::controllers::search::search;
 use crate::controllers::sessions::{sessions_index, sessions_revoke, sessions_show};
@@ -21,7 +21,9 @@ use crate::controllers::users::{
     users_update,
 };
 use crate::controllers::{home, not_found};
-use crate::layers::{cors_post_layer, cors_pre_layer, log_layer};
+use crate::layers::{
+    auth_optional_layer, auth_required_layer, cors_post_layer, cors_pre_layer, log_layer,
+};
 use crate::models::{Session, User};
 
 mod consts;
@@ -49,6 +51,7 @@ fn main() {
         .pre_layer(log_layer)
         .pre_layer(cors_pre_layer)
         .post_layer(cors_post_layer)
+        .pre_layer(auth_optional_layer)
         .get("/", home)
         // Auth
         .post("/auth/login", auth_login)
@@ -66,7 +69,7 @@ fn main() {
 
     // Authed routes
     let router = router
-        .pre_layer(auth_layer)
+        .pre_layer(auth_required_layer)
         // Auth
         .get("/auth/validate", auth_validate)
         .put("/auth/logout", auth_logout)
@@ -74,6 +77,10 @@ fn main() {
         .post("/posts", posts_create)
         .put("/posts/:post_id", posts_update)
         .delete("/posts/:post_id", posts_delete)
+        .put("/posts/:post_id/like", posts_like)
+        .delete("/posts/:post_id/like", posts_like_delete)
+        .put("/posts/:post_id/dislike", posts_dislike)
+        .delete("/posts/:post_id/dislike", posts_dislike_delete)
         // Users
         .get("/users", users_index)
         .put("/users/:user_id", users_update)
