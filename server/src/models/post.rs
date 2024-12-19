@@ -17,14 +17,12 @@ pub struct Post {
     #[serde(skip)]
     pub user_id: Uuid,
     pub text: String,
+    pub likes: i64,
+    pub dislikes: i64,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     #[sqlite(skip)]
     pub user: Option<User>,
-    #[sqlite(skip)]
-    pub likes_count: i64,
-    #[sqlite(skip)]
-    pub dislikes_count: i64,
     #[sqlite(skip)]
     pub auth_user_liked: Option<bool>,
     #[sqlite(skip)]
@@ -38,11 +36,11 @@ impl Default for Post {
             id: Uuid::now_v7(),
             user_id: Uuid::now_v7(),
             text: String::new(),
+            likes: 0,
+            dislikes: 0,
             created_at: now,
             updated_at: now,
             user: None,
-            likes_count: 0,
-            dislikes_count: 0,
             auth_user_liked: None,
             auth_user_disliked: None,
         }

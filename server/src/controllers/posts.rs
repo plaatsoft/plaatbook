@@ -40,23 +40,6 @@ fn fetch_posts_relationships(post: Post, ctx: &Context) -> Post {
         )
         .next();
 
-    post.likes_count = ctx
-        .database
-        .query::<i64>(
-            "SELECT COUNT(id) FROM post_interactions WHERE post_id = ? AND type = ?",
-            (post.id, PostInteractionType::Like),
-        )
-        .next()
-        .unwrap_or(0);
-    post.dislikes_count = ctx
-        .database
-        .query::<i64>(
-            "SELECT COUNT(id) FROM post_interactions WHERE post_id = ? AND type = ?",
-            (post.id, PostInteractionType::Dislike),
-        )
-        .next()
-        .unwrap_or(0);
-
     if let Some(auth_user) = &ctx.auth_user {
         post.auth_user_liked = Some(
             ctx.database
@@ -77,6 +60,34 @@ fn fetch_posts_relationships(post: Post, ctx: &Context) -> Post {
                 .expect("Should be some") > 0);
     }
     post
+}
+
+fn remove_post_like(database: &sqlite::Connection, post: &Post, auth_user: &User) {
+    // Remove post like interaction
+    database.execute(
+        "DELETE FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ?",
+        (post.id, auth_user.id, PostInteractionType::Like),
+    );
+    if database.affected_rows() > 0 {
+        database.execute(
+            "UPDATE posts SET likes = ? WHERE id = ?",
+            (post.likes - 1, post.id),
+        );
+    }
+}
+
+fn remove_post_dislike(database: &sqlite::Connection, post: &Post, auth_user: &User) {
+    // Remove post dislike interaction
+    database.execute(
+        "DELETE FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ?",
+        (post.id, auth_user.id, PostInteractionType::Dislike),
+    );
+    if database.affected_rows() > 0 {
+        database.execute(
+            "UPDATE posts SET dislikes = ? WHERE id = ?",
+            (post.dislikes - 1, post.id),
+        );
+    }
 }
 
 // MARK: Posts index
@@ -102,11 +113,14 @@ pub fn posts_index(_: &Request, ctx: &Context, _: &Path) -> Response {
 // MARK: Posts create
 pub fn posts_create(req: &Request, ctx: &Context, _: &Path) -> Response {
     // Authorization
-    if ctx.auth_user.is_none() {
-        return Response::new()
-            .status(Status::Unauthorized)
-            .body("401 Unauthorized");
-    }
+    let auth_user = match ctx.auth_user.as_ref() {
+        Some(user) => user,
+        None => {
+            return Response::new()
+                .status(Status::Unauthorized)
+                .body("401 Unauthorized")
+        }
+    };
 
     // Parse and validate body
     #[derive(Deserialize, Validate)]
@@ -128,9 +142,9 @@ pub fn posts_create(req: &Request, ctx: &Context, _: &Path) -> Response {
 
     // Create a new post
     let post = Post {
-        user_id: ctx.auth_user.as_ref().expect("Not authed").id,
+        user_id: auth_user.id,
         text: body.text,
-        user: ctx.auth_user.clone(),
+        user: Some(auth_user.clone()),
         ..Default::default()
     };
     ctx.database.execute(
@@ -166,8 +180,8 @@ pub fn posts_update(req: &Request, ctx: &Context, path: &Path) -> Response {
     };
 
     // Authorization
-    let auth_post = ctx.auth_user.as_ref().expect("Not authed");
-    if !(post.user_id == auth_post.id || auth_post.role == UserRole::Admin) {
+    let auth_user = ctx.auth_user.as_ref().expect("Not authed");
+    if !(post.user_id == auth_user.id || auth_user.role == UserRole::Admin) {
         return Response::new()
             .status(Status::Unauthorized)
             .body("401 Unauthorized");
@@ -210,24 +224,25 @@ pub fn posts_like(req: &Request, ctx: &Context, path: &Path) -> Response {
     };
 
     // Authorization
-    if ctx.auth_user.is_none() {
-        return Response::new()
-            .status(Status::Unauthorized)
-            .body("401 Unauthorized");
-    }
+    let auth_user = match ctx.auth_user.as_ref() {
+        Some(user) => user,
+        None => {
+            return Response::new()
+                .status(Status::Unauthorized)
+                .body("401 Unauthorized")
+        }
+    };
 
     // Remove possible old post interaction
-    ctx.database.execute(
-        "DELETE FROM post_interactions WHERE post_id = ? AND user_id = ?",
-        (post.id, ctx.auth_user.as_ref().expect("Not authed").id),
-    );
+    remove_post_like(&ctx.database, &post, auth_user);
+    remove_post_dislike(&ctx.database, &post, auth_user);
 
     // Create new post like interaction
     let now = Utc::now();
     let post_interaction = PostInteraction {
         id: Uuid::now_v7(),
         post_id: post.id,
-        user_id: ctx.auth_user.as_ref().expect("Not authed").id,
+        user_id: auth_user.id,
         r#type: PostInteractionType::Like,
         created_at: now,
         updated_at: now,
@@ -239,6 +254,10 @@ pub fn posts_like(req: &Request, ctx: &Context, path: &Path) -> Response {
             PostInteraction::values()
         ),
         post_interaction,
+    );
+    ctx.database.execute(
+        "UPDATE posts SET likes = ? WHERE id = ?",
+        (post.likes + 1, post.id),
     );
 
     Response::new()
@@ -252,22 +271,17 @@ pub fn posts_like_delete(req: &Request, ctx: &Context, path: &Path) -> Response 
     };
 
     // Authorization
-    if ctx.auth_user.is_none() {
-        return Response::new()
-            .status(Status::Unauthorized)
-            .body("401 Unauthorized");
-    }
+    let auth_user = match ctx.auth_user.as_ref() {
+        Some(user) => user,
+        None => {
+            return Response::new()
+                .status(Status::Unauthorized)
+                .body("401 Unauthorized")
+        }
+    };
 
-    // Remove post like interaction
-    ctx.database.execute(
-        "DELETE FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ?",
-        (
-            post.id,
-            ctx.auth_user.as_ref().expect("Not authed").id,
-            PostInteractionType::Like,
-        ),
-    );
-
+    // Remove post like
+    remove_post_like(&ctx.database, &post, auth_user);
     Response::new()
 }
 
@@ -279,24 +293,25 @@ pub fn posts_dislike(req: &Request, ctx: &Context, path: &Path) -> Response {
     };
 
     // Authorization
-    if ctx.auth_user.is_none() {
-        return Response::new()
-            .status(Status::Unauthorized)
-            .body("401 Unauthorized");
-    }
+    let auth_user = match ctx.auth_user.as_ref() {
+        Some(user) => user,
+        None => {
+            return Response::new()
+                .status(Status::Unauthorized)
+                .body("401 Unauthorized")
+        }
+    };
 
     // Remove possible old post interaction
-    ctx.database.execute(
-        "DELETE FROM post_interactions WHERE post_id = ? AND user_id = ?",
-        (post.id, ctx.auth_user.as_ref().expect("Not authed").id),
-    );
+    remove_post_like(&ctx.database, &post, auth_user);
+    remove_post_dislike(&ctx.database, &post, auth_user);
 
     // Create new post dislike interaction
     let now = Utc::now();
     let post_interaction = PostInteraction {
         id: Uuid::now_v7(),
         post_id: post.id,
-        user_id: ctx.auth_user.as_ref().expect("Not authed").id,
+        user_id: auth_user.id,
         r#type: PostInteractionType::Dislike,
         created_at: now,
         updated_at: now,
@@ -308,6 +323,10 @@ pub fn posts_dislike(req: &Request, ctx: &Context, path: &Path) -> Response {
             PostInteraction::values()
         ),
         post_interaction,
+    );
+    ctx.database.execute(
+        "UPDATE posts SET dislikes = ? WHERE id = ?",
+        (post.dislikes + 1, post.id),
     );
 
     Response::new()
@@ -321,22 +340,17 @@ pub fn posts_dislike_delete(req: &Request, ctx: &Context, path: &Path) -> Respon
     };
 
     // Authorization
-    if ctx.auth_user.is_none() {
-        return Response::new()
-            .status(Status::Unauthorized)
-            .body("401 Unauthorized");
-    }
+    let auth_user = match ctx.auth_user.as_ref() {
+        Some(user) => user,
+        None => {
+            return Response::new()
+                .status(Status::Unauthorized)
+                .body("401 Unauthorized")
+        }
+    };
 
-    // Remove post dislike interaction
-    ctx.database.execute(
-        "DELETE FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ?",
-        (
-            post.id,
-            ctx.auth_user.as_ref().expect("Not authed").id,
-            PostInteractionType::Dislike,
-        ),
-    );
-
+    // Remove post dislike
+    remove_post_dislike(&ctx.database, &post, auth_user);
     Response::new()
 }
 
