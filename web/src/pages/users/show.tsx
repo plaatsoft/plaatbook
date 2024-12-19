@@ -11,6 +11,9 @@ import { NotFound } from '../not-found.tsx';
 import { Post } from '../../models/post.ts';
 import { PostComponent } from '../../components/post.tsx';
 import { dateFormatAgo } from '../../utils.ts';
+import { $authUser } from '../../services/auth.service.ts';
+import { CreatePost } from '../../components/create-post.tsx';
+import { $refreshPosts } from '../../services/posts.service.ts';
 
 export function UsersShow({ user_id }: { user_id: string }) {
     const [user, setUser] = useState<User | null>(null);
@@ -38,6 +41,8 @@ export function UsersShow({ user_id }: { user_id: string }) {
                 </div>
             </div>
 
+            {user.id === $authUser.value?.id && <CreatePost />}
+
             <UserPostsList user={user} />
         </div>
     ) : (
@@ -62,7 +67,7 @@ function UserPostsList({ user }: { user: User }) {
     };
     useEffect(() => {
         fetchPosts();
-    }, []);
+    }, [$refreshPosts.value]);
 
     return (
         <>

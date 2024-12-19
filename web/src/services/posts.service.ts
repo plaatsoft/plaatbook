@@ -9,7 +9,7 @@ import { Errors } from '../models/errors.ts';
 import { Post } from '../models/post.ts';
 import { $authUser } from './auth.service.ts';
 
-export const refreshPosts$ = signal<number>(0);
+export const $refreshPosts = signal<number>(0);
 
 export class PostsService {
     static instance?: PostsService;

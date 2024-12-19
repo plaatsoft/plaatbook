@@ -4,17 +4,23 @@
  * SPDX-License-Identifier: MIT
  */
 
+import { useState } from 'preact/hooks';
 import { Post } from '../models/post.ts';
 import { $authUser } from '../services/auth.service.ts';
 import { DialogService } from '../services/dialog.service.tsx';
-import { PostsService, refreshPosts$ } from '../services/posts.service.ts';
+import { PostsService, $refreshPosts } from '../services/posts.service.ts';
 import { dateFormatAgo } from '../utils.ts';
 import { PostEditModal } from './modals/post-edit-modal.tsx';
 
 export function PostComponent({ post }: { post: Post }) {
+    const [, setUpdate] = useState(0);
+
     const editPost = async () => {
-        if (await DialogService.getInstance().open<Post | null>(PostEditModal, { post })) {
-            refreshPosts$.value = Date.now();
+        const updatedPost = await DialogService.getInstance().open<Post | null>(PostEditModal, { post });
+        if (updatedPost !== null) {
+            post.text = updatedPost.text;
+            post.updated_at = updatedPost.updated_at;
+            setUpdate((prev) => prev + 1);
         }
     };
 
@@ -27,26 +33,42 @@ export function PostComponent({ post }: { post: Post }) {
             )
         ) {
             await PostsService.getInstance().delete(post.id);
-            refreshPosts$.value = Date.now();
+            $refreshPosts.value = $refreshPosts.value + 1;
         }
     };
 
     const likePost = async () => {
         if (!post.auth_user_liked) {
             await PostsService.getInstance().like(post.id);
+            if (post.auth_user_disliked) {
+                post.dislikes--;
+                post.auth_user_disliked = false;
+            }
+            post.likes++;
+            post.auth_user_liked = true;
         } else {
             await PostsService.getInstance().remove_like(post.id);
+            post.likes--;
+            post.auth_user_liked = false;
         }
-        refreshPosts$.value = Date.now();
+        setUpdate((prev) => prev + 1);
     };
 
     const dislikePost = async () => {
         if (!post.auth_user_disliked) {
             await PostsService.getInstance().dislike(post.id);
+            if (post.auth_user_liked) {
+                post.likes--;
+                post.auth_user_liked = false;
+            }
+            post.dislikes++;
+            post.auth_user_disliked = true;
         } else {
             await PostsService.getInstance().remove_dislike(post.id);
+            post.dislikes--;
+            post.auth_user_disliked = false;
         }
-        refreshPosts$.value = Date.now();
+        setUpdate((prev) => prev + 1);
     };
 
     return (
