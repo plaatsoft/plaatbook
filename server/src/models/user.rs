@@ -55,7 +55,7 @@ pub fn is_unique_username(value: &str, context: &Context) -> validate::Result {
             value.to_string(),
         )
         .next()
-        .unwrap();
+        .expect("Should be some");
     if count != 0 {
         return Err(validate::Error::new("username is not unique"));
     }
@@ -66,7 +66,7 @@ pub fn is_unique_username_or_auth_user_username(
     value: &str,
     context: &Context,
 ) -> validate::Result {
-    if value == context.auth_user.as_ref().unwrap().username {
+    if value == context.auth_user.as_ref().expect("Not authed").username {
         return Ok(());
     }
     is_unique_username(value, context)
@@ -80,7 +80,7 @@ pub fn is_unique_email(value: &str, context: &Context) -> validate::Result {
             value.to_string(),
         )
         .next()
-        .unwrap();
+        .expect("Should be some");
     if count != 0 {
         return Err(validate::Error::new("email is not unique"));
     }
@@ -88,15 +88,15 @@ pub fn is_unique_email(value: &str, context: &Context) -> validate::Result {
 }
 
 pub fn is_unique_email_or_auth_user_email(value: &str, context: &Context) -> validate::Result {
-    if value == context.auth_user.as_ref().unwrap().email {
+    if value == context.auth_user.as_ref().expect("Not authed").email {
         return Ok(());
     }
     is_unique_email(value, context)
 }
 
 pub fn is_current_password(value: &str, context: &Context) -> validate::Result {
-    let user = context.auth_user.as_ref().unwrap();
-    if !bcrypt::verify(value, &user.password).unwrap() {
+    let user = context.auth_user.as_ref().expect("Not authed");
+    if !bcrypt::verify(value, &user.password).expect("Can't verify password") {
         return Err(validate::Error::new("password is incorrect"));
     }
     Ok(())

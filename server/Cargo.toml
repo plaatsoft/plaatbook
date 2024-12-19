@@ -38,3 +38,6 @@ opt-level = "z"
 lto = "fat"
 panic = "abort"
 overflow-checks = false
+
+[lints.clippy]
+unwrap_used = "deny"

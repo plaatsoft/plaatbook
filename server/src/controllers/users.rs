@@ -21,7 +21,7 @@ use crate::Context;
 
 // MARK: Helpers
 fn find_user(ctx: &Context, path: &Path) -> Option<User> {
-    let user_id = path.get("user_id").unwrap();
+    let user_id = path.get("user_id").expect("Should be some");
     let parsed_user_id = match user_id.parse::<Uuid>() {
         Ok(id) => id,
         Err(_) => Uuid::nil(),
@@ -41,7 +41,7 @@ fn find_user(ctx: &Context, path: &Path) -> Option<User> {
 // MARK: Users index
 pub fn users_index(_: &Request, ctx: &Context, _: &Path) -> Response {
     // Authorization
-    let auth_user = ctx.auth_user.as_ref().unwrap();
+    let auth_user = ctx.auth_user.as_ref().expect("Not authed");
     if !(auth_user.role == UserRole::Admin) {
         return Response::new()
             .status(Status::Unauthorized)
@@ -89,7 +89,7 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Response {
         id: Uuid::now_v7(),
         username: body.username,
         email: body.email,
-        password: bcrypt::hash(body.password, bcrypt::DEFAULT_COST).unwrap(),
+        password: bcrypt::hash(body.password, bcrypt::DEFAULT_COST).expect("Can't hash password"),
         role: UserRole::Normal,
         created_at: now,
         updated_at: now,
@@ -127,7 +127,7 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Response {
     };
 
     // Authorization
-    let auth_user = ctx.auth_user.as_ref().unwrap();
+    let auth_user = ctx.auth_user.as_ref().expect("Not authed");
     if !(user.id == auth_user.id || auth_user.role == UserRole::Admin) {
         return Response::new()
             .status(Status::Unauthorized)
@@ -184,7 +184,7 @@ pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Respo
     };
 
     // Authorization
-    let auth_user = ctx.auth_user.as_ref().unwrap();
+    let auth_user = ctx.auth_user.as_ref().expect("Not authed");
     if !(user.id == auth_user.id || auth_user.role == UserRole::Admin) {
         return Response::new()
             .status(Status::Unauthorized)
@@ -213,7 +213,7 @@ pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Respo
     }
 
     // Update user
-    user.password = bcrypt::hash(body.password, bcrypt::DEFAULT_COST).unwrap();
+    user.password = bcrypt::hash(body.password, bcrypt::DEFAULT_COST).expect("Can't hash password");
     user.updated_at = Utc::now();
     ctx.database.execute(
         "UPDATE users SET password = ?, updated_at = ? WHERE id = ?",
@@ -231,7 +231,7 @@ pub fn users_sessions(req: &Request, ctx: &Context, path: &Path) -> Response {
     };
 
     // Authorization
-    let auth_user = ctx.auth_user.as_ref().unwrap();
+    let auth_user = ctx.auth_user.as_ref().expect("Not authed");
     if !(user.id == auth_user.id || auth_user.role == UserRole::Admin) {
         return Response::new()
             .status(Status::Unauthorized)

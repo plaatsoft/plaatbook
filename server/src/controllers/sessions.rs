@@ -15,7 +15,11 @@ use crate::Context;
 
 // MARK: Helpers
 fn find_session(ctx: &Context, path: &Path) -> Option<Session> {
-    let session_id = match path.get("session_id").unwrap().parse::<Uuid>() {
+    let session_id = match path
+        .get("session_id")
+        .expect("Should be some")
+        .parse::<Uuid>()
+    {
         Ok(id) => id,
         Err(_) => return None,
     };
@@ -44,7 +48,7 @@ fn fetch_session_user(ctx: &Context, mut session: Session) -> Session {
 // MARK: Sessions index
 pub fn sessions_index(_: &Request, ctx: &Context, _: &Path) -> Response {
     // Authorization
-    let auth_user = ctx.auth_user.as_ref().unwrap();
+    let auth_user = ctx.auth_user.as_ref().expect("Not authed");
     if !(auth_user.role == UserRole::Admin) {
         return Response::new()
             .status(Status::Unauthorized)
@@ -82,7 +86,7 @@ pub fn sessions_show(req: &Request, ctx: &Context, path: &Path) -> Response {
     };
 
     // Authorization
-    let auth_user = ctx.auth_user.as_ref().unwrap();
+    let auth_user = ctx.auth_user.as_ref().expect("Not authed");
     if !(session.user_id == auth_user.id || auth_user.role == UserRole::Admin) {
         return Response::new()
             .status(Status::Unauthorized)
@@ -100,7 +104,7 @@ pub fn sessions_revoke(req: &Request, ctx: &Context, path: &Path) -> Response {
     };
 
     // Authorization
-    let auth_user = ctx.auth_user.as_ref().unwrap();
+    let auth_user = ctx.auth_user.as_ref().expect("Not authed");
     if !(session.user_id == auth_user.id || auth_user.role == UserRole::Admin) {
         return Response::new()
             .status(Status::Unauthorized)

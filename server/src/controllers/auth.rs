@@ -42,15 +42,17 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
             (body.logon.clone(), body.logon),
         )
         .next();
-    if user.is_none() {
-        return Response::new()
-            .status(Status::Unauthorized)
-            .body("Wrong username, email address or password");
-    }
+    let user = match user {
+        Some(user) => user,
+        None => {
+            return Response::new()
+                .status(Status::Unauthorized)
+                .body("Wrong username, email address or password");
+        }
+    };
 
     // Check password
-    let user = user.unwrap();
-    if !bcrypt::verify(&body.password, &user.password).unwrap() {
+    if !bcrypt::verify(&body.password, &user.password).expect("Can't verify password") {
         return Response::new()
             .status(Status::Unauthorized)
             .body("Wrong username, email address or password");
@@ -77,20 +79,34 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
 
     // Generate token
     let mut token_bytes = [0u8; 256];
-    getrandom::getrandom(&mut token_bytes).unwrap();
+    getrandom::getrandom(&mut token_bytes).expect("Can't get random bytes");
     let token = BASE64_STANDARD.encode(token_bytes);
 
     // Create new session
     let session = Session {
         user_id: user.id,
         token,
-        ip_address: req.client_addr.unwrap().ip().to_string(),
-        ip_latitude: ip_info
-            .as_ref()
-            .and_then(|info| info.loc.split(',').next().unwrap().parse().ok()),
-        ip_longitude: ip_info
-            .as_ref()
-            .and_then(|info| info.loc.split(',').nth(1).unwrap().parse().ok()),
+        ip_address: req
+            .client_addr
+            .expect("Should have client address")
+            .ip()
+            .to_string(),
+        ip_latitude: ip_info.as_ref().and_then(|info| {
+            info.loc
+                .split(',')
+                .next()
+                .expect("Should exists")
+                .parse()
+                .ok()
+        }),
+        ip_longitude: ip_info.as_ref().and_then(|info| {
+            info.loc
+                .split(',')
+                .nth(1)
+                .expect("Should exists")
+                .parse()
+                .ok()
+        }),
         ip_country: ip_info.as_ref().map(|info| info.country.clone()),
         ip_city: ip_info.as_ref().map(|info| info.city.clone()),
         client_name: user_agent.as_ref().map(|ua| ua.name.to_string()),
@@ -128,7 +144,10 @@ pub fn auth_logout(_: &Request, ctx: &Context, _: &Path) -> Response {
     // Expire session
     ctx.database.execute(
         "UPDATE sessions SET expires_at = ? WHERE token = ?",
-        (Utc::now(), ctx.auth_session.as_ref().unwrap().token.clone()),
+        (
+            Utc::now(),
+            ctx.auth_session.as_ref().expect("Not authed").token.clone(),
+        ),
     );
     Response::new().status(Status::Ok)
 }

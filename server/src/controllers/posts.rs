@@ -17,7 +17,7 @@ use crate::Context;
 
 // MARK: Helpers
 fn find_post(ctx: &Context, path: &Path) -> Option<Post> {
-    let post_id = match path.get("post_id").unwrap().parse::<Uuid>() {
+    let post_id = match path.get("post_id").expect("Should exists").parse::<Uuid>() {
         Ok(id) => id,
         Err(_) => return None,
     };
@@ -65,7 +65,7 @@ fn fetch_posts_relationships(post: Post, ctx: &Context) -> Post {
                     (post.id, auth_user.id, PostInteractionType::Like),
                 )
                 .next()
-                .unwrap() > 0);
+                .expect("Should be some") > 0);
 
         post.auth_user_disliked = Some(
             ctx.database
@@ -74,7 +74,7 @@ fn fetch_posts_relationships(post: Post, ctx: &Context) -> Post {
                     (post.id, auth_user.id, PostInteractionType::Dislike),
                 )
                 .next()
-                .unwrap() > 0);
+                .expect("Should be some") > 0);
     }
     post
 }
@@ -128,7 +128,7 @@ pub fn posts_create(req: &Request, ctx: &Context, _: &Path) -> Response {
 
     // Create a new post
     let post = Post {
-        user_id: ctx.auth_user.as_ref().unwrap().id,
+        user_id: ctx.auth_user.as_ref().expect("Not authed").id,
         text: body.text,
         user: ctx.auth_user.clone(),
         ..Default::default()
@@ -166,7 +166,7 @@ pub fn posts_update(req: &Request, ctx: &Context, path: &Path) -> Response {
     };
 
     // Authorization
-    let auth_post = ctx.auth_user.as_ref().unwrap();
+    let auth_post = ctx.auth_user.as_ref().expect("Not authed");
     if !(post.user_id == auth_post.id || auth_post.role == UserRole::Admin) {
         return Response::new()
             .status(Status::Unauthorized)
@@ -219,7 +219,7 @@ pub fn posts_like(req: &Request, ctx: &Context, path: &Path) -> Response {
     // Remove possible old post interaction
     ctx.database.execute(
         "DELETE FROM post_interactions WHERE post_id = ? AND user_id = ?",
-        (post.id, ctx.auth_user.as_ref().unwrap().id),
+        (post.id, ctx.auth_user.as_ref().expect("Not authed").id),
     );
 
     // Create new post like interaction
@@ -227,7 +227,7 @@ pub fn posts_like(req: &Request, ctx: &Context, path: &Path) -> Response {
     let post_interaction = PostInteraction {
         id: Uuid::now_v7(),
         post_id: post.id,
-        user_id: ctx.auth_user.as_ref().unwrap().id,
+        user_id: ctx.auth_user.as_ref().expect("Not authed").id,
         r#type: PostInteractionType::Like,
         created_at: now,
         updated_at: now,
@@ -263,7 +263,7 @@ pub fn posts_like_delete(req: &Request, ctx: &Context, path: &Path) -> Response 
         "DELETE FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ?",
         (
             post.id,
-            ctx.auth_user.as_ref().unwrap().id,
+            ctx.auth_user.as_ref().expect("Not authed").id,
             PostInteractionType::Like,
         ),
     );
@@ -288,7 +288,7 @@ pub fn posts_dislike(req: &Request, ctx: &Context, path: &Path) -> Response {
     // Remove possible old post interaction
     ctx.database.execute(
         "DELETE FROM post_interactions WHERE post_id = ? AND user_id = ?",
-        (post.id, ctx.auth_user.as_ref().unwrap().id),
+        (post.id, ctx.auth_user.as_ref().expect("Not authed").id),
     );
 
     // Create new post dislike interaction
@@ -296,7 +296,7 @@ pub fn posts_dislike(req: &Request, ctx: &Context, path: &Path) -> Response {
     let post_interaction = PostInteraction {
         id: Uuid::now_v7(),
         post_id: post.id,
-        user_id: ctx.auth_user.as_ref().unwrap().id,
+        user_id: ctx.auth_user.as_ref().expect("Not authed").id,
         r#type: PostInteractionType::Dislike,
         created_at: now,
         updated_at: now,
@@ -332,7 +332,7 @@ pub fn posts_dislike_delete(req: &Request, ctx: &Context, path: &Path) -> Respon
         "DELETE FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ?",
         (
             post.id,
-            ctx.auth_user.as_ref().unwrap().id,
+            ctx.auth_user.as_ref().expect("Not authed").id,
             PostInteractionType::Dislike,
         ),
     );
@@ -348,7 +348,7 @@ pub fn posts_delete(req: &Request, ctx: &Context, path: &Path) -> Response {
     };
 
     // Authorization
-    let auth_post = ctx.auth_user.as_ref().unwrap();
+    let auth_post = ctx.auth_user.as_ref().expect("Not authed");
     if !(post.user_id == auth_post.id || auth_post.role == UserRole::Admin) {
         return Response::new()
             .status(Status::Unauthorized)

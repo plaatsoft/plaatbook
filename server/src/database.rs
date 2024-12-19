@@ -74,14 +74,14 @@ pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
     let users_count = database
         .query::<i64>("SELECT COUNT(id) FROM users", ())
         .next()
-        .unwrap();
+        .expect("Should be some");
     if users_count == 0 {
         let now = Utc::now();
         let admin = User {
             id: Uuid::now_v7(),
             username: "admin".to_string(),
             email: "admin@plaatsoft.nl".to_string(),
-            password: bcrypt::hash("admin", bcrypt::DEFAULT_COST).unwrap(),
+            password: bcrypt::hash("admin", bcrypt::DEFAULT_COST).expect("Can't hash password"),
             role: UserRole::Admin,
             created_at: now,
             updated_at: now,
