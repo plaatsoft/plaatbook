@@ -16,10 +16,15 @@ export function Register() {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [errors, setErrors] = useState<Errors>({});
 
     const register = async (event: SubmitEvent) => {
         event.preventDefault();
+        if (password !== confirmPassword) {
+            setErrors({ confirm_password: ['Passwords do not match'] });
+            return;
+        }
         setIsLoading(true);
         setErrors({});
         const errors = await AuthService.getInstance().register(username, email, password);
@@ -27,6 +32,9 @@ export function Register() {
             await AuthService.getInstance().login(email, password);
             location.route('/');
         } else {
+            if (password !== confirmPassword) {
+                errors.confirm_password = ['Passwords do not match'];
+            }
             setIsLoading(false);
             setErrors(errors);
         }
@@ -66,6 +74,16 @@ export function Register() {
                     setValue={setPassword}
                     error={errors.password?.join(', ')}
                     disabled={isLoading}
+                />
+
+                <Field
+                    name="confirm_password"
+                    type="password"
+                    label="Confirm new password"
+                    value={confirmPassword}
+                    setValue={setConfirmPassword}
+                    disabled={isLoading}
+                    error={errors.confirm_password?.join(', ')}
                 />
 
                 <div className="field">
