@@ -75,9 +75,9 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "cc"
-version = "1.2.4"
+version = "1.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9157bbaa6b165880c27a4293a474c91cdcf265cc68cc829bf10be0964a391caf"
+checksum = "c31a0499c1dc64f458ad13872de75c0eb7e3fdb0e67964610c914b034fc5956e"
 dependencies = [
  "shlex",
 ]
@@ -162,7 +162,7 @@ dependencies = [
 [[package]]
 name = "http"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#582f010e6e2b292aa7a810441622e64e534e8282"
+source = "git+https://github.com/bplaat/crates.git#19d8116ab27795b41f31c8f6424fadd42f4610bd"
 dependencies = [
  "serde",
  "serde_json",
@@ -226,9 +226,9 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "libc"
-version = "0.2.168"
+version = "0.2.169"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aaeb2981e0606ca11d79718f8bb01164f1d6ed75080182d3abf017e6d244b6d"
+checksum = "b5aba8db14291edd000dfcc4d620c7ebfb122c613afb886ca8803fa4e128a20a"
 
 [[package]]
 name = "log"
@@ -332,7 +332,7 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 [[package]]
 name = "router"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#582f010e6e2b292aa7a810441622e64e534e8282"
+source = "git+https://github.com/bplaat/crates.git#19d8116ab27795b41f31c8f6424fadd42f4610bd"
 dependencies = [
  "http",
 ]
@@ -396,17 +396,23 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "sqlite"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#582f010e6e2b292aa7a810441622e64e534e8282"
+source = "git+https://github.com/bplaat/crates.git#19d8116ab27795b41f31c8f6424fadd42f4610bd"
 dependencies = [
  "chrono",
+ "sqlite3-sys",
  "sqlite_derive",
  "uuid",
 ]
 
 [[package]]
+name = "sqlite3-sys"
+version = "0.1.0"
+source = "git+https://github.com/bplaat/crates.git#19d8116ab27795b41f31c8f6424fadd42f4610bd"
+
+[[package]]
 name = "sqlite_derive"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#582f010e6e2b292aa7a810441622e64e534e8282"
+source = "git+https://github.com/bplaat/crates.git#19d8116ab27795b41f31c8f6424fadd42f4610bd"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -433,7 +439,7 @@ dependencies = [
 [[package]]
 name = "threadpool"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#582f010e6e2b292aa7a810441622e64e534e8282"
+source = "git+https://github.com/bplaat/crates.git#19d8116ab27795b41f31c8f6424fadd42f4610bd"
 
 [[package]]
 name = "typenum"
@@ -450,12 +456,12 @@ checksum = "adb9e6ca4f869e1180728b7950e35922a7fc6397f7b641499e8f3ef06e50dc83"
 [[package]]
 name = "url"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#582f010e6e2b292aa7a810441622e64e534e8282"
+source = "git+https://github.com/bplaat/crates.git#19d8116ab27795b41f31c8f6424fadd42f4610bd"
 
 [[package]]
 name = "uuid"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#582f010e6e2b292aa7a810441622e64e534e8282"
+source = "git+https://github.com/bplaat/crates.git#19d8116ab27795b41f31c8f6424fadd42f4610bd"
 dependencies = [
  "getrandom",
  "serde",
@@ -464,7 +470,7 @@ dependencies = [
 [[package]]
 name = "validate"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#582f010e6e2b292aa7a810441622e64e534e8282"
+source = "git+https://github.com/bplaat/crates.git#19d8116ab27795b41f31c8f6424fadd42f4610bd"
 dependencies = [
  "regex",
  "serde",
@@ -474,7 +480,7 @@ dependencies = [
 [[package]]
 name = "validate_derive"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#582f010e6e2b292aa7a810441622e64e534e8282"
+source = "git+https://github.com/bplaat/crates.git#19d8116ab27795b41f31c8f6424fadd42f4610bd"
 dependencies = [
  "proc-macro2",
  "quote",

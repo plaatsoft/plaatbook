@@ -50,6 +50,8 @@ pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
             id BLOB PRIMARY KEY,
             user_id BLOB NOT NULL,
             text TEXT NOT NULL,
+            likes INTEGER NOT NULL,
+            dislikes INTEGER NOT NULL,
             created_at TIMESTAMP NOT NULL,
             updated_at TIMESTAMP NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
