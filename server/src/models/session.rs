@@ -11,6 +11,7 @@ use uuid::Uuid;
 
 use super::User;
 use crate::consts::SESSION_EXPIRE_DURATION;
+use crate::Context;
 
 #[derive(Clone, Serialize, FromRow)]
 pub struct Session {
@@ -54,5 +55,17 @@ impl Default for Session {
             updated_at: now,
             user: None,
         }
+    }
+}
+
+impl Session {
+    pub fn fetch_relationships(&mut self, ctx: &Context) {
+        self.user = ctx
+            .database
+            .query::<User>(
+                format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
+                self.user_id,
+            )
+            .next();
     }
 }

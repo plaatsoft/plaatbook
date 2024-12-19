@@ -9,7 +9,8 @@ use serde::Serialize;
 use sqlite::FromRow;
 use uuid::Uuid;
 
-use super::User;
+use super::{PostInteractionType, User};
+use crate::Context;
 
 #[derive(Clone, Serialize, FromRow)]
 pub struct Post {
@@ -43,6 +44,37 @@ impl Default for Post {
             user: None,
             auth_user_liked: None,
             auth_user_disliked: None,
+        }
+    }
+}
+
+impl Post {
+    pub fn fetch_relationships(&mut self, ctx: &Context) {
+        self.user = ctx
+            .database
+            .query::<User>(
+                format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
+                self.user_id,
+            )
+            .next();
+
+        if let Some(auth_user) = &ctx.auth_user {
+            self.auth_user_liked = Some(
+            ctx.database
+                .query::<i64>(
+                    "SELECT COUNT(id) FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ? LIMIT 1",
+                    (self.id, auth_user.id, PostInteractionType::Like),
+                )
+                .next()
+                .expect("Should be some") > 0);
+
+            self.auth_user_disliked = Some(    ctx.database
+                .query::<i64>(
+                    "SELECT COUNT(id) FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ? LIMIT 1",
+                    (self.id, auth_user.id, PostInteractionType::Dislike),
+                )
+                .next()
+                .expect("Should be some") > 0);
         }
     }
 }
