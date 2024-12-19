@@ -40,7 +40,11 @@ function PostsList() {
     return (
         <>
             {posts.map((post) => (
-                <PostComponent post={post} key={post.id} />
+                <PostComponent
+                    post={post}
+                    onUpdate={(post) => setPosts(posts.map((p) => (p.id === post.id ? post : p)))}
+                    key={post.id}
+                />
             ))}
         </>
     );

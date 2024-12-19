@@ -56,7 +56,7 @@ export function Search() {
                 <>
                     <h3 className="subtitle">Users</h3>
                     {users.map((user) => (
-                        <UserComponent key={user.id} user={user} />
+                        <UserComponent user={user} key={user.id} />
                     ))}
                     {posts.length > 0 && <hr />}
                 </>
@@ -65,7 +65,11 @@ export function Search() {
                 <>
                     <h3 className="subtitle">Posts</h3>
                     {posts.map((post) => (
-                        <PostComponent key={post.id} post={post} />
+                        <PostComponent
+                            post={post}
+                            onUpdate={(post) => setPosts(posts.map((p) => (p.id === post.id ? post : p)))}
+                            key={post.id}
+                        />
                     ))}
                 </>
             )}
