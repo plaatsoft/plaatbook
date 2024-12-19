@@ -57,7 +57,7 @@ pub fn is_unique_username(value: &str, context: &Context) -> validate::Result {
         .next()
         .expect("Should be some");
     if count != 0 {
-        return Err(validate::Error::new("username is not unique"));
+        return Err(validate::Error::new("not unique"));
     }
     Ok(())
 }
@@ -82,7 +82,7 @@ pub fn is_unique_email(value: &str, context: &Context) -> validate::Result {
         .next()
         .expect("Should be some");
     if count != 0 {
-        return Err(validate::Error::new("email is not unique"));
+        return Err(validate::Error::new("not unique"));
     }
     Ok(())
 }
@@ -97,7 +97,7 @@ pub fn is_unique_email_or_auth_user_email(value: &str, context: &Context) -> val
 pub fn is_current_password(value: &str, context: &Context) -> validate::Result {
     let user = context.auth_user.as_ref().expect("Not authed");
     if !bcrypt::verify(value, &user.password).expect("Can't verify password") {
-        return Err(validate::Error::new("password is incorrect"));
+        return Err(validate::Error::new("incorrect"));
     }
     Ok(())
 }

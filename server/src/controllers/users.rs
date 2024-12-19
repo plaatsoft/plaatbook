@@ -11,12 +11,13 @@ use serde::Deserialize;
 use uuid::Uuid;
 use validate::Validate;
 
+use crate::consts::LIMIT_DEFAULT;
 use crate::controllers::not_found;
 use crate::models::user::{
     is_current_password, is_unique_email, is_unique_email_or_auth_user_email, is_unique_username,
     is_unique_username_or_auth_user_username,
 };
-use crate::models::{Post, Session, User, UserRole};
+use crate::models::{IndexQuery, Post, Session, User, UserRole};
 use crate::Context;
 
 // MARK: Helpers
@@ -39,7 +40,7 @@ fn find_user(ctx: &Context, path: &Path) -> Option<User> {
 }
 
 // MARK: Users index
-pub fn users_index(_: &Request, ctx: &Context, _: &Path) -> Response {
+pub fn users_index(req: &Request, ctx: &Context, _: &Path) -> Response {
     // Authorization
     let auth_user = ctx.auth_user.as_ref().expect("Not authed");
     if !(auth_user.role == UserRole::Admin) {
@@ -48,9 +49,33 @@ pub fn users_index(_: &Request, ctx: &Context, _: &Path) -> Response {
             .body("401 Unauthorized");
     }
 
+    // Parse request query
+    let query = match req.url.query.as_ref() {
+        Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {
+            Ok(query) => query,
+            Err(_) => return Response::with_status(Status::BadRequest),
+        },
+        None => IndexQuery::default(),
+    };
+    if let Err(report) = query.validate() {
+        return Response::with_status(Status::BadRequest).json(report);
+    }
+
+    // Get users
+    let limit = query.limit.unwrap_or(LIMIT_DEFAULT);
     let users = ctx
         .database
-        .query::<User>(format!("SELECT {} FROM users", User::columns()), ())
+        .query::<User>(
+            format!(
+                "SELECT {} FROM users WHERE username LIKE ? LIMIT ? OFFSET ?",
+                User::columns()
+            ),
+            (
+                format!("%{}%", query.query.unwrap_or_default().replace("%", "\\%")),
+                limit,
+                limit * (query.page.unwrap_or(1) - 1),
+            ),
+        )
         .collect::<Vec<_>>();
     Response::new().json(users)
 }
@@ -261,14 +286,33 @@ pub fn users_posts(req: &Request, ctx: &Context, path: &Path) -> Response {
     // Authorization
     // -
 
+    // Parse request query
+    let query = match req.url.query.as_ref() {
+        Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {
+            Ok(query) => query,
+            Err(_) => return Response::with_status(Status::BadRequest),
+        },
+        None => IndexQuery::default(),
+    };
+    if let Err(report) = query.validate() {
+        return Response::with_status(Status::BadRequest).json(report);
+    }
+
+    // Get user posts
+    let limit = query.limit.unwrap_or(LIMIT_DEFAULT);
     let user_posts = ctx
         .database
         .query::<Post>(
             format!(
-                "SELECT {} FROM posts WHERE user_id = ? ORDER BY created_at DESC",
+                "SELECT {} FROM posts WHERE user_id = ? AND text LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
                 Post::columns()
             ),
-            user.id,
+            (
+                user.id,
+                format!("%{}%", query.query.unwrap_or_default().replace("%", "\\%")),
+                limit,
+                limit * (query.page.unwrap_or(1) - 1),
+            )
         )
         .collect::<Vec<_>>();
     Response::new().json(user_posts)

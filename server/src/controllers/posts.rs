@@ -11,8 +11,9 @@ use serde::Deserialize;
 use uuid::Uuid;
 use validate::Validate;
 
+use crate::consts::LIMIT_DEFAULT;
 use crate::controllers::not_found;
-use crate::models::{Post, PostInteraction, PostInteractionType, User, UserRole};
+use crate::models::{IndexQuery, Post, PostInteraction, PostInteractionType, User, UserRole};
 use crate::Context;
 
 // MARK: Helpers
@@ -59,18 +60,36 @@ fn remove_post_dislike(database: &sqlite::Connection, post: &Post, auth_user: &U
 }
 
 // MARK: Posts index
-pub fn posts_index(_: &Request, ctx: &Context, _: &Path) -> Response {
+pub fn posts_index(req: &Request, ctx: &Context, _: &Path) -> Response {
     // Authorization
     // -
 
+    // Parse request query
+    let query = match req.url.query.as_ref() {
+        Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {
+            Ok(query) => query,
+            Err(_) => return Response::with_status(Status::BadRequest),
+        },
+        None => IndexQuery::default(),
+    };
+    if let Err(report) = query.validate() {
+        return Response::with_status(Status::BadRequest).json(report);
+    }
+
+    // Get posts
+    let limit = query.limit.unwrap_or(LIMIT_DEFAULT);
     let posts = ctx
         .database
         .query::<Post>(
             format!(
-                "SELECT {} FROM posts ORDER BY created_at DESC",
+                "SELECT {} FROM posts WHERE text LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
                 Post::columns()
             ),
-            (),
+            (
+                format!("%{}%", query.query.unwrap_or_default().replace("%", "\\%")),
+                limit,
+                limit * (query.page.unwrap_or(1) - 1),
+            ),
         )
         .map(|mut post| {
             post.fetch_relationships(ctx);
