@@ -29,37 +29,35 @@ export function Login() {
     };
 
     return (
-        <div className="section">
-            <form className="box mx-auto" style="max-width: 50rem;" onSubmit={login}>
-                <h2 className="title is-5">Login with your PlaatBook account</h2>
+        <form className="section" onSubmit={login}>
+            <h2 className="title">Login</h2>
 
-                <Field
-                    name="logon"
-                    type="text"
-                    label="Username or email address"
-                    value={logon}
-                    setValue={setLogon}
-                    error={isError ? 'Invalid username, email address or password' : undefined}
-                    disabled={isLoading}
-                    autofocus
-                />
+            <Field
+                name="logon"
+                type="text"
+                label="Username or email address"
+                value={logon}
+                setValue={setLogon}
+                error={isError ? 'Invalid username, email address or password' : undefined}
+                disabled={isLoading}
+                autofocus
+            />
 
-                <Field
-                    name="password"
-                    type="password"
-                    label="Password"
-                    value={password}
-                    setValue={setPassword}
-                    error={isError ? '' : undefined}
-                    disabled={isLoading}
-                />
+            <Field
+                name="password"
+                type="password"
+                label="Password"
+                value={password}
+                setValue={setPassword}
+                error={isError ? '' : undefined}
+                disabled={isLoading}
+            />
 
-                <div className="field">
-                    <button className="button is-link" type="submit">
-                        Login
-                    </button>
-                </div>
-            </form>
-        </div>
+            <div className="field">
+                <button className="button is-link" type="submit">
+                    Login
+                </button>
+            </div>
+        </form>
     );
 }

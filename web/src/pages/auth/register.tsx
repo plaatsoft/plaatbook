@@ -41,57 +41,55 @@ export function Register() {
     };
 
     return (
-        <div className="section">
-            <form className="box mx-auto" style="max-width: 50rem;" onSubmit={register}>
-                <h2 className="title is-5">Register a new PlaatBook account</h2>
+        <form className="section" onSubmit={register}>
+            <h2 className="title">Register</h2>
 
-                <Field
-                    name="username"
-                    type="text"
-                    label="Username"
-                    value={username}
-                    setValue={setUsername}
-                    error={errors.username?.join(', ')}
-                    disabled={isLoading}
-                    autofocus
-                />
+            <Field
+                name="username"
+                type="text"
+                label="Username"
+                value={username}
+                setValue={setUsername}
+                error={errors.username?.join(', ')}
+                disabled={isLoading}
+                autofocus
+            />
 
-                <Field
-                    name="email"
-                    type="email"
-                    label="Email address"
-                    value={email}
-                    setValue={setEmail}
-                    error={errors.email?.join(', ')}
-                    disabled={isLoading}
-                />
+            <Field
+                name="email"
+                type="email"
+                label="Email address"
+                value={email}
+                setValue={setEmail}
+                error={errors.email?.join(', ')}
+                disabled={isLoading}
+            />
 
-                <Field
-                    name="password"
-                    type="password"
-                    label="Password"
-                    value={password}
-                    setValue={setPassword}
-                    error={errors.password?.join(', ')}
-                    disabled={isLoading}
-                />
+            <Field
+                name="password"
+                type="password"
+                label="Password"
+                value={password}
+                setValue={setPassword}
+                error={errors.password?.join(', ')}
+                disabled={isLoading}
+            />
 
-                <Field
-                    name="confirm_password"
-                    type="password"
-                    label="Confirm new password"
-                    value={confirmPassword}
-                    setValue={setConfirmPassword}
-                    disabled={isLoading}
-                    error={errors.confirm_password?.join(', ')}
-                />
+            <Field
+                name="confirm_password"
+                type="password"
+                label="Confirm new password"
+                value={confirmPassword}
+                setValue={setConfirmPassword}
+                disabled={isLoading}
+                error={errors.confirm_password?.join(', ')}
+            />
 
-                <div className="field">
-                    <button className="button is-link" type="submit">
-                        Register
-                    </button>
-                </div>
-            </form>
-        </div>
+            <div className="field">
+                <button className="button is-link" type="submit">
+                    Register
+                </button>
+            </div>
+        </form>
     );
 }

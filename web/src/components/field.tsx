@@ -20,6 +20,8 @@ export function Field({
     error,
     disabled,
     autofocus,
+    addon,
+    expanded,
 }: {
     name: string;
     type: string;
@@ -32,6 +34,8 @@ export function Field({
     error?: string;
     disabled?: boolean;
     autofocus?: boolean;
+    addon?: boolean;
+    expanded?: boolean;
 }) {
     const input = createRef<HTMLInputElement>();
 
@@ -42,7 +46,7 @@ export function Field({
     }
 
     return (
-        <div className="field">
+        <div className={`${addon ? 'control' : 'field'} ${expanded ? 'is-expanded' : ''}`}>
             {label !== undefined && (
                 <label className="label" htmlFor={name}>
                     {label}

@@ -29,7 +29,7 @@ export function ConfirmModal({
                 <footer className="modal-card-foot">
                     <div className="buttons">
                         <button
-                            className={`button ${action === 'Delete' ? 'is-danger' : 'is-success'}`}
+                            className={`button ${action === 'Delete' || action === 'Revoke' ? 'is-danger' : 'is-success'}`}
                             onClick={() => onConfirm(true)}
                         >
                             {action}

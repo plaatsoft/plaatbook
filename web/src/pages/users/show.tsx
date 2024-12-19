@@ -15,6 +15,13 @@ import { $authUser } from '../../services/auth.service.ts';
 import { CreatePost } from '../../components/create-post.tsx';
 import { $refreshPosts } from '../../services/posts.service.ts';
 
+const styles = css`
+    .user-hero {
+        height: 8rem;
+        align-items: center !important;
+    }
+`;
+
 export function UsersShow({ user_id }: { user_id: string }) {
     const [user, setUser] = useState<User | null>(null);
 
@@ -29,7 +36,7 @@ export function UsersShow({ user_id }: { user_id: string }) {
 
     return user !== undefined && user !== null ? (
         <div className="section">
-            <div className="media has-background-dark px-5" style="height: 10rem; align-items: center;">
+            <div className={`media ${styles['user-hero']}`}>
                 <div className="media-left">
                     <img className="image is-64x64" src="/images/avatar.svg" />
                 </div>
@@ -58,12 +65,7 @@ function UserPostsList({ user }: { user: User }) {
         if (posts === null) {
             return;
         }
-        setPosts(
-            posts.map((post) => {
-                post.user = user;
-                return post;
-            }),
-        );
+        setPosts(posts);
     };
     useEffect(() => {
         fetchPosts();

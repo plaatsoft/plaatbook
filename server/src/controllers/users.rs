@@ -314,6 +314,10 @@ pub fn users_posts(req: &Request, ctx: &Context, path: &Path) -> Response {
                 limit * (query.page.unwrap_or(1) - 1),
             )
         )
+        .map(|mut post| {
+            post.fetch_relationships(ctx);
+            post
+        })
         .collect::<Vec<_>>();
     Response::new().json(user_posts)
 }
