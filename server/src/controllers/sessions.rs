@@ -34,17 +34,6 @@ fn find_session(ctx: &Context, path: &Path) -> Option<Session> {
         .next()
 }
 
-fn fetch_session_user(ctx: &Context, mut session: Session) -> Session {
-    session.user = ctx
-        .database
-        .query::<User>(
-            format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
-            session.user_id,
-        )
-        .next();
-    session
-}
-
 // MARK: Sessions index
 pub fn sessions_index(_: &Request, ctx: &Context, _: &Path) -> Response {
     // Authorization
@@ -80,7 +69,7 @@ pub fn sessions_index(_: &Request, ctx: &Context, _: &Path) -> Response {
 
 // MARK: Sessions show
 pub fn sessions_show(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let session = match find_session(ctx, path) {
+    let mut session = match find_session(ctx, path) {
         Some(session) => session,
         None => return not_found(req, ctx, path),
     };
@@ -93,7 +82,9 @@ pub fn sessions_show(req: &Request, ctx: &Context, path: &Path) -> Response {
             .body("401 Unauthorized");
     }
 
-    Response::new().json(fetch_session_user(ctx, session))
+    // Return session
+    session.fetch_relationships(ctx);
+    Response::new().json(session)
 }
 
 // MARK: Sessions revoke

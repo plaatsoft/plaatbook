@@ -58,13 +58,7 @@ pub fn search(req: &Request, ctx: &Context, _: &Path) -> Response {
             query,
         )
         .map(|mut post| {
-            post.user = ctx
-                .database
-                .query::<User>(
-                    format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
-                    post.user_id,
-                )
-                .next();
+            post.fetch_relationships(ctx);
             post
         })
         .collect::<Vec<_>>();

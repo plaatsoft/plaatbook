@@ -30,38 +30,6 @@ fn find_post(ctx: &Context, path: &Path) -> Option<Post> {
         .next()
 }
 
-fn fetch_posts_relationships(post: Post, ctx: &Context) -> Post {
-    let mut post = post;
-    post.user = ctx
-        .database
-        .query::<User>(
-            format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
-            post.user_id,
-        )
-        .next();
-
-    if let Some(auth_user) = &ctx.auth_user {
-        post.auth_user_liked = Some(
-            ctx.database
-                .query::<i64>(
-                    "SELECT COUNT(id) FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ? LIMIT 1",
-                    (post.id, auth_user.id, PostInteractionType::Like),
-                )
-                .next()
-                .expect("Should be some") > 0);
-
-        post.auth_user_disliked = Some(
-            ctx.database
-                .query::<i64>(
-                    "SELECT COUNT(id) FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ? LIMIT 1",
-                    (post.id, auth_user.id, PostInteractionType::Dislike),
-                )
-                .next()
-                .expect("Should be some") > 0);
-    }
-    post
-}
-
 fn remove_post_like(database: &sqlite::Connection, post: &Post, auth_user: &User) {
     // Remove post like interaction
     database.execute(
@@ -104,7 +72,10 @@ pub fn posts_index(_: &Request, ctx: &Context, _: &Path) -> Response {
             ),
             (),
         )
-        .map(|post| fetch_posts_relationships(post, ctx))
+        .map(|mut post| {
+            post.fetch_relationships(ctx);
+            post
+        })
         .collect::<Vec<_>>();
 
     Response::new().json(posts)
@@ -161,7 +132,7 @@ pub fn posts_create(req: &Request, ctx: &Context, _: &Path) -> Response {
 
 // MARK: Posts show
 pub fn posts_show(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let post = match find_post(ctx, path) {
+    let mut post = match find_post(ctx, path) {
         Some(post) => post,
         None => return not_found(req, ctx, path),
     };
@@ -169,7 +140,9 @@ pub fn posts_show(req: &Request, ctx: &Context, path: &Path) -> Response {
     // Authorization
     // -
 
-    Response::new().json(fetch_posts_relationships(post, ctx))
+    // Return post
+    post.fetch_relationships(ctx);
+    Response::new().json(post)
 }
 
 // MARK: Posts update
