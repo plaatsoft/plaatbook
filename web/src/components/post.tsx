@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { useState } from 'preact/hooks';
 import { Post } from '../models/post.ts';
 import { $authUser } from '../services/auth.service.ts';
 import { DialogService } from '../services/dialog.service.tsx';
@@ -12,16 +11,10 @@ import { PostsService, $refreshPosts } from '../services/posts.service.ts';
 import { dateFormatAgo } from '../utils.ts';
 import { PostEditModal } from './modals/post-edit-modal.tsx';
 
-export function PostComponent({ post }: { post: Post }) {
-    const [, setUpdate] = useState(0);
-
+export function PostComponent({ post, onUpdate }: { post: Post; onUpdate: (post: Post) => void }) {
     const editPost = async () => {
         const updatedPost = await DialogService.getInstance().open<Post | null>(PostEditModal, { post });
-        if (updatedPost !== null) {
-            post.text = updatedPost.text;
-            post.updated_at = updatedPost.updated_at;
-            setUpdate((prev) => prev + 1);
-        }
+        if (updatedPost !== null) onUpdate(updatedPost);
     };
 
     const deletePost = async () => {
@@ -51,7 +44,7 @@ export function PostComponent({ post }: { post: Post }) {
             post.likes--;
             post.auth_user_liked = false;
         }
-        setUpdate((prev) => prev + 1);
+        onUpdate(post);
     };
 
     const dislikePost = async () => {
@@ -68,7 +61,7 @@ export function PostComponent({ post }: { post: Post }) {
             post.dislikes--;
             post.auth_user_disliked = false;
         }
-        setUpdate((prev) => prev + 1);
+        onUpdate(post);
     };
 
     return (
