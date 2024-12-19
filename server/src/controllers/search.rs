@@ -6,47 +6,43 @@
 
 use http::{Request, Response, Status};
 use router::Path;
-use serde::Deserialize;
 use serde_json::json;
 use validate::Validate;
 
-use crate::models::{Post, User};
+use crate::consts::LIMIT_DEFAULT;
+use crate::models::{IndexQuery, Post, User};
 use crate::Context;
 
 pub fn search(req: &Request, ctx: &Context, _: &Path) -> Response {
-    // Parse query get variable
-    #[derive(Deserialize, Validate)]
-    struct Query {
-        #[serde(rename = "q")]
-        #[validate(length(min = 1, max = 255))]
-        query: String,
-    }
-    let query = match serde_urlencoded::from_str::<Query>(match req.url.query.as_ref() {
-        Some(query) => query,
-        None => {
-            return Response::new()
-                .status(Status::BadRequest)
-                .body("400 Bad Request")
-        }
-    }) {
-        Ok(query) => query,
-        Err(_) => {
-            return Response::new()
-                .status(Status::BadRequest)
-                .body("400 Bad Request")
-        }
+    // Parse request query
+    let query = match req.url.query.as_ref() {
+        Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {
+            Ok(query) => query,
+            Err(_) => return Response::with_status(Status::BadRequest),
+        },
+        None => IndexQuery::default(),
     };
+    if let Err(report) = query.validate() {
+        return Response::with_status(Status::BadRequest).json(report);
+    }
+    let limit = query.limit.unwrap_or(LIMIT_DEFAULT);
 
     // Search users
-    let query = format!("%{}%", query.query);
     let users = ctx
         .database
         .query::<User>(
             format!(
-                "SELECT {} FROM users WHERE username LIKE ?",
+                "SELECT {} FROM users WHERE username LIKE ? LIMIT ? OFFSET ?",
                 User::columns()
             ),
-            query.clone(),
+            (
+                format!(
+                    "%{}%",
+                    query.query.clone().unwrap_or_default().replace("%", "\\%")
+                ),
+                limit,
+                limit * (query.page.unwrap_or(1) - 1),
+            ),
         )
         .collect::<Vec<_>>();
 
@@ -54,8 +50,15 @@ pub fn search(req: &Request, ctx: &Context, _: &Path) -> Response {
     let posts = ctx
         .database
         .query::<Post>(
-            format!("SELECT {} FROM posts WHERE text LIKE ?", Post::columns()),
-            query,
+            format!(
+                "SELECT {} FROM posts WHERE text LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+                Post::columns()
+            ),
+            (
+                format!("%{}%", query.query.unwrap_or_default().replace("%", "\\%")),
+                limit,
+                limit * (query.page.unwrap_or(1) - 1),
+            ),
         )
         .map(|mut post| {
             post.fetch_relationships(ctx);
@@ -63,6 +66,7 @@ pub fn search(req: &Request, ctx: &Context, _: &Path) -> Response {
         })
         .collect::<Vec<_>>();
 
+    // Return response
     Response::new().json(json!({
         "users": users,
         "posts": posts,
