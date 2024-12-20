@@ -74,6 +74,15 @@ export class PostsService {
         });
     }
 
+    async repost(id: string): Promise<void> {
+        await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/repost`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+        });
+    }
+
     async like(id: string): Promise<void> {
         await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/like`, {
             method: 'PUT',
