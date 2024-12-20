@@ -11,8 +11,9 @@ use router::Router;
 use crate::consts::HTTP_PORT;
 use crate::controllers::auth::{auth_login, auth_logout, auth_validate};
 use crate::controllers::posts::{
-    posts_create, posts_delete, posts_dislike, posts_dislike_delete, posts_index, posts_like,
-    posts_like_delete, posts_show, posts_update,
+    posts_create, posts_create_reply, posts_delete, posts_dislike, posts_dislike_delete,
+    posts_index, posts_like, posts_like_delete, posts_replies, posts_repost, posts_show,
+    posts_update,
 };
 use crate::controllers::search::search;
 use crate::controllers::sessions::{sessions_index, sessions_revoke, sessions_show};
@@ -58,6 +59,7 @@ fn main() {
         // Posts
         .get("/posts", posts_index)
         .get("/posts/:post_id", posts_show)
+        .get("/posts/:post_id/replies", posts_replies)
         // Search
         .get("/search", search)
         // Users
@@ -77,6 +79,8 @@ fn main() {
         .post("/posts", posts_create)
         .put("/posts/:post_id", posts_update)
         .delete("/posts/:post_id", posts_delete)
+        .post("/posts/:post_id/reply", posts_create_reply)
+        .post("/posts/:post_id/repost", posts_repost)
         .put("/posts/:post_id/like", posts_like)
         .delete("/posts/:post_id/like", posts_like_delete)
         .put("/posts/:post_id/dislike", posts_dislike)

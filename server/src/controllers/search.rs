@@ -61,7 +61,7 @@ pub fn search(req: &Request, ctx: &Context, _: &Path) -> Response {
             ),
         )
         .map(|mut post| {
-            post.fetch_relationships(ctx);
+            post.fetch_relationships_and_update_views(ctx);
             post
         })
         .collect::<Vec<_>>();

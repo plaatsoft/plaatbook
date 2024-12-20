@@ -16,9 +16,10 @@ use crate::Context;
 pub struct User {
     pub id: Uuid,
     pub username: String,
-    pub email: String,
+    pub email: String, // FIXME: Hide in non admin / own user responses
     #[serde(skip)]
     pub password: String,
+    #[serde(skip)]
     pub role: UserRole,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,

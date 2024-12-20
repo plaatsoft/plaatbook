@@ -48,12 +48,18 @@ pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
     database.execute(
         "CREATE TABLE IF NOT EXISTS posts (
             id BLOB PRIMARY KEY,
+            type INTEGER NOT NULL,
+            parent_post_id BLOB NULL,
             user_id BLOB NOT NULL,
             text TEXT NOT NULL,
+            replies INTEGER NOT NULL,
+            reposts INTEGER NOT NULL,
             likes INTEGER NOT NULL,
             dislikes INTEGER NOT NULL,
+            views INTEGER NOT NULL,
             created_at TIMESTAMP NOT NULL,
             updated_at TIMESTAMP NOT NULL,
+            FOREIGN KEY (parent_post_id) REFERENCES posts(id) ON DELETE CASCADE,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )",
         (),
