@@ -7,7 +7,7 @@
 use serde::Deserialize;
 use validate::Validate;
 
-pub use self::post::Post;
+pub use self::post::{Post, PostType};
 pub use self::post_interaction::{PostInteraction, PostInteractionType};
 pub use self::session::Session;
 pub use self::user::{User, UserRole};

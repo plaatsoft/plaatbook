@@ -7,6 +7,7 @@ info:
 servers:
   - url: "http://localhost:8080"
 
+# MARK: Components
 components:
   securitySchemes:
     TokenAuth:
@@ -14,21 +15,7 @@ components:
       scheme: bearer
 
   parameters:
-    UserID:
-      name: id
-      in: path
-      description: User ID or username
-      required: true
-      schema:
-        type: string
-    SessionID:
-      name: id
-      in: path
-      description: Session ID
-      required: true
-      schema:
-        type: string
-        format: uuid
+    # MARK: Path parameters
     PostID:
       name: id
       in: path
@@ -37,22 +24,60 @@ components:
       schema:
         type: string
         format: uuid
+    SessionID:
+      name: id
+      in: path
+      description: Session ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+    UserID:
+      name: id
+      in: path
+      description: User ID or username
+      required: true
+      schema:
+        type: string
+
+    # MARK: Query parameters
+    Query:
+      name: q
+      in: query
+      description: Search query
+      schema:
+        type: string
+    Page:
+      name: page
+      in: query
+      description: Page number
+      schema:
+        type: integer
+        minimum: 1
+    Limit:
+      name: limit
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
 
 paths:
   # MARK: Misc
   /:
     get:
       tags: [Misc]
-      description: Get some information about this REST API
+      summary: Basic information about REST API
       responses:
         "200":
-          description: Name and version of this REST API
+          description: Name and version of REST API
 
   # MARK: Auth
   /auth/login:
     post:
       tags: [Auth]
-      description: Login with user credentials
+      summary: Login with user credentials
       requestBody:
         required: true
         content:
@@ -75,7 +100,7 @@ paths:
   /auth/validate:
     get:
       tags: [Auth]
-      description: Validate your auth token
+      summary: Validate auth token
       security:
         - TokenAuth: []
       responses:
@@ -86,7 +111,7 @@ paths:
   /auth/logout:
     put:
       tags: [Auth]
-      description: Logout your auth token
+      summary: Logout auth token
       security:
         - TokenAuth: []
       responses:
@@ -99,7 +124,11 @@ paths:
   /posts:
     get:
       tags: [Posts]
-      description: Get all posts
+      summary: Get posts
+      parameters:
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
       responses:
         "200":
           description: Successful response
@@ -107,7 +136,7 @@ paths:
           description: Bad Request
     post:
       tags: [Posts]
-      description: Create new post
+      summary: Create new post
       security:
         - TokenAuth: []
       requestBody:
@@ -131,7 +160,7 @@ paths:
   /posts/{id}:
     get:
       tags: [Posts]
-      description: Get post
+      summary: Get post
       parameters:
         - $ref: "#/components/parameters/PostID"
       responses:
@@ -141,7 +170,7 @@ paths:
           description: Post not found
     put:
       tags: [Posts]
-      description: Update post
+      summary: Update post
       security:
         - TokenAuth: []
       parameters:
@@ -166,7 +195,7 @@ paths:
           description: Post not found
     delete:
       tags: [Posts]
-      description: Delete post
+      summary: Delete post
       security:
         - TokenAuth: []
       parameters:
@@ -178,10 +207,69 @@ paths:
           description: Authorization error
         "404":
           description: Post not found
+  /posts/{id}/replies:
+    get:
+      tags: [Posts]
+      summary: Get post replies
+      parameters:
+        - $ref: "#/components/parameters/PostID"
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Successful response
+        "404":
+          description: Post not found
+  /posts/{id}/reply:
+    post:
+      tags: [Posts]
+      summary: Create post reply
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PostID"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+              required:
+                - text
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: Post not found
+  /posts/{id}/repost:
+    post:
+      tags: [Posts]
+      summary: Create post repost
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PostID"
+      responses:
+        "200":
+          description: Successful response
+        "400":
+          description: Bad Request
+        "401":
+          description: Authorization error
+        "404":
+          description: Post not found
   /posts/{id}/like:
     put:
       tags: [Posts]
-      description: Like post
+      summary: Like post
       security:
         - TokenAuth: []
       parameters:
@@ -195,7 +283,7 @@ paths:
           description: Post not found
     delete:
       tags: [Posts]
-      description: Remove post like
+      summary: Remove post like
       security:
         - TokenAuth: []
       parameters:
@@ -210,7 +298,7 @@ paths:
   /posts/{id}/dislike:
     put:
       tags: [Posts]
-      description: Dislike post
+      summary: Dislike post
       security:
         - TokenAuth: []
       parameters:
@@ -224,7 +312,7 @@ paths:
           description: Post not found
     delete:
       tags: [Posts]
-      description: Remove post dislike
+      summary: Remove post dislike
       security:
         - TokenAuth: []
       parameters:
@@ -241,14 +329,11 @@ paths:
   /search:
     get:
       tags: [Search]
-      description: Search for posts and users
+      summary: Search content
       parameters:
-        - name: q
-          in: query
-          description: Search query
-          required: true
-          schema:
-            type: string
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
       responses:
         "200":
           description: Successful response
@@ -259,9 +344,13 @@ paths:
   /users:
     get:
       tags: [Users]
-      description: Get all users
+      summary: Get users
       security:
         - TokenAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
       responses:
         "200":
           description: Successful response
@@ -271,7 +360,7 @@ paths:
           description: Authorization error
     post:
       tags: [Users]
-      description: Create new user
+      summary: Create new user
       security:
         - TokenAuth: []
       requestBody:
@@ -300,7 +389,7 @@ paths:
   /users/{id}:
     get:
       tags: [Users]
-      description: Get user
+      summary: Get user
       security:
         - TokenAuth: []
       parameters:
@@ -312,7 +401,7 @@ paths:
           description: User not found
     put:
       tags: [Users]
-      description: Change user details
+      summary: Change user details
       security:
         - TokenAuth: []
       parameters:
@@ -341,7 +430,7 @@ paths:
   /users/{id}/change_password:
     put:
       tags: [Users]
-      description: Change user password
+      summary: Change user password
       security:
         - TokenAuth: []
       parameters:
@@ -369,7 +458,7 @@ paths:
   /users/{id}/sessions:
     get:
       tags: [Users]
-      description: Get a list of active user sessions
+      summary: Get active user sessions
       security:
         - TokenAuth: []
       parameters:
@@ -384,11 +473,14 @@ paths:
   /users/{id}/posts:
     get:
       tags: [Users]
-      description: Get a list of all user posts
+      summary: Get user posts
       security:
         - TokenAuth: []
       parameters:
         - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Query"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
       responses:
         "200":
           description: Successful response
@@ -399,7 +491,7 @@ paths:
   /sessions:
     get:
       tags: [Sessions]
-      description: Get a list of all sessions
+      summary: Get sessions
       security:
         - TokenAuth: []
       responses:
@@ -412,7 +504,7 @@ paths:
   /sessions/{id}:
     get:
       tags: [Sessions]
-      description: Get a session
+      summary: Get session
       security:
         - TokenAuth: []
       parameters:
@@ -426,7 +518,7 @@ paths:
           description: Session not found
     delete:
       tags: [Sessions]
-      description: Revoke a session
+      summary: Revoke session
       security:
         - TokenAuth: []
       parameters:
