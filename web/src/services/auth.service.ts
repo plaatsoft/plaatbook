@@ -28,10 +28,7 @@ export class AuthService {
         // Try to login with logon and password
         const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
             method: 'POST',
-            body: new URLSearchParams({
-                logon,
-                password,
-            }),
+            body: new URLSearchParams({ logon, password }),
         });
         if (res.status != 200) {
             return false;
@@ -49,11 +46,7 @@ export class AuthService {
         // Try to register with username, email and password
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
             method: 'POST',
-            body: new URLSearchParams({
-                username,
-                email,
-                password,
-            }),
+            body: new URLSearchParams({ username, email, password }),
         });
         if (res.status != 200) {
             return (await res.json()) as Errors;
@@ -138,10 +131,7 @@ export class AuthService {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
-            body: new URLSearchParams({
-                username,
-                email,
-            }),
+            body: new URLSearchParams({ username, email }),
         });
         if (res.status != 200) {
             return (await res.json()) as Errors;
@@ -161,10 +151,7 @@ export class AuthService {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
-            body: new URLSearchParams({
-                current_password,
-                password,
-            }),
+            body: new URLSearchParams({ current_password, password }),
         });
         if (res.status != 200) {
             return (await res.json()) as Errors;

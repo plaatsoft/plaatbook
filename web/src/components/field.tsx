@@ -37,11 +37,16 @@ export function Field({
     addon?: boolean;
     expanded?: boolean;
 }) {
+    const textarea = createRef<HTMLTextAreaElement>();
     const input = createRef<HTMLInputElement>();
 
     if (autofocus) {
         useEffect(() => {
-            input.current!.focus();
+            if (type === 'textarea') {
+                textarea.current!.focus();
+            } else {
+                input.current!.focus();
+            }
         }, []);
     }
 
@@ -54,6 +59,7 @@ export function Field({
             )}
             {type === 'textarea' ? (
                 <textarea
+                    ref={textarea}
                     className={`textarea ${error !== undefined ? 'is-danger' : ''}`}
                     placeholder={placeholder || label}
                     rows={rows || 3}

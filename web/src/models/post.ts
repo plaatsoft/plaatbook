@@ -10,16 +10,16 @@ export interface Post {
     id: string;
     type: PostType;
     text: string;
-    replies: number;
-    reposts: number;
-    likes: number;
-    dislikes: number;
-    views: number;
+    replies_count: number;
+    reposts_count: number;
+    likes_count: number;
+    dislikes_count: number;
+    views_count: number;
     created_at: string;
     updated_at: string;
     parent_post?: Post;
     user?: User;
-    auth_user_reposted?: boolean;
+    replies?: Post[];
     auth_user_liked?: boolean;
     auth_user_disliked?: boolean;
 }

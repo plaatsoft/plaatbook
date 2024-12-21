@@ -23,7 +23,7 @@ const styles = css`
 `;
 
 export function UsersShow({ user_id }: { user_id: string }) {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null | undefined>(undefined);
 
     const getUser = async () => {
         const user = await UsersService.getInstance().get(user_id);
@@ -34,26 +34,29 @@ export function UsersShow({ user_id }: { user_id: string }) {
         getUser();
     }, [user_id]);
 
-    return user !== undefined && user !== null ? (
-        <div className="section">
-            <div className={`media ${styles['user-hero']}`}>
-                <div className="media-left">
-                    <img className="image is-64x64" src="/images/avatar.svg" />
-                </div>
-                <div className="media-content">
-                    <h2 className="title mb-2">
-                        <a href={`/users/${user.username}`}>@{user.username}</a>
-                    </h2>
-                    <p>Joined {dateFormatAgo(user.created_at)}</p>
-                </div>
-            </div>
+    return (
+        <>
+            {user !== null && user !== undefined && (
+                <div className="section">
+                    <div className={`media ${styles['user-hero']}`}>
+                        <div className="media-left">
+                            <img className="image is-64x64" src="/images/avatar.svg" />
+                        </div>
+                        <div className="media-content">
+                            <h2 className="title mb-2">
+                                <a href={`/users/${user.username}`}>@{user.username}</a>
+                            </h2>
+                            <p>Joined {dateFormatAgo(user.created_at)}</p>
+                        </div>
+                    </div>
 
-            {user.id === $authUser.value?.id && <CreatePost />}
+                    {user.id === $authUser.value?.id && <CreatePost />}
 
-            <UserPostsList user={user} />
-        </div>
-    ) : (
-        <NotFound />
+                    <UserPostsList user={user} />
+                </div>
+            )}
+            {user === null && <NotFound />}
+        </>
     );
 }
 
