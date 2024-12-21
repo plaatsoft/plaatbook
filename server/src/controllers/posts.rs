@@ -160,7 +160,26 @@ pub fn posts_show(req: &Request, ctx: &Context, path: &Path) -> Response {
     // Authorization
     // -
 
-    // Return post
+    // Fetch post replies
+    let replies = ctx
+        .database
+        .query::<Post>(
+            format!(
+                "SELECT {} FROM posts WHERE parent_post_id = ? AND type = ? ORDER BY created_at DESC",
+                Post::columns()
+            ),
+            (
+                post.id,
+                PostType::Reply,
+            )
+        )
+        .map(|mut reply| {
+            reply.fetch_relationships_and_update_views(ctx);
+            reply
+        })
+        .collect::<Vec<_>>();
+    post.replies = Some(replies);
+
     post.fetch_relationships_and_update_views(ctx);
     Response::new().json(post)
 }
@@ -224,7 +243,13 @@ pub fn posts_delete(req: &Request, ctx: &Context, path: &Path) -> Response {
             .body("401 Unauthorized");
     }
 
-    // When repost decrement original post reposts counter
+    // Update parent post counters
+    if post.r#type == PostType::Reply {
+        ctx.database.execute(
+            "UPDATE posts SET replies = replies - 1 WHERE id = ?",
+            post.parent_post_id,
+        );
+    }
     if post.r#type == PostType::Repost {
         ctx.database.execute(
             "UPDATE posts SET reposts = reposts - 1 WHERE id = ?",
@@ -325,7 +350,7 @@ pub fn posts_create_reply(req: &Request, ctx: &Context, path: &Path) -> Response
     let now = Utc::now();
     let mut reply = Post {
         id: Uuid::now_v7(),
-        r#type: PostType::Normal,
+        r#type: PostType::Reply,
         parent_post_id: Some(post.id),
         user_id: auth_user.id,
         text: body.text,
@@ -343,7 +368,7 @@ pub fn posts_create_reply(req: &Request, ctx: &Context, path: &Path) -> Response
         reply.clone(),
     );
 
-    // Update original post replies counter
+    // Update parent post replies counter
     ctx.database.execute(
         "UPDATE posts SET replies = replies + 1 WHERE id = ?",
         post.id,
@@ -371,18 +396,12 @@ pub fn posts_repost(req: &Request, ctx: &Context, path: &Path) -> Response {
         }
     };
 
-    // Find original post id
-    let original_post_id = match post.parent_post_id {
-        Some(parent_post_id) => parent_post_id,
-        None => post.id,
-    };
-
     // Create new repost
     let now = Utc::now();
     let mut repost = Post {
         id: Uuid::now_v7(),
         r#type: PostType::Repost,
-        parent_post_id: Some(original_post_id),
+        parent_post_id: Some(post.content_post_id()),
         user_id: auth_user.id,
         user: Some(auth_user.clone()),
         created_at: now,
@@ -398,10 +417,10 @@ pub fn posts_repost(req: &Request, ctx: &Context, path: &Path) -> Response {
         repost.clone(),
     );
 
-    // Update original post reposts counter
+    // Update content post reposts counter
     ctx.database.execute(
         "UPDATE posts SET reposts = reposts + 1 WHERE id = ?",
-        original_post_id,
+        post.content_post_id(),
     );
 
     // Return new repost
@@ -426,21 +445,15 @@ pub fn posts_like(req: &Request, ctx: &Context, path: &Path) -> Response {
         }
     };
 
-    // Find original post id
-    let original_post_id = match post.parent_post_id {
-        Some(parent_post_id) => parent_post_id,
-        None => post.id,
-    };
-
     // Remove possible old post interaction
-    remove_post_like(&ctx.database, original_post_id, auth_user);
-    remove_post_dislike(&ctx.database, original_post_id, auth_user);
+    remove_post_like(&ctx.database, post.content_post_id(), auth_user);
+    remove_post_dislike(&ctx.database, post.content_post_id(), auth_user);
 
     // Create new post like interaction
     let now = Utc::now();
     let post_interaction = PostInteraction {
         id: Uuid::now_v7(),
-        post_id: original_post_id,
+        post_id: post.content_post_id(),
         user_id: auth_user.id,
         r#type: PostInteractionType::Like,
         created_at: now,
@@ -456,7 +469,7 @@ pub fn posts_like(req: &Request, ctx: &Context, path: &Path) -> Response {
     );
     ctx.database.execute(
         "UPDATE posts SET likes = likes + 1 WHERE id = ?",
-        original_post_id,
+        post.content_post_id(),
     );
 
     Response::new()
@@ -479,14 +492,8 @@ pub fn posts_like_delete(req: &Request, ctx: &Context, path: &Path) -> Response 
         }
     };
 
-    // Find original post id
-    let original_post_id = match post.parent_post_id {
-        Some(parent_post_id) => parent_post_id,
-        None => post.id,
-    };
-
     // Remove post like
-    remove_post_like(&ctx.database, original_post_id, auth_user);
+    remove_post_like(&ctx.database, post.content_post_id(), auth_user);
     Response::new()
 }
 
@@ -507,21 +514,15 @@ pub fn posts_dislike(req: &Request, ctx: &Context, path: &Path) -> Response {
         }
     };
 
-    // Find original post id
-    let original_post_id = match post.parent_post_id {
-        Some(parent_post_id) => parent_post_id,
-        None => post.id,
-    };
-
     // Remove possible old post interaction
-    remove_post_like(&ctx.database, original_post_id, auth_user);
-    remove_post_dislike(&ctx.database, original_post_id, auth_user);
+    remove_post_like(&ctx.database, post.content_post_id(), auth_user);
+    remove_post_dislike(&ctx.database, post.content_post_id(), auth_user);
 
     // Create new post dislike interaction
     let now = Utc::now();
     let post_interaction = PostInteraction {
         id: Uuid::now_v7(),
-        post_id: original_post_id,
+        post_id: post.content_post_id(),
         user_id: auth_user.id,
         r#type: PostInteractionType::Dislike,
         created_at: now,
@@ -537,7 +538,7 @@ pub fn posts_dislike(req: &Request, ctx: &Context, path: &Path) -> Response {
     );
     ctx.database.execute(
         "UPDATE posts SET dislikes = dislikes + 1 WHERE id = ?",
-        original_post_id,
+        post.content_post_id(),
     );
 
     Response::new()
@@ -560,13 +561,7 @@ pub fn posts_dislike_delete(req: &Request, ctx: &Context, path: &Path) -> Respon
         }
     };
 
-    // Find original post id
-    let original_post_id = match post.parent_post_id {
-        Some(parent_post_id) => parent_post_id,
-        None => post.id,
-    };
-
     // Remove post dislike
-    remove_post_dislike(&ctx.database, original_post_id, auth_user);
+    remove_post_dislike(&ctx.database, post.content_post_id(), auth_user);
     Response::new()
 }

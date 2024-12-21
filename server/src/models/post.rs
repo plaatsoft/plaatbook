@@ -21,11 +21,16 @@ pub struct Post {
     #[serde(skip)]
     pub user_id: Uuid,
     pub text: String,
-    pub replies: i64,
-    pub reposts: i64,
-    pub likes: i64,
-    pub dislikes: i64,
-    pub views: i64,
+    #[sqlite(rename = "replies")]
+    pub replies_count: i64,
+    #[sqlite(rename = "reposts")]
+    pub reposts_count: i64,
+    #[sqlite(rename = "likes")]
+    pub likes_count: i64,
+    #[sqlite(rename = "dislikes")]
+    pub dislikes_count: i64,
+    #[sqlite(rename = "views")]
+    pub views_count: i64,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     #[sqlite(skip)]
@@ -33,7 +38,7 @@ pub struct Post {
     #[sqlite(skip)]
     pub user: Option<User>,
     #[sqlite(skip)]
-    pub auth_user_reposted: Option<bool>,
+    pub replies: Option<Vec<Post>>,
     #[sqlite(skip)]
     pub auth_user_liked: Option<bool>,
     #[sqlite(skip)]
@@ -59,16 +64,16 @@ impl Default for Post {
             parent_post_id: None,
             user_id: Uuid::now_v7(),
             text: String::new(),
-            replies: 0,
-            reposts: 0,
-            likes: 0,
-            dislikes: 0,
-            views: 0,
+            replies_count: 0,
+            reposts_count: 0,
+            likes_count: 0,
+            dislikes_count: 0,
+            views_count: 0,
             created_at: now,
             updated_at: now,
             parent_post: None,
             user: None,
-            auth_user_reposted: None,
+            replies: None,
             auth_user_liked: None,
             auth_user_disliked: None,
         }
@@ -76,6 +81,14 @@ impl Default for Post {
 }
 
 impl Post {
+    pub fn content_post_id(&self) -> Uuid {
+        if self.r#type == PostType::Repost {
+            self.parent_post_id.expect("Should be some")
+        } else {
+            self.id
+        }
+    }
+
     pub fn fetch_user(&mut self, ctx: &Context) {
         self.user = ctx
             .database
@@ -86,10 +99,7 @@ impl Post {
             .next();
     }
 
-    pub fn fetch_relationships_and_update_views(&mut self, ctx: &Context) {
-        self.fetch_user(ctx);
-
-        // Fetch parent post
+    pub fn fetch_parent_post(&mut self, ctx: &Context) {
         if let Some(parent_post_id) = self.parent_post_id {
             let mut parent_post = ctx
                 .database
@@ -100,52 +110,55 @@ impl Post {
                 .next()
                 .expect("Should be some");
             parent_post.fetch_user(ctx);
+            if parent_post.r#type != PostType::Normal {
+                parent_post.fetch_parent_post(ctx);
+            }
 
-            // Update parent post views counter
-            parent_post.views += 1;
-            ctx.database.execute(
-                "UPDATE posts SET views = ? WHERE id = ?",
-                (parent_post.views, parent_post.id),
-            );
-
-            self.replies = parent_post.replies;
-            self.reposts = parent_post.reposts;
-            self.likes = parent_post.likes;
-            self.dislikes = parent_post.dislikes;
-            self.views = parent_post.views;
+            if self.r#type == PostType::Repost {
+                self.replies_count = parent_post.replies_count;
+                self.reposts_count = parent_post.reposts_count;
+                self.likes_count = parent_post.likes_count;
+                self.dislikes_count = parent_post.dislikes_count;
+                self.views_count = parent_post.views_count;
+            }
             self.parent_post = Some(Box::new(parent_post));
-        } else {
-            // Update views counter
-            self.views += 1;
+        }
+    }
+
+    pub fn fetch_relationships_and_update_views(&mut self, ctx: &Context) {
+        self.fetch_user(ctx);
+        self.fetch_parent_post(ctx);
+
+        // Update views counter
+        if self.r#type == PostType::Repost {
+            let parent_post = self.parent_post.as_mut().expect("Should be some");
+            parent_post.views_count += 1;
             ctx.database.execute(
                 "UPDATE posts SET views = ? WHERE id = ?",
-                (self.views, self.id),
+                (parent_post.views_count, parent_post.id),
+            );
+        } else {
+            self.views_count += 1;
+            ctx.database.execute(
+                "UPDATE posts SET views = ? WHERE id = ?",
+                (self.views_count, self.id),
             );
         }
 
         // Fetch auth user interactions
         if let Some(auth_user) = &ctx.auth_user {
-            self.auth_user_reposted = Some(self.r#type == PostType::Repost ||
-                ctx.database
-                    .query::<i64>(
-                        "SELECT COUNT(id) FROM posts WHERE parent_post_id = ? AND user_id = ? AND type = ? LIMIT 1",
-                        (self.id, auth_user.id, PostType::Repost),
-                    )
-                    .next()
-                    .expect("Should be some") > 0);
-
             self.auth_user_liked = Some(ctx.database
                 .query::<i64>(
-                    "SELECT COUNT(id) FROM post_interactions WHERE (post_id = ? OR post_id = ?) AND user_id = ? AND type = ? LIMIT 1",
-                    (self.id, self.parent_post_id, auth_user.id, PostInteractionType::Like),
+                    "SELECT COUNT(id) FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ? LIMIT 1",
+                    (self.content_post_id(), auth_user.id, PostInteractionType::Like),
                 )
                 .next()
                 .expect("Should be some") > 0);
 
             self.auth_user_disliked = Some(ctx.database
                 .query::<i64>(
-                    "SELECT COUNT(id) FROM post_interactions WHERE (post_id = ? OR post_id = ?) AND user_id = ? AND type = ? LIMIT 1",
-                    (self.id, self.parent_post_id, auth_user.id, PostInteractionType::Dislike),
+                    "SELECT COUNT(id) FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ? LIMIT 1",
+                    (self.content_post_id(), auth_user.id, PostInteractionType::Dislike),
                 )
                 .next()
                 .expect("Should be some") > 0);
