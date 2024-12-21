@@ -5,7 +5,7 @@
  */
 
 use chrono::{DateTime, Utc};
-use sqlite::FromRow;
+use sqlite::{FromRow, FromValue};
 use uuid::Uuid;
 
 #[derive(FromRow)]
@@ -18,22 +18,8 @@ pub struct PostInteraction {
     pub updated_at: DateTime<Utc>,
 }
 
+#[derive(FromValue)]
 pub enum PostInteractionType {
     Like = 0,
     Dislike = 1,
-}
-impl From<PostInteractionType> for sqlite::Value {
-    fn from(value: PostInteractionType) -> Self {
-        sqlite::Value::Integer(value as i64)
-    }
-}
-impl TryFrom<sqlite::Value> for PostInteractionType {
-    type Error = sqlite::ValueError;
-    fn try_from(value: sqlite::Value) -> Result<Self, Self::Error> {
-        match value {
-            sqlite::Value::Integer(0) => Ok(PostInteractionType::Like),
-            sqlite::Value::Integer(1) => Ok(PostInteractionType::Dislike),
-            _ => Err(sqlite::ValueError),
-        }
-    }
 }
