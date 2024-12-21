@@ -30,6 +30,18 @@ export class PostsService {
         return (await res.json()) as Post[];
     }
 
+    async get(id: string): Promise<Post | null> {
+        const headers = new Headers();
+        if ($authUser.value !== null) {
+            headers.append('Authorization', `Bearer ${localStorage.getItem('token')}`);
+        }
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}`, { headers });
+        if (res.status === 404) {
+            return null;
+        }
+        return (await res.json()) as Post;
+    }
+
     async create(text: string): Promise<Errors | null> {
         // Try to create a post with text
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`, {
@@ -37,9 +49,7 @@ export class PostsService {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
-            body: new URLSearchParams({
-                text,
-            }),
+            body: new URLSearchParams({ text }),
         });
         if (res.status != 200) {
             return (await res.json()) as Errors;
@@ -54,9 +64,7 @@ export class PostsService {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
-            body: new URLSearchParams({
-                text,
-            }),
+            body: new URLSearchParams({ text }),
         });
         if (res.status != 200) {
             return (await res.json()) as Errors;
@@ -74,13 +82,32 @@ export class PostsService {
         });
     }
 
-    async repost(id: string): Promise<void> {
-        await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/repost`, {
+    async reply(parent_post_id: string, text: string): Promise<[boolean, Post | Errors]> {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${parent_post_id}/reply`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: new URLSearchParams({ text }),
+        });
+        if (res.status == 200) {
+            return [true, (await res.json()) as Post];
+        } else {
+            return [false, (await res.json()) as Errors];
+        }
+    }
+
+    async repost(id: string): Promise<Post | null> {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/repost`, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
         });
+        if (res.status == 200) {
+            return (await res.json()) as Post;
+        }
+        return null;
     }
 
     async like(id: string): Promise<void> {

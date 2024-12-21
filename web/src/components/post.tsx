@@ -4,94 +4,301 @@
  * SPDX-License-Identifier: MIT
  */
 
+import { useLocation } from 'preact-iso';
 import { Post, PostType } from '../models/post.ts';
 import { $authUser } from '../services/auth.service.ts';
 import { DialogService } from '../services/dialog.service.tsx';
 import { PostsService, $refreshPosts } from '../services/posts.service.ts';
 import { dateFormatAgo } from '../utils.ts';
+import {
+    CommentIcon,
+    DeleteIcon,
+    DislikeIcon,
+    EditIcon,
+    LikeIcon,
+    OptionsIcon,
+    RepostIcon,
+    StatsIcon,
+} from './icons.tsx';
 import { PostEditModal } from './modals/post-edit-modal.tsx';
+import { PostReplyModal } from './modals/post-reply-modal.tsx';
 
-export function PostComponent({ post, onUpdate }: { post: Post; onUpdate: (post: Post) => void }) {
-    const editPost = async () => {
-        const updatedPost = await DialogService.getInstance().open<Post | null>(PostEditModal, { post });
-        if (updatedPost !== null) onUpdate(updatedPost);
+export function PostComponent({
+    post,
+    onUpdate,
+    onDelete,
+    isFullPage,
+    replyHideParent,
+}: {
+    post: Post;
+    onUpdate: (post: Post) => void;
+    onDelete?: () => void;
+    isFullPage?: boolean;
+    replyHideParent?: boolean;
+}) {
+    const location = useLocation();
+
+    const openPost = (event: MouseEvent) => {
+        event.stopPropagation();
+        location.route(`/posts/${post.id}`);
     };
 
-    const deletePost = async () => {
-        if (
-            await DialogService.getInstance().confirm(
-                'Are you sure?',
-                post.type === PostType.REPOST
-                    ? 'Are you sure you want to delete this repost?'
-                    : `Are you sure you want to delete this post and the ${post.reposts} reposts?`,
-                'Delete',
-            )
-        ) {
-            await PostsService.getInstance().delete(post.id);
-            $refreshPosts.value = $refreshPosts.value + 1;
-        }
-    };
-
-    const replyPost = async () => {};
-
-    const repostPost = async () => {
-        await PostsService.getInstance().repost(post.id);
-        // FIXME: Open reposted post page
-        post.reposts++;
-        post.auth_user_reposted = true;
-        onUpdate(post);
-        $refreshPosts.value = $refreshPosts.value + 1;
-    };
-
-    const likePost = async () => {
-        if (!post.auth_user_liked) {
-            await PostsService.getInstance().like(post.id);
-            if (post.auth_user_disliked) {
-                post.dislikes--;
-                post.auth_user_disliked = false;
-            }
-            post.likes++;
-            post.auth_user_liked = true;
-        } else {
-            await PostsService.getInstance().remove_like(post.id);
-            post.likes--;
-            post.auth_user_liked = false;
-        }
-        onUpdate(post);
-    };
-
-    const dislikePost = async () => {
-        if (!post.auth_user_disliked) {
-            await PostsService.getInstance().dislike(post.id);
-            if (post.auth_user_liked) {
-                post.likes--;
-                post.auth_user_liked = false;
-            }
-            post.dislikes++;
-            post.auth_user_disliked = true;
-        } else {
-            await PostsService.getInstance().remove_dislike(post.id);
-            post.dislikes--;
-            post.auth_user_disliked = false;
-        }
+    const updateParentPost = (parent_post: Post) => {
+        post.parent_post = parent_post;
         onUpdate(post);
     };
 
     const contentPost = post.type === PostType.REPOST ? post.parent_post! : post;
     return (
-        <div className="media">
+        <>
+            {isFullPage && contentPost.type == PostType.REPLY && (
+                <PostComponent
+                    post={contentPost.parent_post!}
+                    onUpdate={updateParentPost}
+                    isFullPage={isFullPage}
+                    replyHideParent
+                />
+            )}
+
+            <div className="media" onClick={openPost}>
+                <div className="media-left">
+                    <a href={`/users/${contentPost.user!.username}`}>
+                        <img className="image is-64x64" src="/images/avatar.svg" />
+                    </a>
+                </div>
+
+                <div className="media-content">
+                    {post.type === PostType.REPLY && (
+                        <div className="mb-1">
+                            <a href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
+                                <CommentIcon className="is-small mr-1" />
+                                {post.user!.username} replied
+                            </a>
+                        </div>
+                    )}
+                    {post.type === PostType.REPOST && (
+                        <div className="mb-1">
+                            <a href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
+                                <RepostIcon className="is-small mr-1" />
+                                {post.user!.username} reposted
+                            </a>
+                        </div>
+                    )}
+
+                    <div className="mb-1" style="position: relative;">
+                        <a className="mr-2" href={`/users/${contentPost.user!.username}`}>
+                            <strong>@{contentPost.user!.username}</strong>
+                        </a>
+                        <small className="mr-2">{dateFormatAgo(contentPost.created_at)}</small>
+                        {contentPost.created_at !== contentPost.updated_at && (
+                            <span className="tag" style="position: absolute; top: 0;">
+                                <EditIcon className="is-small mr-1" />
+                                Edited
+                            </span>
+                        )}
+
+                        {$authUser.value && $authUser.value.id === post.user!.id && (
+                            <PostOptions post={post} onUpdate={onUpdate} onDelete={onDelete} />
+                        )}
+                    </div>
+
+                    <div className="mb-2">{contentPost.text}</div>
+
+                    {!isFullPage && !replyHideParent && contentPost.type == PostType.REPLY && (
+                        <ParentPost post={contentPost.parent_post!} />
+                    )}
+
+                    {$authUser.value && <PostActions post={post} onUpdate={onUpdate} />}
+
+                    {isFullPage &&
+                        post.replies &&
+                        post.replies.map((reply) => (
+                            <PostComponent post={reply} onUpdate={onUpdate} replyHideParent key={post.id} />
+                        ))}
+                </div>
+            </div>
+        </>
+    );
+}
+
+function PostOptions({
+    post,
+    onUpdate,
+    onDelete,
+}: {
+    post: Post;
+    onUpdate: (post: Post) => void;
+    onDelete?: () => void;
+}) {
+    const editPost = async (event: MouseEvent) => {
+        event.stopPropagation();
+        const updatedPost = await DialogService.getInstance().open<Post | null>(PostEditModal, { post });
+        if (updatedPost !== null) onUpdate(updatedPost);
+    };
+
+    const deletePost = async (event: MouseEvent) => {
+        event.stopPropagation();
+        if (
+            await DialogService.getInstance().confirm(
+                'Are you sure?',
+                post.type === PostType.REPOST
+                    ? 'Are you sure you want to delete this repost?'
+                    : `Are you sure you want to delete this post, the ${post.replies_count} replies and the ${post.reposts_count} reposts?`,
+                'Delete',
+                DeleteIcon,
+            )
+        ) {
+            await PostsService.getInstance().delete(post.id);
+            $refreshPosts.value = $refreshPosts.value + 1;
+            if (onDelete) onDelete();
+        }
+    };
+
+    return (
+        <div className="dropdown is-hoverable is-right is-pulled-right">
+            <div className="dropdown-trigger">
+                <button className="button is-small">
+                    <OptionsIcon />
+                </button>
+            </div>
+            <div className="dropdown-menu">
+                <div className="dropdown-content">
+                    {post.type === PostType.NORMAL && (
+                        <a className="dropdown-item" href="#" onClick={editPost}>
+                            <EditIcon />
+                            Update post
+                        </a>
+                    )}
+                    <a className="dropdown-item" href="#" onClick={deletePost}>
+                        <DeleteIcon />
+                        {post.type === PostType.NORMAL ? 'Delete post' : null}
+                        {post.type === PostType.REPLY ? 'Delete reply' : null}
+                        {post.type === PostType.REPOST ? 'Delete repost' : null}
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function PostActions({ post, onUpdate }: { post: Post; onUpdate: (post: Post) => void }) {
+    const location = useLocation();
+
+    const replyPost = async (event: MouseEvent) => {
+        event.stopPropagation();
+        const replyPost = await DialogService.getInstance().open<Post | null>(PostReplyModal, { post });
+        if (replyPost !== null) {
+            location.route(`/posts/${replyPost.id}`);
+        }
+    };
+
+    const repostPost = async (event: MouseEvent) => {
+        event.stopPropagation();
+        const repostedPost = await PostsService.getInstance().repost(post.id);
+        if (repostedPost !== null) {
+            location.route(`/posts/${repostedPost.id}`);
+        }
+    };
+
+    const likePost = async (event: MouseEvent) => {
+        event.stopPropagation();
+        if (!post.auth_user_liked) {
+            await PostsService.getInstance().like(post.id);
+            if (post.auth_user_disliked) {
+                post.dislikes_count--;
+                post.auth_user_disliked = false;
+            }
+            post.likes_count++;
+            post.auth_user_liked = true;
+        } else {
+            await PostsService.getInstance().remove_like(post.id);
+            post.likes_count--;
+            post.auth_user_liked = false;
+        }
+        onUpdate(post);
+    };
+
+    const dislikePost = async (event: MouseEvent) => {
+        event.stopPropagation();
+        if (!post.auth_user_disliked) {
+            await PostsService.getInstance().dislike(post.id);
+            if (post.auth_user_liked) {
+                post.likes_count--;
+                post.auth_user_liked = false;
+            }
+            post.dislikes_count++;
+            post.auth_user_disliked = true;
+        } else {
+            await PostsService.getInstance().remove_dislike(post.id);
+            post.dislikes_count--;
+            post.auth_user_disliked = false;
+        }
+        onUpdate(post);
+    };
+
+    return (
+        <div className="buttons">
+            <button className={`button is-small pl-4 py-2`} onClick={replyPost} title="Reply to post">
+                <CommentIcon className="mr-2" />
+                {post.replies_count}
+            </button>
+            <button className={`button is-small pl-4 py-2`} onClick={repostPost} title="Repost post">
+                <RepostIcon className="mr-2" />
+                {post.reposts_count}
+            </button>
+            <button
+                className={`button is-small ${post.auth_user_liked ? 'is-link' : ''} pl-4 py-2`}
+                onClick={likePost}
+                title="Like post"
+            >
+                <LikeIcon className="mr-2" />
+                {post.likes_count}
+            </button>
+            <button
+                className={`button is-small ${post.auth_user_disliked ? 'is-danger' : ''} pl-4 py-2`}
+                onClick={dislikePost}
+                title="Dislike post"
+            >
+                <DislikeIcon className="mr-2" />
+                {post.dislikes_count}
+            </button>
+            <button className={`button is-small pl-4 py-2`}>
+                <StatsIcon className="mr-2" />
+                {post.views_count}
+            </button>
+        </div>
+    );
+}
+
+function ParentPost({ post }: { post: Post }) {
+    const location = useLocation();
+
+    const openPost = (event: MouseEvent) => {
+        event.stopPropagation();
+        location.route(`/posts/${post.id}`);
+    };
+
+    const contentPost = post.type === PostType.REPOST ? post.parent_post! : post;
+    return (
+        <div className="media" onClick={openPost}>
             <div className="media-left">
                 <a href={`/users/${contentPost.user!.username}`}>
                     <img className="image is-64x64" src="/images/avatar.svg" />
                 </a>
             </div>
             <div className="media-content">
+                {post.type === PostType.REPLY && (
+                    <div className="mb-1">
+                        <a href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
+                            <CommentIcon className="is-small mr-1" />
+                            {post.user!.username} replied
+                        </a>
+                    </div>
+                )}
                 {post.type === PostType.REPOST && (
                     <div className="mb-1">
                         <a href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
-                            <svg className="icon is-small mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M17,17H7V14L3,18L7,22V19H19V13H17M7,7H17V10L21,6L17,2V5H5V11H7V7Z" />
-                            </svg>
+                            <RepostIcon className="is-small mr-1" />
                             {post.user!.username} reposted
                         </a>
                     </div>
@@ -104,96 +311,13 @@ export function PostComponent({ post, onUpdate }: { post: Post; onUpdate: (post:
                     <small className="mr-2">{dateFormatAgo(contentPost.created_at)}</small>
                     {contentPost.created_at !== contentPost.updated_at && (
                         <span className="tag" style="position: absolute; top: 0;">
-                            <svg className="icon is-small mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" />
-                            </svg>
+                            <EditIcon className="is-small mr-1" />
                             Edited
                         </span>
-                    )}
-                    {$authUser.value && $authUser.value.id === post.user!.id && (
-                        <div className="dropdown is-hoverable is-right is-pulled-right">
-                            <div className="dropdown-trigger">
-                                <button className="button is-small">
-                                    <svg className="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                        <path d="M12,16A2,2 0 0,1 14,18A2,2 0 0,1 12,20A2,2 0 0,1 10,18A2,2 0 0,1 12,16M12,10A2,2 0 0,1 14,12A2,2 0 0,1 12,14A2,2 0 0,1 10,12A2,2 0 0,1 12,10M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4Z" />
-                                    </svg>
-                                </button>
-                            </div>
-                            <div className="dropdown-menu">
-                                <div className="dropdown-content">
-                                    {post.type === PostType.NORMAL && (
-                                        <a className="dropdown-item" href="#" onClick={editPost}>
-                                            <svg
-                                                className="icon"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" />
-                                            </svg>
-                                            Update post
-                                        </a>
-                                    )}
-                                    <a className="dropdown-item" href="#" onClick={deletePost}>
-                                        <svg className="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                            <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
-                                        </svg>
-                                        {post.type === PostType.NORMAL ? 'Delete post' : null}
-                                        {post.type === PostType.REPOST ? 'Delete repost' : null}
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
                     )}
                 </div>
 
                 <div className="mb-2">{contentPost.text}</div>
-
-                {$authUser.value && (
-                    <div className="buttons">
-                        <button className={`button is-small pl-4 py-2`} onClick={replyPost} title="Reply to post">
-                            <svg className="icon mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12,3C17.5,3 22,6.58 22,11C22,15.42 17.5,19 12,19C10.76,19 9.57,18.82 8.47,18.5C5.55,21 2,21 2,21C4.33,18.67 4.7,17.1 4.75,16.5C3.05,15.07 2,13.13 2,11C2,6.58 6.5,3 12,3Z" />
-                            </svg>
-                            {post.replies}
-                        </button>
-                        <button
-                            className={`button is-small ${post.auth_user_reposted ? 'is-link' : ''} pl-4 py-2`}
-                            onClick={repostPost}
-                            title="Repost post"
-                        >
-                            <svg className="icon mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M17,17H7V14L3,18L7,22V19H19V13H17M7,7H17V10L21,6L17,2V5H5V11H7V7Z" />
-                            </svg>
-                            {post.reposts}
-                        </button>
-                        <button
-                            className={`button is-small ${post.auth_user_liked ? 'is-link' : ''} pl-4 py-2`}
-                            onClick={likePost}
-                            title="Like post"
-                        >
-                            <svg className="icon mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M23,10C23,8.89 22.1,8 21,8H14.68L15.64,3.43C15.66,3.33 15.67,3.22 15.67,3.11C15.67,2.7 15.5,2.32 15.23,2.05L14.17,1L7.59,7.58C7.22,7.95 7,8.45 7,9V19A2,2 0 0,0 9,21H18C18.83,21 19.54,20.5 19.84,19.78L22.86,12.73C22.95,12.5 23,12.26 23,12V10M1,21H5V9H1V21Z" />
-                            </svg>
-                            {post.likes}
-                        </button>
-                        <button
-                            className={`button is-small ${post.auth_user_disliked ? 'is-danger' : ''} pl-4 py-2`}
-                            onClick={dislikePost}
-                            title="Dislike post"
-                        >
-                            <svg className="icon mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M19,15H23V3H19M15,3H6C5.17,3 4.46,3.5 4.16,4.22L1.14,11.27C1.05,11.5 1,11.74 1,12V14A2,2 0 0,0 3,16H9.31L8.36,20.57C8.34,20.67 8.33,20.77 8.33,20.88C8.33,21.3 8.5,21.67 8.77,21.94L9.83,23L16.41,16.41C16.78,16.05 17,15.55 17,15V5C17,3.89 16.1,3 15,3Z" />
-                            </svg>
-                            {post.dislikes}
-                        </button>
-                        <button className={`button is-small pl-4 py-2`}>
-                            <svg className="icon mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M22,21H2V3H4V19H6V10H10V19H12V6H16V19H18V14H22V21Z" />
-                            </svg>
-                            {post.views}
-                        </button>
-                    </div>
-                )}
             </div>
         </div>
     );

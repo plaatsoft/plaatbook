@@ -15,6 +15,7 @@ import { AuthService, $authUser } from './services/auth.service.ts';
 import { NotFound } from './pages/not-found.tsx';
 import { UsersShow } from './pages/users/show.tsx';
 import { Search } from './pages/search.tsx';
+import { PostsShow } from './pages/posts/show.tsx';
 
 export function App() {
     const location = useLocation();
@@ -35,6 +36,7 @@ export function App() {
                 <Router>
                     <Route path="/" component={Home} />
                     <Route path="/search" component={Search} />
+                    <Route path="/posts/:post_id" component={PostsShow} />
                     <Route path="/users/:user_id" component={UsersShow} />
                     <Route path="/settings" component={Settings} />
                     <Route default component={NotFound} />
@@ -44,6 +46,7 @@ export function App() {
                 <Router>
                     <Route path="/" component={Home} />
                     <Route path="/search" component={Search} />
+                    <Route path="/posts/:post_id" component={PostsShow} />
                     <Route path="/users/:user_id" component={UsersShow} />
                     <Route path="/auth/login" component={Login} />
                     <Route path="/auth/register" component={Register} />

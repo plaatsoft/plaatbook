@@ -38,7 +38,12 @@ export class DialogService {
         });
     }
 
-    async confirm(title: string, message: string, action: string): Promise<boolean> {
-        return this.open<boolean>(ConfirmModal, { title, message, action });
+    async confirm(
+        title: string,
+        message: string,
+        action: string,
+        ActionIcon?: FunctionComponent<{ className: string }>,
+    ): Promise<boolean> {
+        return this.open<boolean>(ConfirmModal, { title, message, action, ActionIcon });
     }
 }
