@@ -6,7 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use sqlite::FromRow;
+use sqlite::{FromRow, FromValue};
 use uuid::Uuid;
 
 use crate::Context;
@@ -25,26 +25,10 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
 }
 
-// MARK: User role
-#[derive(Clone, Copy, Serialize, Eq, PartialEq)]
+#[derive(Clone, Copy, Serialize, FromValue, Eq, PartialEq)]
 pub enum UserRole {
     Normal = 0,
     Admin = 1,
-}
-impl From<UserRole> for sqlite::Value {
-    fn from(value: UserRole) -> Self {
-        sqlite::Value::Integer(value as i64)
-    }
-}
-impl TryFrom<sqlite::Value> for UserRole {
-    type Error = sqlite::ValueError;
-    fn try_from(value: sqlite::Value) -> Result<Self, Self::Error> {
-        match value {
-            sqlite::Value::Integer(0) => Ok(UserRole::Normal),
-            sqlite::Value::Integer(1) => Ok(UserRole::Admin),
-            _ => Err(sqlite::ValueError),
-        }
-    }
 }
 
 // MARK: Validators

@@ -6,7 +6,7 @@
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use sqlite::FromRow;
+use sqlite::{FromRow, FromValue};
 use uuid::Uuid;
 
 use super::{PostInteractionType, User};
@@ -38,6 +38,16 @@ pub struct Post {
     pub auth_user_liked: Option<bool>,
     #[sqlite(skip)]
     pub auth_user_disliked: Option<bool>,
+}
+
+#[derive(Clone, Copy, Serialize, FromValue, Eq, PartialEq)]
+pub enum PostType {
+    #[serde(rename = "normal")]
+    Normal = 0,
+    #[serde(rename = "reply")]
+    Reply = 1,
+    #[serde(rename = "repost")]
+    Repost = 2,
 }
 
 impl Default for Post {
@@ -139,33 +149,6 @@ impl Post {
                 )
                 .next()
                 .expect("Should be some") > 0);
-        }
-    }
-}
-
-// MARK: Post type
-#[derive(Clone, Copy, Serialize, Eq, PartialEq)]
-pub enum PostType {
-    #[serde(rename = "normal")]
-    Normal = 0,
-    #[serde(rename = "reply")]
-    Reply = 1,
-    #[serde(rename = "repost")]
-    Repost = 2,
-}
-impl From<PostType> for sqlite::Value {
-    fn from(value: PostType) -> Self {
-        sqlite::Value::Integer(value as i64)
-    }
-}
-impl TryFrom<sqlite::Value> for PostType {
-    type Error = sqlite::ValueError;
-    fn try_from(value: sqlite::Value) -> Result<Self, Self::Error> {
-        match value {
-            sqlite::Value::Integer(0) => Ok(PostType::Normal),
-            sqlite::Value::Integer(1) => Ok(PostType::Reply),
-            sqlite::Value::Integer(2) => Ok(PostType::Repost),
-            _ => Err(sqlite::ValueError),
         }
     }
 }
