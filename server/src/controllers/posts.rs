@@ -221,6 +221,8 @@ pub fn posts_update(req: &Request, ctx: &Context, path: &Path) -> Response {
         (post.text.clone(), post.updated_at, post.id),
     );
 
+    // Return updated post
+    post.process(ctx);
     Response::new().json(post)
 }
 

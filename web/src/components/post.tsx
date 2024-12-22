@@ -104,7 +104,7 @@ export function PostComponent({
                         )}
                     </div>
 
-                    <div className="content" dangerouslySetInnerHTML={{ __html: contentPost.text }}></div>
+                    <div className="content" dangerouslySetInnerHTML={{ __html: contentPost.text_html! }}></div>
 
                     {!isFullPage && !replyHideParent && contentPost.type == PostType.REPLY && (
                         <ParentPost post={contentPost.parent_post!} />
@@ -337,7 +337,7 @@ function ParentPost({ post }: { post: Post }) {
                     )}
                 </div>
 
-                <div className="content" dangerouslySetInnerHTML={{ __html: contentPost.text }}></div>
+                <div className="content" dangerouslySetInnerHTML={{ __html: contentPost.text_html! }}></div>
             </div>
         </div>
     );
