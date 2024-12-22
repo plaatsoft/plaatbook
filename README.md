@@ -1,6 +1,13 @@
 # PlaatBook
 
-PlaatBook is a X/Twitter like clone example project
+<div>
+<img align="left" src="web/public/images/icon-192x192.png" width="96" height="96" />
+<br/>
+<p>
+    PlaatBook is a X/Twitter like clone example project. It is written in Rust and Preact. The backend mostly uses custom code from <a href="https://github.com/bplaat/crates">bplaat/crates</a>, and the frontend uses Bulma for styling.
+</p>
+<br/>
+</div>
 
 > [!IMPORTANT]
 > PlaatBook is currently in development and not finished yet
