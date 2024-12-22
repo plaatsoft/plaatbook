@@ -18,10 +18,12 @@ import {
     LikeIcon,
     OptionsIcon,
     RepostIcon,
+    ShareIcon,
     StatsIcon,
 } from './icons.tsx';
 import { PostEditModal } from './modals/post-edit-modal.tsx';
 import { PostReplyModal } from './modals/post-reply-modal.tsx';
+import { PostShareModal } from './modals/post-share-modal.tsx';
 
 export function PostComponent({
     post,
@@ -237,6 +239,19 @@ function PostActions({ post, onUpdate }: { post: Post; onUpdate: (post: Post) =>
         onUpdate(post);
     };
 
+    const sharePost = async (event: MouseEvent) => {
+        event.stopPropagation();
+        if ('share' in navigator) {
+            await navigator.share({
+                title: 'PlaatBook post',
+                text: post.text,
+                url: `${window.location.host}/posts/${post.id}`,
+            });
+        } else {
+            await DialogService.getInstance().open(PostShareModal, { post });
+        }
+    };
+
     return (
         <div className="buttons">
             <button className={`button is-small pl-4 py-2`} onClick={replyPost} title="Reply to post">
@@ -263,9 +278,13 @@ function PostActions({ post, onUpdate }: { post: Post; onUpdate: (post: Post) =>
                 <DislikeIcon className="mr-2" />
                 {post.dislikes_count}
             </button>
-            <button className={`button is-small pl-4 py-2`}>
+            <button className={`button is-small pl-4 py-2`} onClick={(event) => event.stopPropagation()}>
                 <StatsIcon className="mr-2" />
                 {post.views_count}
+            </button>
+            <button className={`button is-small pl-4 py-2`} onClick={sharePost}>
+                <ShareIcon className="mr-2" />
+                Share
             </button>
         </div>
     );
