@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { createRef } from 'preact';
+// eslint-disable-next-line import/named
+import { createRef, JSX } from 'preact';
 // eslint-disable-next-line import/named
 import { Dispatch, StateUpdater, useEffect } from 'preact/hooks';
 
@@ -17,6 +18,7 @@ export function Field({
     value,
     onInput,
     setValue,
+    help,
     error,
     disabled,
     autofocus,
@@ -31,6 +33,7 @@ export function Field({
     value: string;
     onInput?: (event: InputEvent) => void;
     setValue?: Dispatch<StateUpdater<string>>;
+    help?: JSX.Element;
     error?: string;
     disabled?: boolean;
     autofocus?: boolean;
@@ -85,6 +88,7 @@ export function Field({
                     disabled={disabled}
                 />
             )}
+            {help !== undefined && <p className="help">{help}</p>}
             {error !== undefined && error !== '' && <p className="help is-danger">{error}</p>}
         </div>
     );

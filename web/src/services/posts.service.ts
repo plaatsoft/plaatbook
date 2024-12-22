@@ -57,7 +57,7 @@ export class PostsService {
         return null;
     }
 
-    async update(id: string, text: string): Promise<Errors | null> {
+    async update(id: string, text: string): Promise<[boolean, Post | Errors]> {
         // Try to update a post with text
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}`, {
             method: 'PUT',
@@ -66,10 +66,10 @@ export class PostsService {
             },
             body: new URLSearchParams({ text }),
         });
-        if (res.status != 200) {
-            return (await res.json()) as Errors;
+        if (res.status == 200) {
+            return [true, (await res.json()) as Post];
         }
-        return null;
+        return [false, (await res.json()) as Errors];
     }
 
     async delete(id: string): Promise<void> {
@@ -92,9 +92,8 @@ export class PostsService {
         });
         if (res.status == 200) {
             return [true, (await res.json()) as Post];
-        } else {
-            return [false, (await res.json()) as Errors];
         }
+        return [false, (await res.json()) as Errors];
     }
 
     async repost(id: string): Promise<Post | null> {

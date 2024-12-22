@@ -34,6 +34,8 @@ pub struct Post {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     #[sqlite(skip)]
+    pub text_html: Option<String>,
+    #[sqlite(skip)]
     pub parent_post: Option<Box<Post>>,
     #[sqlite(skip)]
     pub user: Option<User>,
@@ -71,6 +73,7 @@ impl Default for Post {
             views_count: 0,
             created_at: now,
             updated_at: now,
+            text_html: None,
             parent_post: None,
             user: None,
             replies: None,
@@ -167,10 +170,13 @@ impl Post {
         self.fetch_parent_post(ctx);
         self.fetch_user_interactions(ctx);
         self.update_views(ctx);
+
+        // Render markdown text to html
         if let Some(parent_post) = &mut self.parent_post {
-            parent_post.text = render_markdown(&parent_post.text);
-        } else {
-            self.text = render_markdown(&self.text);
+            parent_post.text_html = Some(render_markdown(&parent_post.text));
+        }
+        if self.r#type != PostType::Repost {
+            self.text_html = Some(render_markdown(&self.text));
         }
     }
 }

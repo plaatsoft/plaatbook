@@ -10,6 +10,7 @@ import { Field } from '../field.tsx';
 import { Errors } from '../../models/errors.ts';
 import { PostsService } from '../../services/posts.service.ts';
 import { EditIcon } from '../icons.tsx';
+import { POST_TEXT_MAX } from '../../consts.ts';
 
 export function PostEditModal({ post, onConfirm }: { post: Post; onConfirm: (updatedPost: Post | null) => void }) {
     const [isLoading, setIsLoading] = useState(false);
@@ -20,12 +21,12 @@ export function PostEditModal({ post, onConfirm }: { post: Post; onConfirm: (upd
         event.preventDefault();
         setIsLoading(true);
         setErrors({});
-        const errors = await PostsService.getInstance().update(post.id, text);
-        if (errors === null) {
-            onConfirm({ ...post, text });
+        const [success, result] = await PostsService.getInstance().update(post.id, text);
+        if (success) {
+            onConfirm(result as Post);
         } else {
             setIsLoading(false);
-            setErrors(errors);
+            setErrors(result as Errors);
         }
     };
 
@@ -47,6 +48,11 @@ export function PostEditModal({ post, onConfirm }: { post: Post; onConfirm: (upd
                         placeholder="Post text"
                         value={text}
                         setValue={setText}
+                        help={
+                            <span className="is-pulled-right has-text-weight-bold has-text-grey">
+                                {POST_TEXT_MAX - text.length}
+                            </span>
+                        }
                         error={errors.text?.join(', ')}
                         disabled={isLoading}
                         autofocus

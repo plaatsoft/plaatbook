@@ -9,7 +9,7 @@ import { $authUser } from '../services/auth.service.ts';
 import { PostsService, $refreshPosts } from '../services/posts.service.ts';
 import { Post } from '../models/post.ts';
 import { PostComponent } from '../components/post.tsx';
-import { CreatePost } from '../components/create-post.tsx';
+import { PostCreateForm } from '../components/post-create-form.tsx';
 
 export function Home() {
     return (
@@ -20,7 +20,7 @@ export function Home() {
                 <h2 className="title">Home</h2>
             )}
 
-            {$authUser.value !== null ? <CreatePost /> : null}
+            {$authUser.value !== null ? <PostCreateForm /> : null}
 
             <PostsList />
         </div>

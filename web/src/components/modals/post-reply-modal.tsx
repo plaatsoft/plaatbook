@@ -10,6 +10,7 @@ import { Field } from '../field.tsx';
 import { Errors } from '../../models/errors.ts';
 import { PostsService } from '../../services/posts.service.ts';
 import { CommentIcon } from '../icons.tsx';
+import { POST_TEXT_MAX } from '../../consts.ts';
 
 export function PostReplyModal({ post, onConfirm }: { post: Post; onConfirm: (updatedPost: Post | null) => void }) {
     const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +45,11 @@ export function PostReplyModal({ post, onConfirm }: { post: Post; onConfirm: (up
                         placeholder="What's your reply?"
                         value={text}
                         setValue={setText}
+                        help={
+                            <span className="is-pulled-right has-text-weight-bold has-text-grey">
+                                {POST_TEXT_MAX - text.length}
+                            </span>
+                        }
                         error={errors.text?.join(', ')}
                         disabled={isLoading}
                         autofocus

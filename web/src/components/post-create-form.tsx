@@ -9,8 +9,9 @@ import { PostsService, $refreshPosts } from '../services/posts.service.ts';
 import { Errors } from '../models/errors.ts';
 import { Field } from '../components/field.tsx';
 import { CommentIcon } from './icons.tsx';
+import { POST_TEXT_MAX } from '../consts.ts';
 
-export function CreatePost() {
+export function PostCreateForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [text, setText] = useState('');
     const [errors, setErrors] = useState<Errors>({});
@@ -51,6 +52,9 @@ export function CreatePost() {
                             <CommentIcon className="mr-2" />
                             Post
                         </button>
+                        <span className="is-pulled-right has-text-weight-bold has-text-grey">
+                            {POST_TEXT_MAX - text.length}
+                        </span>
                     </div>
                 </div>
             </form>

@@ -12,8 +12,8 @@ import { Post } from '../../models/post.ts';
 import { PostComponent } from '../../components/post.tsx';
 import { dateFormatAgo } from '../../utils.ts';
 import { $authUser } from '../../services/auth.service.ts';
-import { CreatePost } from '../../components/create-post.tsx';
 import { $refreshPosts } from '../../services/posts.service.ts';
+import { PostCreateForm } from '../../components/post-create-form.tsx';
 
 const styles = css`
     .user-hero {
@@ -50,7 +50,7 @@ export function UsersShow({ user_id }: { user_id: string }) {
                         </div>
                     </div>
 
-                    {user.id === $authUser.value?.id && <CreatePost />}
+                    {user.id === $authUser.value?.id && <PostCreateForm />}
 
                     <UserPostsList user={user} />
                 </div>
