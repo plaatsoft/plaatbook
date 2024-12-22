@@ -125,27 +125,7 @@ impl Post {
         }
     }
 
-    pub fn fetch_relationships_and_update_views(&mut self, ctx: &Context) {
-        self.fetch_user(ctx);
-        self.fetch_parent_post(ctx);
-
-        // Update views counter
-        if self.r#type == PostType::Repost {
-            let parent_post = self.parent_post.as_mut().expect("Should be some");
-            parent_post.views_count += 1;
-            ctx.database.execute(
-                "UPDATE posts SET views = ? WHERE id = ?",
-                (parent_post.views_count, parent_post.id),
-            );
-        } else {
-            self.views_count += 1;
-            ctx.database.execute(
-                "UPDATE posts SET views = ? WHERE id = ?",
-                (self.views_count, self.id),
-            );
-        }
-
-        // Fetch auth user interactions
+    pub fn fetch_user_interactions(&mut self, ctx: &Context) {
         if let Some(auth_user) = &ctx.auth_user {
             self.auth_user_liked = Some(ctx.database
                 .query::<i64>(
@@ -164,4 +144,61 @@ impl Post {
                 .expect("Should be some") > 0);
         }
     }
+
+    pub fn update_views(&mut self, ctx: &Context) {
+        if self.r#type == PostType::Repost {
+            let parent_post = self.parent_post.as_mut().expect("Should be some");
+            parent_post.views_count += 1;
+            ctx.database.execute(
+                "UPDATE posts SET views = ? WHERE id = ?",
+                (parent_post.views_count, parent_post.id),
+            );
+        } else {
+            self.views_count += 1;
+            ctx.database.execute(
+                "UPDATE posts SET views = ? WHERE id = ?",
+                (self.views_count, self.id),
+            );
+        }
+    }
+
+    pub fn process(&mut self, ctx: &Context) {
+        self.fetch_user(ctx);
+        self.fetch_parent_post(ctx);
+        self.fetch_user_interactions(ctx);
+        self.update_views(ctx);
+        if let Some(parent_post) = &mut self.parent_post {
+            parent_post.text = render_markdown(&parent_post.text);
+        } else {
+            self.text = render_markdown(&self.text);
+        }
+    }
+}
+
+// MARK: Post Markdown
+lazy_static::lazy_static! {
+    static ref URL_REGEX: regex::Regex = regex::Regex::new(r"(https?://[^\s]+)").expect("Should compile");
+    static ref BOLD_REGEX: regex::Regex = regex::Regex::new(r"\*\*(.*?)\*\*").expect("Should compile");
+    static ref ITALIC_REGEX: regex::Regex = regex::Regex::new(r"\*(.*?)\*").expect("Should compile");
+    static ref PARAGRAPH_REGEX: regex::Regex = regex::Regex::new(r"\n\n").expect("Should compile");
+}
+
+fn render_markdown(text: &str) -> String {
+    // Convert URLs to links
+    let mut text = URL_REGEX
+        .replace_all(
+            text,
+            r#"<a href="$1" target="_blank" rel="noreferrer">$1</a>"#,
+        )
+        .to_string();
+
+    // Convert bold text
+    text = BOLD_REGEX.replace_all(&text, r#"<b>$1</b>"#).to_string();
+
+    // Convert italic text
+    text = ITALIC_REGEX.replace_all(&text, r#"<i>$1</i>"#).to_string();
+
+    // Convert paragraphs
+    text = PARAGRAPH_REGEX.replace_all(&text, r#"</p><p>"#).to_string();
+    format!("<p>{}</p>", text)
 }

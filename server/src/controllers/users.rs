@@ -315,7 +315,7 @@ pub fn users_posts(req: &Request, ctx: &Context, path: &Path) -> Response {
             )
         )
         .map(|mut post| {
-            post.fetch_relationships_and_update_views(ctx);
+            post.process(ctx);
             post
         })
         .collect::<Vec<_>>();

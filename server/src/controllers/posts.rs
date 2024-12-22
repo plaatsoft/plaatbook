@@ -91,7 +91,7 @@ pub fn posts_index(req: &Request, ctx: &Context, _: &Path) -> Response {
             ),
         )
         .map(|mut post| {
-            post.fetch_relationships_and_update_views(ctx);
+            post.process(ctx);
             post
         })
         .collect::<Vec<_>>();
@@ -100,6 +100,12 @@ pub fn posts_index(req: &Request, ctx: &Context, _: &Path) -> Response {
 }
 
 // MARK: Posts create
+#[derive(Deserialize, Validate)]
+struct PostBody {
+    #[validate(length(min = 1, max = 512))]
+    text: String,
+}
+
 pub fn posts_create(req: &Request, ctx: &Context, _: &Path) -> Response {
     // Authorization
     let auth_user = match ctx.auth_user.as_ref() {
@@ -112,12 +118,7 @@ pub fn posts_create(req: &Request, ctx: &Context, _: &Path) -> Response {
     };
 
     // Parse and validate body
-    #[derive(Deserialize, Validate)]
-    struct Body {
-        #[validate(length(min = 1))]
-        text: String,
-    }
-    let body = match serde_urlencoded::from_str::<Body>(&req.body) {
+    let body = match serde_urlencoded::from_str::<PostBody>(&req.body) {
         Ok(body) => body,
         Err(_) => {
             return Response::new()
@@ -146,7 +147,7 @@ pub fn posts_create(req: &Request, ctx: &Context, _: &Path) -> Response {
     );
 
     // Return new post
-    post.fetch_relationships_and_update_views(ctx);
+    post.process(ctx);
     Response::new().json(post)
 }
 
@@ -174,13 +175,13 @@ pub fn posts_show(req: &Request, ctx: &Context, path: &Path) -> Response {
             )
         )
         .map(|mut reply| {
-            reply.fetch_relationships_and_update_views(ctx);
+            reply.process(ctx);
             reply
         })
         .collect::<Vec<_>>();
     post.replies = Some(replies);
 
-    post.fetch_relationships_and_update_views(ctx);
+    post.process(ctx);
     Response::new().json(post)
 }
 
@@ -200,12 +201,7 @@ pub fn posts_update(req: &Request, ctx: &Context, path: &Path) -> Response {
     }
 
     // Parse and validate body
-    #[derive(Deserialize, Validate)]
-    struct Body {
-        #[validate(length(min = 1))]
-        text: String,
-    }
-    let body = match serde_urlencoded::from_str::<Body>(&req.body) {
+    let body = match serde_urlencoded::from_str::<PostBody>(&req.body) {
         Ok(body) => body,
         Err(_) => {
             return Response::new()
@@ -303,7 +299,7 @@ pub fn posts_replies(req: &Request, ctx: &Context, path: &Path) -> Response {
             ),
         )
         .map(|mut post| {
-            post.fetch_relationships_and_update_views(ctx);
+            post.process(ctx);
             post
         })
         .collect::<Vec<_>>();
@@ -329,12 +325,7 @@ pub fn posts_create_reply(req: &Request, ctx: &Context, path: &Path) -> Response
     };
 
     // Parse and validate body
-    #[derive(Deserialize, Validate)]
-    struct Body {
-        #[validate(length(min = 1))]
-        text: String,
-    }
-    let body = match serde_urlencoded::from_str::<Body>(&req.body) {
+    let body = match serde_urlencoded::from_str::<PostBody>(&req.body) {
         Ok(body) => body,
         Err(_) => {
             return Response::new()
@@ -375,7 +366,7 @@ pub fn posts_create_reply(req: &Request, ctx: &Context, path: &Path) -> Response
     );
 
     // Return new reply
-    reply.fetch_relationships_and_update_views(ctx);
+    reply.process(ctx);
     Response::new().json(reply)
 }
 
@@ -424,7 +415,7 @@ pub fn posts_repost(req: &Request, ctx: &Context, path: &Path) -> Response {
     );
 
     // Return new repost
-    repost.fetch_relationships_and_update_views(ctx);
+    repost.process(ctx);
     Response::new().json(repost)
 }
 
