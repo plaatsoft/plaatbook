@@ -163,10 +163,11 @@ function PostOptions({
             </div>
             <div className="dropdown-menu">
                 <div className="dropdown-content">
-                    {post.type === PostType.NORMAL && (
+                    {post.type !== PostType.REPOST && (
                         <a className="dropdown-item" href="#" onClick={editPost}>
                             <EditIcon />
-                            Update post
+                            {post.type === PostType.NORMAL ? 'Edit post' : null}
+                            {post.type === PostType.REPLY ? 'Edit reply' : null}
                         </a>
                     )}
                     <a className="dropdown-item" href="#" onClick={deletePost}>

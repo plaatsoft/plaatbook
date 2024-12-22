@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'preact/hooks';
-import { Post } from '../../models/post.ts';
+import { Post, PostType } from '../../models/post.ts';
 import { Field } from '../field.tsx';
 import { Errors } from '../../models/errors.ts';
 import { PostsService } from '../../services/posts.service.ts';
@@ -34,7 +34,10 @@ export function PostEditModal({ post, onConfirm }: { post: Post; onConfirm: (upd
             <div className="modal-background" onClick={() => onConfirm(null)}></div>
             <form className="modal-card" onSubmit={update}>
                 <header className="modal-card-head">
-                    <p className="modal-card-title">Edit post</p>
+                    <p className="modal-card-title">
+                        {post.type == PostType.NORMAL && <>Edit post</>}
+                        {post.type == PostType.REPLY && <>Edit reply</>}
+                    </p>
                     <button className="delete" aria-label="close" onClick={() => onConfirm(null)}></button>
                 </header>
                 <section className="modal-card-body">
@@ -53,7 +56,7 @@ export function PostEditModal({ post, onConfirm }: { post: Post; onConfirm: (upd
                     <div className="buttons">
                         <button type="submit" className="button is-link">
                             <EditIcon className="mr-2" />
-                            Update
+                            Edit
                         </button>
                         <button className="button" onClick={() => onConfirm(null)}>
                             Cancel
