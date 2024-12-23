@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { route } from 'preact-router';
 import { Field } from '../../components/field.tsx';
 import { AuthService } from '../../services/auth.service.ts';
@@ -17,6 +17,10 @@ export function Register() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errors, setErrors] = useState<Errors>({});
+
+    useEffect(() => {
+        document.title = 'Register - PlaatBook';
+    }, []);
 
     const register = async (event: SubmitEvent) => {
         event.preventDefault();

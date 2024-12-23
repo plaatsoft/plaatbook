@@ -13,6 +13,10 @@ import { PostCreateForm } from '../components/post-create-form.tsx';
 import { InfiniteList } from '../components/infinite-list.tsx';
 
 export function Home() {
+    useEffect(() => {
+        document.title = 'Home - PlaatBook';
+    }, []);
+
     return (
         <div className="section">
             {$authUser.value !== null ? (

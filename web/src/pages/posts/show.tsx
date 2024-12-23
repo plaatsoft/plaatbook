@@ -17,10 +17,13 @@ export function PostsShow({ post_id }: { post_id: string }) {
     const getPost = async () => {
         setPost(await PostsService.getInstance().get(post_id));
     };
-
     useEffect(() => {
         getPost();
     }, [post_id]);
+
+    useEffect(() => {
+        if (post) document.title = `Post by ${post!.user!.username} - PlaatBook`;
+    }, [post]);
 
     return (
         <>
