@@ -18,12 +18,14 @@ export class SearchService {
         return SearchService.instance;
     }
 
-    async search(query: string): Promise<{ posts: Post[]; users: User[] } | null> {
+    async search(query: string, page: number): Promise<{ posts: Post[]; users: User[] } | null> {
         const headers = new Headers();
         if ($authUser.value !== null) {
             headers.append('Authorization', `Bearer ${localStorage.getItem('token')}`);
         }
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/search?q=${encodeURIComponent(query)}`, { headers });
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/search?q=${encodeURIComponent(query)}&page=${page}`, {
+            headers,
+        });
         if (res.status !== 200) {
             return null;
         }

@@ -12,8 +12,9 @@ import { Post } from '../../models/post.ts';
 import { PostComponent } from '../../components/post.tsx';
 import { dateFormatAgo } from '../../utils.ts';
 import { $authUser } from '../../services/auth.service.ts';
-import { $refreshPosts } from '../../services/posts.service.ts';
+import { $addPost } from '../../services/posts.service.ts';
 import { PostCreateForm } from '../../components/post-create-form.tsx';
+import { InfiniteList } from '../../components/infinite-list.tsx';
 
 const styles = css`
     .user-hero {
@@ -63,26 +64,28 @@ export function UsersShow({ user_id }: { user_id: string }) {
 function UserPostsList({ user }: { user: User }) {
     const [posts, setPosts] = useState<Post[]>([]);
 
-    const fetchPosts = async () => {
-        const posts = await UsersService.getInstance().getPosts(user.id);
-        if (posts === null) {
-            return;
-        }
-        setPosts(posts);
-    };
     useEffect(() => {
-        fetchPosts();
-    }, [$refreshPosts.value]);
+        if ($addPost.value) posts.unshift($addPost.value);
+        $addPost.value = null;
+    }, [$addPost.value]);
 
     return (
-        <>
-            {posts.map((post) => (
+        <InfiniteList
+            items={posts}
+            fetchPage={async (page) => {
+                const newPosts = (await UsersService.getInstance().getPosts(user.id, page))!;
+                setPosts((posts) => [...posts, ...newPosts]);
+            }}
+            template={(post) => (
                 <PostComponent
                     post={post}
-                    onUpdate={(post) => setPosts(posts.map((p) => (p.id === post.id ? post : p)))}
+                    onUpdate={(updatedPost) => {
+                        if (updatedPost) setPosts((posts) => posts.map((p) => (p.id === post.id ? updatedPost : p)));
+                        else setPosts((posts) => posts.filter((p) => p.id !== post.id));
+                    }}
                     key={post.id}
                 />
-            ))}
-        </>
+            )}
+        />
     );
 }

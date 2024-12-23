@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { useEffect } from 'preact/hooks';
-import { LocationProvider, Route, Router, useLocation } from 'preact-iso';
+import { useEffect, useState } from 'preact/hooks';
+// eslint-disable-next-line import/named
+import { Router, Route, RouterOnChangeArgs } from 'preact-router';
 import { Menu } from './components/menu.tsx';
 import { Login } from './pages/auth/login.tsx';
 import { Register } from './pages/auth/register.tsx';
@@ -18,22 +19,22 @@ import { Search } from './pages/search.tsx';
 import { PostsShow } from './pages/posts/show.tsx';
 
 export function App() {
-    const location = useLocation();
+    const [route, setRoute] = useState<RouterOnChangeArgs | null>(null);
 
     // Auth user
     const auth = async () => {
-        await AuthService.getInstance().auth(location);
+        await AuthService.getInstance().auth();
     };
     useEffect(() => {
         auth();
     }, []);
 
     return (
-        <LocationProvider>
-            <Menu />
+        <>
+            <Menu route={route} />
 
             {$authUser.value !== undefined && $authUser.value !== null && (
-                <Router>
+                <Router onChange={setRoute}>
                     <Route path="/" component={Home} />
                     <Route path="/search" component={Search} />
                     <Route path="/posts/:post_id" component={PostsShow} />
@@ -43,7 +44,7 @@ export function App() {
                 </Router>
             )}
             {$authUser.value !== undefined && $authUser.value === null && (
-                <Router>
+                <Router onChange={setRoute}>
                     <Route path="/" component={Home} />
                     <Route path="/search" component={Search} />
                     <Route path="/posts/:post_id" component={PostsShow} />
@@ -53,6 +54,6 @@ export function App() {
                     <Route default component={NotFound} />
                 </Router>
             )}
-        </LocationProvider>
+        </>
     );
 }

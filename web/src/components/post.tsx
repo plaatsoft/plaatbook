@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { useLocation } from 'preact-iso';
+import { route } from 'preact-router';
 import { Post, PostType } from '../models/post.ts';
 import { $authUser } from '../services/auth.service.ts';
 import { DialogService } from '../services/dialog.service.tsx';
-import { PostsService, $refreshPosts } from '../services/posts.service.ts';
+import { PostsService } from '../services/posts.service.ts';
 import { dateFormatAgo } from '../utils.ts';
 import {
     CommentIcon,
@@ -28,38 +28,24 @@ import { PostShareModal } from './modals/post-share-modal.tsx';
 export function PostComponent({
     post,
     onUpdate,
-    onDelete,
     isFullPage,
     replyHideParent,
 }: {
     post: Post;
-    onUpdate: (post: Post) => void;
-    onDelete?: () => void;
+    onUpdate?: (post: Post | null) => void;
     isFullPage?: boolean;
     replyHideParent?: boolean;
 }) {
-    const location = useLocation();
-
     const openPost = (event: MouseEvent) => {
         event.stopPropagation();
-        location.route(`/posts/${post.id}`);
-    };
-
-    const updateParentPost = (parent_post: Post) => {
-        post.parent_post = parent_post;
-        onUpdate(post);
+        route(`/posts/${post.id}`);
     };
 
     const contentPost = post.type === PostType.REPOST ? post.parent_post! : post;
     return (
         <>
             {isFullPage && contentPost.type == PostType.REPLY && (
-                <PostComponent
-                    post={contentPost.parent_post!}
-                    onUpdate={updateParentPost}
-                    isFullPage={isFullPage}
-                    replyHideParent
-                />
+                <PostComponent post={contentPost.parent_post!} isFullPage={isFullPage} replyHideParent />
             )}
 
             <div className="media" onClick={openPost}>
@@ -100,7 +86,7 @@ export function PostComponent({
                         )}
 
                         {$authUser.value && $authUser.value.id === post.user!.id && (
-                            <PostOptions post={post} onUpdate={onUpdate} onDelete={onDelete} />
+                            <PostOptions post={post} onUpdate={onUpdate} />
                         )}
                     </div>
 
@@ -123,19 +109,11 @@ export function PostComponent({
     );
 }
 
-function PostOptions({
-    post,
-    onUpdate,
-    onDelete,
-}: {
-    post: Post;
-    onUpdate: (post: Post) => void;
-    onDelete?: () => void;
-}) {
+function PostOptions({ post, onUpdate }: { post: Post; onUpdate?: (post: Post | null) => void }) {
     const editPost = async (event: MouseEvent) => {
         event.stopPropagation();
         const updatedPost = await DialogService.getInstance().open<Post | null>(PostEditModal, { post });
-        if (updatedPost !== null) onUpdate(updatedPost);
+        if (updatedPost !== null && onUpdate) onUpdate(updatedPost);
     };
 
     const deletePost = async (event: MouseEvent) => {
@@ -151,8 +129,7 @@ function PostOptions({
             )
         ) {
             await PostsService.getInstance().delete(post.id);
-            $refreshPosts.value = $refreshPosts.value + 1;
-            if (onDelete) onDelete();
+            if (onUpdate) onUpdate(null);
         }
     };
 
@@ -184,14 +161,12 @@ function PostOptions({
     );
 }
 
-function PostActions({ post, onUpdate }: { post: Post; onUpdate: (post: Post) => void }) {
-    const location = useLocation();
-
+function PostActions({ post, onUpdate }: { post: Post; onUpdate?: (post: Post) => void }) {
     const replyPost = async (event: MouseEvent) => {
         event.stopPropagation();
         const replyPost = await DialogService.getInstance().open<Post | null>(PostReplyModal, { post });
         if (replyPost !== null) {
-            location.route(`/posts/${replyPost.id}`);
+            route(`/posts/${replyPost.id}`);
         }
     };
 
@@ -199,7 +174,7 @@ function PostActions({ post, onUpdate }: { post: Post; onUpdate: (post: Post) =>
         event.stopPropagation();
         const repostedPost = await PostsService.getInstance().repost(post.id);
         if (repostedPost !== null) {
-            location.route(`/posts/${repostedPost.id}`);
+            route(`/posts/${repostedPost.id}`);
         }
     };
 
@@ -218,7 +193,7 @@ function PostActions({ post, onUpdate }: { post: Post; onUpdate: (post: Post) =>
             post.likes_count--;
             post.auth_user_liked = false;
         }
-        onUpdate(post);
+        if (onUpdate) onUpdate(post);
     };
 
     const dislikePost = async (event: MouseEvent) => {
@@ -236,7 +211,7 @@ function PostActions({ post, onUpdate }: { post: Post; onUpdate: (post: Post) =>
             post.dislikes_count--;
             post.auth_user_disliked = false;
         }
-        onUpdate(post);
+        if (onUpdate) onUpdate(post);
     };
 
     const sharePost = async (event: MouseEvent) => {
@@ -291,11 +266,9 @@ function PostActions({ post, onUpdate }: { post: Post; onUpdate: (post: Post) =>
 }
 
 function ParentPost({ post }: { post: Post }) {
-    const location = useLocation();
-
     const openPost = (event: MouseEvent) => {
         event.stopPropagation();
-        location.route(`/posts/${post.id}`);
+        route(`/posts/${post.id}`);
     };
 
     const contentPost = post.type === PostType.REPOST ? post.parent_post! : post;

@@ -5,11 +5,13 @@
  */
 
 import { useState } from 'preact/hooks';
-import { PostsService, $refreshPosts } from '../services/posts.service.ts';
+import { PostsService, $addPost } from '../services/posts.service.ts';
 import { Errors } from '../models/errors.ts';
 import { Field } from '../components/field.tsx';
 import { CommentIcon } from './icons.tsx';
 import { POST_TEXT_MAX } from '../consts.ts';
+import { Post } from '../models/post.ts';
+import { $authUser } from '../services/auth.service.ts';
 
 export function PostCreateForm() {
     const [isLoading, setIsLoading] = useState(false);
@@ -20,13 +22,13 @@ export function PostCreateForm() {
         event.preventDefault();
         setIsLoading(true);
         setErrors({});
-        const errors = await PostsService.getInstance().create(text);
+        const [success, result] = await PostsService.getInstance().create(text);
         setIsLoading(false);
-        if (errors === null) {
+        if (success) {
             setText('');
-            $refreshPosts.value = $refreshPosts.value + 1;
+            $addPost.value = result as Post;
         } else {
-            setErrors(errors);
+            setErrors(result as Errors);
         }
     };
 
@@ -34,7 +36,9 @@ export function PostCreateForm() {
         <>
             <form className="media" onSubmit={createPost}>
                 <div className="media-left">
-                    <img className="image is-64x64" src="/images/avatar.svg" />
+                    <a href={`/users/${$authUser.value!.username}`}>
+                        <img className="image is-64x64" src="/images/avatar.svg" />{' '}
+                    </a>
                 </div>
                 <div className="media-content">
                     <Field

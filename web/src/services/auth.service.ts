@@ -5,8 +5,7 @@
  */
 
 import { signal } from '@preact/signals';
-// eslint-disable-next-line import/named
-import { LocationHook } from 'preact-iso';
+import { route } from 'preact-router';
 import { Session } from '../models/session.ts';
 import { User } from '../models/user.ts';
 import { Errors } from '../models/errors.ts';
@@ -54,7 +53,7 @@ export class AuthService {
         return null;
     }
 
-    async auth(location: LocationHook): Promise<void> {
+    async auth(): Promise<void> {
         // Get token
         const token = localStorage.getItem('token');
         if (token === null) {
@@ -70,14 +69,14 @@ export class AuthService {
             },
         });
         if (res.status != 200) {
-            await this.logout(location);
+            await this.logout();
         }
         const { session, user } = (await res.json()) as { session: Session; user: User };
         $authSession.value = session;
         $authUser.value = user;
     }
 
-    async logout(location: LocationHook): Promise<boolean> {
+    async logout(): Promise<boolean> {
         // Try to logout current token
         await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
             method: 'PUT',
@@ -92,7 +91,7 @@ export class AuthService {
         $authUser.value = null;
 
         // Redirect to login
-        location.route('/auth/login');
+        route('/auth/login');
         return true;
     }
 
@@ -108,9 +107,9 @@ export class AuthService {
         return (await res.json()) as Session[];
     }
 
-    async revokeSession(location: LocationHook, session: Session): Promise<boolean> {
+    async revokeSession(session: Session): Promise<boolean> {
         if (session.id === $authSession.value!.id) {
-            return this.logout(location);
+            return this.logout();
         }
         const res = await fetch(`${import.meta.env.VITE_API_URL}/sessions/${session.id}`, {
             method: 'DELETE',

@@ -5,7 +5,8 @@
  */
 
 import { useState, useEffect } from 'preact/hooks';
-import { useLocation } from 'preact-iso';
+// eslint-disable-next-line import/named
+import { RouterOnChangeArgs } from 'preact-router';
 import { AuthService, $authUser } from '../services/auth.service.ts';
 import { AppIcon, LogoutIcon, SearchIcon, SettingsIcon } from './icons.tsx';
 
@@ -15,17 +16,16 @@ const styles = css`
     }
 `;
 
-export function Menu() {
-    const location = useLocation();
+export function Menu({ route }: { route: RouterOnChangeArgs | null }) {
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
         setIsOpen(false);
-    }, [location]);
+    }, [route]);
 
     const logout = async (event: MouseEvent) => {
         event.preventDefault();
-        await AuthService.getInstance().logout(location);
+        await AuthService.getInstance().logout();
     };
 
     return (
