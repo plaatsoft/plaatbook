@@ -30,12 +30,14 @@ export class UsersService {
         return (await res.json()) as User;
     }
 
-    async getPosts(user_id: string): Promise<Post[] | null> {
+    async getPosts(user_id: string, page: number): Promise<Post[] | null> {
         const headers = new Headers();
         if ($authUser.value !== null) {
             headers.append('Authorization', `Bearer ${localStorage.getItem('token')}`);
         }
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${user_id}/posts`, { headers });
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${user_id}/posts?page=${page}`, {
+            headers,
+        });
         if (res.status !== 200) {
             return [];
         }

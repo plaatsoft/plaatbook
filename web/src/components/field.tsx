@@ -5,9 +5,9 @@
  */
 
 // eslint-disable-next-line import/named
-import { createRef, JSX } from 'preact';
+import { JSX } from 'preact';
 // eslint-disable-next-line import/named
-import { Dispatch, StateUpdater, useEffect } from 'preact/hooks';
+import { Dispatch, StateUpdater, useEffect, useRef } from 'preact/hooks';
 
 export function Field({
     name,
@@ -40,8 +40,8 @@ export function Field({
     addon?: boolean;
     expanded?: boolean;
 }) {
-    const textarea = createRef<HTMLTextAreaElement>();
-    const input = createRef<HTMLInputElement>();
+    const textarea = useRef<HTMLTextAreaElement>(null);
+    const input = useRef<HTMLInputElement>(null);
 
     if (autofocus) {
         useEffect(() => {

@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { useLocation } from 'preact-iso';
 import { useState } from 'preact/hooks';
+import { route } from 'preact-router';
 import { Field } from '../../components/field.tsx';
 import { AuthService } from '../../services/auth.service.ts';
 import { Errors } from '../../models/errors.ts';
 
 export function Register() {
-    const location = useLocation();
     const [isLoading, setIsLoading] = useState(false);
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
@@ -30,7 +29,7 @@ export function Register() {
         const errors = await AuthService.getInstance().register(username, email, password);
         if (errors === null) {
             await AuthService.getInstance().login(email, password);
-            location.route('/');
+            route('/');
         } else {
             if (password !== confirmPassword) {
                 errors.confirm_password = ['Passwords do not match'];

@@ -6,10 +6,11 @@
 
 import { useState, useEffect } from 'preact/hooks';
 import { $authUser } from '../services/auth.service.ts';
-import { PostsService, $refreshPosts } from '../services/posts.service.ts';
+import { PostsService, $addPost } from '../services/posts.service.ts';
 import { Post } from '../models/post.ts';
 import { PostComponent } from '../components/post.tsx';
 import { PostCreateForm } from '../components/post-create-form.tsx';
+import { InfiniteList } from '../components/infinite-list.tsx';
 
 export function Home() {
     return (
@@ -30,22 +31,28 @@ export function Home() {
 function PostsList() {
     const [posts, setPosts] = useState<Post[]>([]);
 
-    const fetchPosts = async () => {
-        setPosts(await PostsService.getInstance().getAll());
-    };
     useEffect(() => {
-        fetchPosts();
-    }, [$refreshPosts.value]);
+        if ($addPost.value) posts.unshift($addPost.value);
+        $addPost.value = null;
+    }, [$addPost.value]);
 
     return (
-        <>
-            {posts.map((post) => (
+        <InfiniteList
+            items={posts}
+            fetchPage={async (page) => {
+                const newPosts = await PostsService.getInstance().getAll(page);
+                setPosts((posts) => [...posts, ...newPosts]);
+            }}
+            template={(post) => (
                 <PostComponent
                     post={post}
-                    onUpdate={(post) => setPosts(posts.map((p) => (p.id === post.id ? post : p)))}
+                    onUpdate={(updatedPost) => {
+                        if (updatedPost) setPosts((posts) => posts.map((p) => (p.id === post.id ? updatedPost : p)));
+                        else setPosts((posts) => posts.filter((p) => p.id !== post.id));
+                    }}
                     key={post.id}
                 />
-            ))}
-        </>
+            )}
+        />
     );
 }

@@ -11,7 +11,6 @@ import { Field } from '../components/field.tsx';
 import { Notification } from '../components/notification.tsx';
 import { Session } from '../models/session.ts';
 import { dateFormat } from '../utils.ts';
-import { useLocation } from 'preact-iso';
 import { DialogService } from '../services/dialog.service.tsx';
 import { AccountEditIcon, DeleteIcon, KeyIcon, OptionsIcon, SecurityEditIcon } from '../components/icons.tsx';
 
@@ -157,7 +156,6 @@ function ChangePasswordForm() {
 }
 
 function SessionsManagement() {
-    const location = useLocation();
     const [sessions, setSessions] = useState<Session[]>([]);
 
     const fetchSessions = async () => {
@@ -176,7 +174,7 @@ function SessionsManagement() {
                 DeleteIcon,
             )
         ) {
-            if (await AuthService.getInstance().revokeSession(location, session)) {
+            if (await AuthService.getInstance().revokeSession(session)) {
                 setSessions(sessions.filter((s) => s.id !== session.id));
             }
         }

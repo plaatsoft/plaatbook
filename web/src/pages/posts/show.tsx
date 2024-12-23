@@ -5,14 +5,13 @@
  */
 
 import { useEffect, useState } from 'preact/hooks';
+import { route } from 'preact-router';
 import { PostsService } from '../../services/posts.service.ts';
 import { PostComponent } from '../../components/post.tsx';
 import { NotFound } from '../not-found.tsx';
 import { Post } from '../../models/post.ts';
-import { useLocation } from 'preact-iso';
 
 export function PostsShow({ post_id }: { post_id: string }) {
-    const location = useLocation();
     const [post, setPost] = useState<Post | null | undefined>(undefined);
 
     const getPost = async () => {
@@ -29,8 +28,10 @@ export function PostsShow({ post_id }: { post_id: string }) {
                 <div className="section">
                     <PostComponent
                         post={post}
-                        onUpdate={(post) => setPost(post)}
-                        onDelete={() => location.route('/')}
+                        onUpdate={(updatedPost) => {
+                            if (updatedPost) setPost(updatedPost);
+                            else route('/');
+                        }}
                         isFullPage
                     />
                 </div>

@@ -4,13 +4,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { useLocation } from 'preact-iso';
 import { useState } from 'preact/hooks';
+import { route } from 'preact-router';
 import { Field } from '../../components/field.tsx';
 import { AuthService } from '../../services/auth.service.ts';
 
 export function Login() {
-    const location = useLocation();
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
     const [logon, setLogon] = useState('');
@@ -21,7 +20,7 @@ export function Login() {
         setIsLoading(true);
         setIsError(false);
         if (await AuthService.getInstance().login(logon, password)) {
-            location.route('/');
+            route('/');
         } else {
             setIsLoading(false);
             setIsError(true);

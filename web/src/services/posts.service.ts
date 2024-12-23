@@ -9,7 +9,7 @@ import { Errors } from '../models/errors.ts';
 import { Post } from '../models/post.ts';
 import { $authUser } from './auth.service.ts';
 
-export const $refreshPosts = signal<number>(0);
+export const $addPost = signal<Post | null>(null);
 
 export class PostsService {
     static instance?: PostsService;
@@ -21,12 +21,12 @@ export class PostsService {
         return PostsService.instance;
     }
 
-    async getAll(): Promise<Post[]> {
+    async getAll(page: number): Promise<Post[]> {
         const headers = new Headers();
         if ($authUser.value !== null) {
             headers.append('Authorization', `Bearer ${localStorage.getItem('token')}`);
         }
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`, { headers });
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/posts?page=${page}`, { headers });
         return (await res.json()) as Post[];
     }
 
@@ -42,7 +42,7 @@ export class PostsService {
         return (await res.json()) as Post;
     }
 
-    async create(text: string): Promise<Errors | null> {
+    async create(text: string): Promise<[boolean, Post | Errors]> {
         // Try to create a post with text
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`, {
             method: 'POST',
@@ -52,9 +52,9 @@ export class PostsService {
             body: new URLSearchParams({ text }),
         });
         if (res.status != 200) {
-            return (await res.json()) as Errors;
+            return [false, (await res.json()) as Errors];
         }
-        return null;
+        return [true, (await res.json()) as Post];
     }
 
     async update(id: string, text: string): Promise<[boolean, Post | Errors]> {

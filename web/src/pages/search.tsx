@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from 'preact/hooks';
-import { useLocation } from 'preact-iso';
+import { route } from 'preact-router';
 import { Field } from '../components/field.tsx';
 import { SearchService } from '../services/search.service.ts';
 import { UserComponent } from '../components/user.tsx';
@@ -22,18 +22,18 @@ const styles = css`
 `;
 
 export function Search() {
-    const location = useLocation();
-    const [query, setQuery] = useState(location.query.q || '');
+    const queryParams = new URLSearchParams(window.location.search);
+    const [query, setQuery] = useState(queryParams.get('q') || '');
     const [users, setUsers] = useState<User[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
 
     const search = async (event?: SubmitEvent) => {
         if (event) event.preventDefault();
-        location.route(`/search?q=${query}`);
+        route(`/search?q=${query}`);
         if (query.length < 1) {
             return;
         }
-        const res = await SearchService.getInstance().search(query);
+        const res = await SearchService.getInstance().search(query, 1);
         if (res !== null) {
             const { posts, users } = res;
             setUsers(users);
@@ -84,7 +84,11 @@ export function Search() {
                     {posts.map((post) => (
                         <PostComponent
                             post={post}
-                            onUpdate={(post) => setPosts(posts.map((p) => (p.id === post.id ? post : p)))}
+                            onUpdate={(updatedPost) => {
+                                if (updatedPost)
+                                    setPosts((posts) => posts.map((p) => (p.id === post.id ? updatedPost : p)));
+                                else setPosts((posts) => posts.filter((p) => p.id !== post.id));
+                            }}
                             key={post.id}
                         />
                     ))}
