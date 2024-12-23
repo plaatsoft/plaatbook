@@ -30,10 +30,13 @@ export function UsersShow({ user_id }: { user_id: string }) {
         const user = await UsersService.getInstance().get(user_id);
         setUser(user);
     };
-
     useEffect(() => {
         getUser();
     }, [user_id]);
+
+    useEffect(() => {
+        if (user) document.title = `${user!.username} - PlaatBook`;
+    }, [user]);
 
     return (
         <>

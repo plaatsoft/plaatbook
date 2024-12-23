@@ -15,6 +15,10 @@ import { DialogService } from '../services/dialog.service.tsx';
 import { AccountEditIcon, DeleteIcon, KeyIcon, OptionsIcon, SecurityEditIcon } from '../components/icons.tsx';
 
 export function Settings() {
+    useEffect(() => {
+        document.title = 'Settings - PlaatBook';
+    }, []);
+
     return (
         <div className="section">
             <h2 className="title">Settings</h2>

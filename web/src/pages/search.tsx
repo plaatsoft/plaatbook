@@ -27,9 +27,15 @@ export function Search() {
     const [users, setUsers] = useState<User[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
 
+    const updateTitle = () => {
+        document.title = `${query ? `${query} - ` : ''}Search - PlaatBook`;
+    };
+    useEffect(() => updateTitle, []);
+
     const search = async (event?: SubmitEvent) => {
         if (event) event.preventDefault();
         route(`/search?q=${query}`);
+        updateTitle();
         if (query.length < 1) {
             return;
         }
