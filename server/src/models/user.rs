@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::Serialize;
 use sqlite::{FromRow, FromValue};
 use uuid::Uuid;
@@ -19,10 +19,37 @@ pub struct User {
     pub email: String, // FIXME: Hide in non admin / own user responses
     #[serde(skip)]
     pub password: String,
+    pub firstname: Option<String>,
+    pub lastname: Option<String>,
+    pub birthdate: Option<NaiveDate>,
+    pub bio: Option<String>,
+    pub location: Option<String>,
+    pub website: Option<String>,
     #[serde(skip)]
     pub role: UserRole,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+
+impl Default for User {
+    fn default() -> Self {
+        let now = Utc::now();
+        User {
+            id: Uuid::now_v7(),
+            username: "".to_string(),
+            email: "".to_string(),
+            password: "".to_string(),
+            firstname: None,
+            lastname: None,
+            birthdate: None,
+            bio: None,
+            location: None,
+            website: None,
+            role: UserRole::Normal,
+            created_at: now,
+            updated_at: now,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Serialize, FromValue, Eq, PartialEq)]

@@ -15,13 +15,9 @@ import { $authUser } from '../../services/auth.service.ts';
 import { $addPost } from '../../services/posts.service.ts';
 import { PostCreateForm } from '../../components/post-create-form.tsx';
 import { InfiniteList } from '../../components/infinite-list.tsx';
-
-const styles = css`
-    .user-hero {
-        height: 8rem;
-        align-items: center !important;
-    }
-`;
+import { BirthdateIcon, CalendarIcon, EditIcon, LinkIcon, LocationIcon, OptionsIcon } from '../../components/icons.tsx';
+import { DialogService } from '../../services/dialog.service.tsx';
+import { UserEditModal } from '../../components/modals/user-edit-modal.tsx';
 
 export function UsersShow({ user_id }: { user_id: string }) {
     const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -38,19 +34,73 @@ export function UsersShow({ user_id }: { user_id: string }) {
         if (user) document.title = `${user!.username} - PlaatBook`;
     }, [user]);
 
+    const editProfile = async (event: MouseEvent) => {
+        event.preventDefault();
+        const updatedUser = await DialogService.getInstance().open<User>(UserEditModal, { user: user! });
+        console.log('close', updatedUser);
+        if (updatedUser) setUser(updatedUser);
+    };
+
     return (
         <>
             {user !== null && user !== undefined && (
                 <div className="section">
-                    <div className={`media ${styles['user-hero']}`}>
+                    <div className="media">
                         <div className="media-left">
                             <img className="image is-64x64" src="/images/avatar.svg" />
                         </div>
                         <div className="media-content">
+                            {user.id === $authUser.value?.id && (
+                                <div className="dropdown is-hoverable is-right is-pulled-right">
+                                    <div className="dropdown-trigger">
+                                        <button className="button is-small">
+                                            <OptionsIcon />
+                                        </button>
+                                    </div>
+                                    <div className="dropdown-menu">
+                                        <div className="dropdown-content">
+                                            <a className="dropdown-item" href="#" onClick={editProfile}>
+                                                <EditIcon />
+                                                Edit profile
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <h2 className="title mb-2">
-                                <a href={`/users/${user.username}`}>@{user.username}</a>
+                                <a href={`/users/${user.username}`} style="color: inherit;">
+                                    {user.firstname && `${user.firstname} `}
+                                    {user.lastname && `${user.lastname} `}@{user.username}
+                                </a>
                             </h2>
-                            <p>Joined {dateFormatAgo(user.created_at)}</p>
+                            {user.bio && <p className="mb-3">{user.bio}</p>}
+                            <p>
+                                {user.location && (
+                                    <span className="tag mr-2" title="User location">
+                                        <LocationIcon className="is-small mr-1" />
+                                        {user.location}
+                                    </span>
+                                )}
+                                {user.website && (
+                                    <span className="tag mr-2" title="User website">
+                                        <LinkIcon className="is-small mr-1" />
+                                        <a href={user.website} target="_blank" rel="noreferrer" style="color: inherit;">
+                                            {user.website}
+                                        </a>
+                                    </span>
+                                )}
+                                {user.birthdate && (
+                                    <span className="tag mr-2" title="User birthdate">
+                                        <BirthdateIcon className="is-small mr-1" />
+                                        {user.birthdate}
+                                    </span>
+                                )}
+                                <span className="tag" title="User joined date">
+                                    <CalendarIcon className="is-small mr-1" />
+                                    Joined {dateFormatAgo(user.created_at)}
+                                </span>
+                            </p>
                         </div>
                     </div>
 

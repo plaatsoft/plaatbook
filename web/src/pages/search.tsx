@@ -55,23 +55,18 @@ export function Search() {
         <div className="section">
             <h2 className="title">Search</h2>
             <form onSubmit={search}>
-                <div className="field has-addons">
-                    <Field
-                        name="query"
-                        type="text"
-                        placeholder="Type to search for something..."
-                        value={query}
-                        setValue={setQuery}
-                        addon
-                        expanded
-                        autofocus
-                    />
-                    <div className="control">
+                <Field
+                    type="text"
+                    placeholder="Type to search for something..."
+                    value={query}
+                    setValue={setQuery}
+                    addonPost={
                         <button type="submit" className="button is-link">
                             <SearchIcon />
                         </button>
-                    </div>
-                </div>
+                    }
+                    autofocus
+                />
             </form>
             <hr />
 

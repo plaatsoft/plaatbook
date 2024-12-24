@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-use chrono::Utc;
+use chrono::{NaiveDate, Utc};
 use http::{Request, Response, Status};
 use router::Path;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use uuid::Uuid;
 use validate::Validate;
 
@@ -89,11 +89,11 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Response {
     #[derive(Deserialize, Validate)]
     #[validate(context(Context))]
     struct Body {
-        #[validate(ascii, length(min = 1), custom(is_unique_username))]
+        #[validate(ascii, length(min = 1, max = 32), custom(is_unique_username))]
         username: String,
-        #[validate(email, custom(is_unique_email))]
+        #[validate(email, length(max = 128), custom(is_unique_email))]
         email: String,
-        #[validate(ascii, length(min = 6))]
+        #[validate(ascii, length(min = 6, max = 128))]
         password: String,
     }
     let body = match serde_urlencoded::from_str::<Body>(&req.body) {
@@ -109,15 +109,12 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Response {
     }
 
     // Create new user
-    let now = Utc::now();
     let user = User {
-        id: Uuid::now_v7(),
         username: body.username,
         email: body.email,
         password: bcrypt::hash(body.password, bcrypt::DEFAULT_COST).expect("Can't hash password"),
         role: UserRole::Normal,
-        created_at: now,
-        updated_at: now,
+        ..Default::default()
     };
     ctx.database.execute(
         format!(
@@ -145,6 +142,18 @@ pub fn users_show(req: &Request, ctx: &Context, path: &Path) -> Response {
 }
 
 // MARK: Users update
+
+fn empty_string_as_none<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt = Option::<String>::deserialize(deserializer)?;
+    match opt {
+        Some(s) if s.is_empty() => Ok(None),
+        _ => Ok(opt),
+    }
+}
+
 pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Response {
     let mut user = match find_user(ctx, path) {
         Some(user) => user,
@@ -165,16 +174,34 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Response {
     struct Body {
         #[validate(
             ascii,
-            length(min = 1),
+            length(min = 1, max = 32),
             custom(is_unique_username_or_auth_user_username)
         )]
         username: String,
-        #[validate(email, custom(is_unique_email_or_auth_user_email))]
+        #[validate(email, length(max = 128), custom(is_unique_email_or_auth_user_email))]
         email: String,
+        #[serde(deserialize_with = "empty_string_as_none")]
+        #[validate(length(max = 64))]
+        firstname: Option<String>,
+        #[serde(deserialize_with = "empty_string_as_none")]
+        #[validate(length(max = 64))]
+        lastname: Option<String>,
+        #[serde(deserialize_with = "empty_string_as_none")]
+        birthdate: Option<String>,
+        #[serde(deserialize_with = "empty_string_as_none")]
+        #[validate(length(max = 512))]
+        bio: Option<String>,
+        #[serde(deserialize_with = "empty_string_as_none")]
+        #[validate(length(max = 128))]
+        location: Option<String>,
+        #[serde(deserialize_with = "empty_string_as_none")]
+        #[validate(url, length(max = 512))]
+        website: Option<String>,
     }
     let body = match serde_urlencoded::from_str::<Body>(&req.body) {
         Ok(body) => body,
-        Err(_) => {
+        Err(e) => {
+            println!("{:?}", e);
             return Response::new()
                 .status(Status::BadRequest)
                 .body("400 Bad Request");
@@ -187,12 +214,26 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Response {
     // Update user
     user.username = body.username;
     user.email = body.email;
+    user.firstname = body.firstname;
+    user.lastname = body.lastname;
+    user.birthdate = body
+        .birthdate
+        .and_then(|birthdate| NaiveDate::parse_from_str(&birthdate, "%Y-%m-%d").ok());
+    user.bio = body.bio;
+    user.location = body.location;
+    user.website = body.website;
     user.updated_at = Utc::now();
     ctx.database.execute(
-        "UPDATE users SET username = ?, email = ?, updated_at = ? WHERE id = ?",
+        "UPDATE users SET username = ?, email = ?, firstname = ?, lastname = ?, birthdate = ?, bio = ?, location = ?, website = ?, updated_at = ? WHERE id = ?",
         (
             user.username.clone(),
             user.email.clone(),
+            user.firstname.clone(),
+            user.lastname.clone(),
+            user.birthdate,
+            user.bio.clone(),
+            user.location.clone(),
+            user.website.clone(),
             user.updated_at,
             user.id,
         ),
@@ -222,7 +263,7 @@ pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Respo
     struct Body {
         #[validate(ascii, custom(is_current_password))]
         current_password: String,
-        #[validate(ascii, length(min = 6))]
+        #[validate(ascii, length(min = 6, max = 128))]
         password: String,
     }
     let body = match serde_urlencoded::from_str::<Body>(&req.body) {
