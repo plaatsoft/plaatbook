@@ -39,11 +39,10 @@ export function PostEditModal({ post, onConfirm }: { post: Post; onConfirm: (upd
                         {post.type == PostType.NORMAL && <>Edit post</>}
                         {post.type == PostType.REPLY && <>Edit reply</>}
                     </p>
-                    <button className="delete" aria-label="close" onClick={() => onConfirm(null)}></button>
+                    <button type="button" className="delete" onClick={() => onConfirm(null)}></button>
                 </header>
                 <section className="modal-card-body">
                     <Field
-                        name="text"
                         type="textarea"
                         placeholder="Post text"
                         value={text}
@@ -64,7 +63,7 @@ export function PostEditModal({ post, onConfirm }: { post: Post; onConfirm: (upd
                             <EditIcon className="mr-2" />
                             Edit
                         </button>
-                        <button className="button" onClick={() => onConfirm(null)}>
+                        <button type="button" className="button" onClick={() => onConfirm(null)}>
                             Cancel
                         </button>
                     </div>

@@ -12,7 +12,8 @@ import { Notification } from '../components/notification.tsx';
 import { Session } from '../models/session.ts';
 import { dateFormat } from '../utils.ts';
 import { DialogService } from '../services/dialog.service.tsx';
-import { AccountEditIcon, DeleteIcon, KeyIcon, OptionsIcon, SecurityEditIcon } from '../components/icons.tsx';
+import { DeleteIcon, KeyIcon, OptionsIcon, SecurityEditIcon } from '../components/icons.tsx';
+import { UserEditForm } from '../components/user-edit-form.tsx';
 
 export function Settings() {
     useEffect(() => {
@@ -22,68 +23,13 @@ export function Settings() {
     return (
         <div className="section">
             <h2 className="title">Settings</h2>
-            <ChangeDetailsForm />
+            <UserEditForm user={$authUser.value!} />
             <ChangePasswordForm />
             <SessionsManagement />
         </div>
     );
 }
 
-function ChangeDetailsForm() {
-    const [isLoading, setIsLoading] = useState(false);
-    const [isDone, setIsDone] = useState(false);
-    const [username, setUsername] = useState($authUser.value?.username ?? '');
-    const [email, setEmail] = useState($authUser.value?.email ?? '');
-    const [errors, setErrors] = useState<Errors>({});
-
-    const changeDetails = async (event: SubmitEvent) => {
-        event.preventDefault();
-        setIsLoading(true);
-        setErrors({});
-        const errors = await AuthService.getInstance().changeDetails(username, email);
-        setIsLoading(false);
-        if (errors === null) {
-            setIsDone(true);
-        } else {
-            setErrors(errors);
-        }
-    };
-
-    return (
-        <form className="box" onSubmit={changeDetails}>
-            <h2 className="title is-5">Change account details</h2>
-
-            {isDone && <Notification text="Account details saved" />}
-
-            <Field
-                name="username"
-                type="text"
-                label="Username"
-                value={username}
-                setValue={setUsername}
-                error={errors.username?.join(', ')}
-                disabled={isLoading}
-            />
-
-            <Field
-                name="email"
-                type="email"
-                label="Email address"
-                value={email}
-                setValue={setEmail}
-                error={errors.email?.join(', ')}
-                disabled={isLoading}
-            />
-
-            <div className="field">
-                <button className="button is-link" type="submit">
-                    <AccountEditIcon className="mr-2" />
-                    Change details
-                </button>
-            </div>
-        </form>
-    );
-}
 function ChangePasswordForm() {
     const authService = AuthService.getInstance();
     const [isLoading, setIsLoading] = useState(false);
@@ -120,7 +66,6 @@ function ChangePasswordForm() {
             {isDone && <Notification text="New password saved" />}
 
             <Field
-                name="current_password"
                 type="password"
                 label="Current password"
                 value={currentPassword}
@@ -130,7 +75,6 @@ function ChangePasswordForm() {
             />
 
             <Field
-                name="password"
                 type="password"
                 label="New password"
                 value={password}
@@ -140,7 +84,6 @@ function ChangePasswordForm() {
             />
 
             <Field
-                name="confirm_password"
                 type="password"
                 label="Confirm new password"
                 value={confirmPassword}
@@ -150,7 +93,7 @@ function ChangePasswordForm() {
             />
 
             <div className="field">
-                <button className="button is-link" type="submit">
+                <button type="submit" className="button is-link">
                     <SecurityEditIcon className="mr-2" />
                     Change password
                 </button>

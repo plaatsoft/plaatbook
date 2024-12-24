@@ -123,26 +123,6 @@ export class AuthService {
         return true;
     }
 
-    async changeDetails(username: string, email: string): Promise<Errors | null> {
-        // Try to change user details
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}`, {
-            method: 'PUT',
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-            body: new URLSearchParams({ username, email }),
-        });
-        if (res.status != 200) {
-            return (await res.json()) as Errors;
-        }
-        $authUser.value = {
-            ...$authUser.value!,
-            username,
-            email,
-        };
-        return null;
-    }
-
     async changePassword(current_password: string, password: string): Promise<Errors | null> {
         // Try to change user password
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}/change_password`, {

@@ -36,7 +36,6 @@ export function Login() {
             <h2 className="title">Login</h2>
 
             <Field
-                name="logon"
                 type="text"
                 label="Username or email address"
                 value={logon}
@@ -47,7 +46,6 @@ export function Login() {
             />
 
             <Field
-                name="password"
                 type="password"
                 label="Password"
                 value={password}
@@ -57,7 +55,7 @@ export function Login() {
             />
 
             <div className="field">
-                <button className="button is-link" type="submit">
+                <button type="submit" className="button is-link">
                     Login
                 </button>
             </div>

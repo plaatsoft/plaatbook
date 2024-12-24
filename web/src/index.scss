@@ -20,10 +20,16 @@
 @use 'bulma/sass/components/modal';
 @use 'bulma/sass/form';
 @use 'bulma/sass/helpers';
+@use 'bulma/sass/grid';
 @use 'bulma/sass/layout/media';
 @use 'bulma/sass/layout/section';
 
 // Layout & theme
+:root {
+    --bulma-body-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji';
+}
+
 html,
 body {
     min-height: 100vh;

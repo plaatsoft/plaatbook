@@ -42,7 +42,6 @@ export function PostCreateForm() {
                 </div>
                 <div className="media-content">
                     <Field
-                        name="text"
                         type="textarea"
                         placeholder="What's on your mind?"
                         value={text}
@@ -52,7 +51,7 @@ export function PostCreateForm() {
                     />
 
                     <div className="field">
-                        <button className="button is-link" type="submit">
+                        <button type="submit" className="button is-link">
                             <CommentIcon className="mr-2" />
                             Post
                         </button>

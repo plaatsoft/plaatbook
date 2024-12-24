@@ -18,15 +18,15 @@ export function PostShareModal({ post, onConfirm }: { post: Post; onConfirm: (up
             <div className="modal-card">
                 <header className="modal-card-head">
                     <p className="modal-card-title">Share post</p>
-                    <button className="delete" aria-label="close" onClick={() => onConfirm(null)}></button>
+                    <button type="button" className="delete" onClick={() => onConfirm(null)}></button>
                 </header>
                 <footer className="modal-card-foot">
                     <div className="buttons">
-                        <button type="submit" className="button is-link" onClick={copyUrl}>
+                        <button type="button" className="button is-link" onClick={copyUrl}>
                             <CopyIcon className="mr-2" />
                             Copy url
                         </button>
-                        <button className="button" onClick={() => onConfirm(null)}>
+                        <button type="button" className="button" onClick={() => onConfirm(null)}>
                             Cancel
                         </button>
                     </div>

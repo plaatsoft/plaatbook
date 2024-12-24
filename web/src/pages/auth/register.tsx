@@ -48,7 +48,6 @@ export function Register() {
             <h2 className="title">Register</h2>
 
             <Field
-                name="username"
                 type="text"
                 label="Username"
                 value={username}
@@ -59,7 +58,6 @@ export function Register() {
             />
 
             <Field
-                name="email"
                 type="email"
                 label="Email address"
                 value={email}
@@ -69,7 +67,6 @@ export function Register() {
             />
 
             <Field
-                name="password"
                 type="password"
                 label="Password"
                 value={password}
@@ -79,7 +76,6 @@ export function Register() {
             />
 
             <Field
-                name="confirm_password"
                 type="password"
                 label="Confirm new password"
                 value={confirmPassword}
@@ -89,7 +85,7 @@ export function Register() {
             />
 
             <div className="field">
-                <button className="button is-link" type="submit">
+                <button type="submit" className="button is-link">
                     Register
                 </button>
             </div>

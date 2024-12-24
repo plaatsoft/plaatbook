@@ -10,7 +10,6 @@ import { JSX } from 'preact';
 import { Dispatch, StateUpdater, useEffect, useRef } from 'preact/hooks';
 
 export function Field({
-    name,
     type,
     label,
     placeholder,
@@ -21,11 +20,11 @@ export function Field({
     help,
     error,
     disabled,
+    required,
     autofocus,
-    addon,
-    expanded,
+    addonPre,
+    addonPost,
 }: {
-    name: string;
     type: string;
     label?: string;
     placeholder?: string;
@@ -36,9 +35,10 @@ export function Field({
     help?: JSX.Element;
     error?: string;
     disabled?: boolean;
+    required?: boolean;
     autofocus?: boolean;
-    addon?: boolean;
-    expanded?: boolean;
+    addonPre?: JSX.Element;
+    addonPost?: JSX.Element;
 }) {
     const textarea = useRef<HTMLTextAreaElement>(null);
     const input = useRef<HTMLInputElement>(null);
@@ -53,40 +53,53 @@ export function Field({
         }, []);
     }
 
+    const name = (placeholder || label)!.toLowerCase().replace(/ /g, '_');
+    const control =
+        type === 'textarea' ? (
+            <textarea
+                ref={textarea}
+                id={name}
+                className={`textarea ${error !== undefined ? 'is-danger' : ''}`}
+                placeholder={placeholder || label}
+                rows={rows || 3}
+                value={value}
+                onInput={
+                    onInput !== undefined ? onInput : (event) => setValue!((event.target as HTMLTextAreaElement).value)
+                }
+                required={required}
+                disabled={disabled}
+            />
+        ) : (
+            <input
+                ref={input}
+                id={name}
+                className={`input ${error !== undefined ? 'is-danger' : ''}`}
+                type={type}
+                placeholder={placeholder || label}
+                value={value}
+                onInput={
+                    onInput !== undefined ? onInput : (event) => setValue!((event.target as HTMLInputElement).value)
+                }
+                required={required}
+                disabled={disabled}
+            />
+        );
+
     return (
-        <div className={`${addon ? 'control' : 'field'} ${expanded ? 'is-expanded' : ''}`}>
+        <div className="field">
             {label !== undefined && (
                 <label className="label" htmlFor={name}>
                     {label}
                 </label>
             )}
-            {type === 'textarea' ? (
-                <textarea
-                    ref={textarea}
-                    className={`textarea ${error !== undefined ? 'is-danger' : ''}`}
-                    placeholder={placeholder || label}
-                    rows={rows || 3}
-                    value={value}
-                    onInput={
-                        onInput !== undefined
-                            ? onInput
-                            : (event) => setValue!((event.target as HTMLTextAreaElement).value)
-                    }
-                    disabled={disabled}
-                />
+            {addonPre || addonPost ? (
+                <div className="field has-addons">
+                    {addonPre !== undefined && <div className="control">{addonPre}</div>}
+                    <div className="control is-expanded">{control}</div>
+                    {addonPost !== undefined && <div className="control">{addonPost}</div>}
+                </div>
             ) : (
-                <input
-                    ref={input}
-                    id={name}
-                    className={`input ${error !== undefined ? 'is-danger' : ''}`}
-                    type={type}
-                    placeholder={placeholder || label}
-                    value={value}
-                    onInput={
-                        onInput !== undefined ? onInput : (event) => setValue!((event.target as HTMLInputElement).value)
-                    }
-                    disabled={disabled}
-                />
+                control
             )}
             {help !== undefined && <p className="help">{help}</p>}
             {error !== undefined && error !== '' && <p className="help is-danger">{error}</p>}

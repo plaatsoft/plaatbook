@@ -26,7 +26,7 @@ export function ConfirmModal({
             <div className="modal-card">
                 <header className="modal-card-head">
                     <p className="modal-card-title">{title}</p>
-                    <button className="delete" aria-label="close" onClick={() => onConfirm(false)}></button>
+                    <button type="button" className="delete" onClick={() => onConfirm(false)}></button>
                 </header>
                 <section className="modal-card-body">
                     <p>{message}</p>
@@ -40,7 +40,7 @@ export function ConfirmModal({
                             {ActionIcon && <ActionIcon className="mr-2" />}
                             {action}
                         </button>
-                        <button className="button" onClick={() => onConfirm(false)}>
+                        <button type="button" className="button" onClick={() => onConfirm(false)}>
                             Cancel
                         </button>
                     </div>

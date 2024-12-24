@@ -139,3 +139,35 @@ export function CopyIcon({ className }: { className?: string }) {
         </svg>
     );
 }
+
+export function LocationIcon({ className }: { className?: string }) {
+    return (
+        <svg className={`icon ${className}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z" />
+        </svg>
+    );
+}
+
+export function BirthdateIcon({ className }: { className?: string }) {
+    return (
+        <svg className={`icon ${className}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M11.5,0.5C12,0.75 13,2.4 13,3.5C13,4.6 12.33,5 11.5,5C10.67,5 10,4.85 10,3.75C10,2.65 11,2 11.5,0.5M18.5,9C21,9 23,11 23,13.5C23,15.06 22.21,16.43 21,17.24V23H12L3,23V17.24C1.79,16.43 1,15.06 1,13.5C1,11 3,9 5.5,9H10V6H13V9H18.5M12,16A2.5,2.5 0 0,0 14.5,13.5H16A2.5,2.5 0 0,0 18.5,16A2.5,2.5 0 0,0 21,13.5A2.5,2.5 0 0,0 18.5,11H5.5A2.5,2.5 0 0,0 3,13.5A2.5,2.5 0 0,0 5.5,16A2.5,2.5 0 0,0 8,13.5H9.5A2.5,2.5 0 0,0 12,16Z" />
+        </svg>
+    );
+}
+
+export function CalendarIcon({ className }: { className?: string }) {
+    return (
+        <svg className={`icon ${className}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M12 9C14 9 15 11.42 13.59 12.84C12.17 14.26 9.75 13.25 9.75 11.25C9.75 10 10.75 9 12 9M16.5 18H7.5V16.88C7.5 15.63 9.5 14.63 12 14.63S16.5 15.63 16.5 16.88M19 19H5V8H19M16 1V3H8V1H6V3H5C3.9 3 3 3.9 3 5V19C3 20.11 3.9 21 5 21H19C20.11 21 21 20.11 21 19V5C21 3.9 20.11 3 19 3H18V1H16Z" />
+        </svg>
+    );
+}
+
+export function LinkIcon({ className }: { className?: string }) {
+    return (
+        <svg className={`icon ${className}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z" />
+        </svg>
+    );
+}

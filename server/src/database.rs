@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-use chrono::Utc;
-use uuid::Uuid;
+use chrono::NaiveDate;
 
 use crate::consts::DATABASE_PATH;
 use crate::models::{User, UserRole};
@@ -19,9 +18,15 @@ pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
             username TEXT UNIQUE NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            firstname TEXT NULL,
+            lastname TEXT NULL,
+            birthdate INTEGER NULL,
+            bio TEXT NULL,
+            location TEXT NULL,
+            website TEXT NULL,
             role INTEGER NOT NULL,
-            created_at TIMESTAMP NOT NULL,
-            updated_at TIMESTAMP NOT NULL
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
         )",
         (),
     );
@@ -38,9 +43,9 @@ pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
             client_name TEXT NULL,
             client_version TEXT NULL,
             client_os TEXT NULL,
-            expires_at TIMESTAMP NOT NULL,
-            created_at TIMESTAMP NOT NULL,
-            updated_at TIMESTAMP NOT NULL,
+            expires_at INTEGER NOT NULL,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )",
         (),
@@ -57,8 +62,8 @@ pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
             likes INTEGER NOT NULL,
             dislikes INTEGER NOT NULL,
             views INTEGER NOT NULL,
-            created_at TIMESTAMP NOT NULL,
-            updated_at TIMESTAMP NOT NULL,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
             FOREIGN KEY (parent_post_id) REFERENCES posts(id) ON DELETE CASCADE,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )",
@@ -70,8 +75,8 @@ pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
             post_id BLOB NOT NULL,
             user_id BLOB NOT NULL,
             type INTEGER NOT NULL,
-            created_at TIMESTAMP NOT NULL,
-            updated_at TIMESTAMP NOT NULL,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
             FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )",
@@ -84,15 +89,17 @@ pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
         .next()
         .expect("Should be some");
     if users_count == 0 {
-        let now = Utc::now();
         let admin = User {
-            id: Uuid::now_v7(),
             username: "admin".to_string(),
             email: "admin@plaatsoft.nl".to_string(),
             password: bcrypt::hash("admin", bcrypt::DEFAULT_COST).expect("Can't hash password"),
+            firstname: Some("Admin".to_string()),
+            birthdate: NaiveDate::from_ymd_opt(2024, 12, 2),
+            bio: Some("Admin of PlaatBook".to_string()),
+            location: Some("Gouda, Netherlands".to_string()),
+            website: Some("https://www.plaatsoft.nl/".to_string()),
             role: UserRole::Admin,
-            created_at: now,
-            updated_at: now,
+            ..Default::default()
         };
         database.execute(
             format!(

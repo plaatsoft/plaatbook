@@ -36,11 +36,10 @@ export function PostReplyModal({ post, onConfirm }: { post: Post; onConfirm: (up
             <form className="modal-card" onSubmit={update}>
                 <header className="modal-card-head">
                     <p className="modal-card-title">Reply to post</p>
-                    <button className="delete" aria-label="close" onClick={() => onConfirm(null)}></button>
+                    <button type="button" className="delete" onClick={() => onConfirm(null)}></button>
                 </header>
                 <section className="modal-card-body">
                     <Field
-                        name="text"
                         type="textarea"
                         placeholder="What's your reply?"
                         value={text}
@@ -61,7 +60,7 @@ export function PostReplyModal({ post, onConfirm }: { post: Post; onConfirm: (up
                             <CommentIcon className="mr-2" />
                             Reply
                         </button>
-                        <button className="button" onClick={() => onConfirm(null)}>
+                        <button type="button" className="button" onClick={() => onConfirm(null)}>
                             Cancel
                         </button>
                     </div>
