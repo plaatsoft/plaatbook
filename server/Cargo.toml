@@ -13,6 +13,7 @@ sqlite = { git = "https://github.com/bplaat/crates.git", features = [
     "uuid",
     "chrono",
 ] }
+useragent = { git = "https://github.com/bplaat/crates.git" }
 uuid = { git = "https://github.com/bplaat/crates.git", features = [
     "v7",
     "serde",
@@ -32,7 +33,6 @@ regex = "1.11"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_urlencoded = "0.7.1"
-woothee = "0.13.0"
 
 [profile.release]
 strip = true

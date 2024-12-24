@@ -10,9 +10,14 @@ use http::{Request, Response, Status};
 use router::Path;
 use serde::Deserialize;
 use serde_json::json;
+use useragent::UserAgentParser;
 
 use crate::models::{Session, User};
 use crate::Context;
+
+lazy_static::lazy_static! {
+    static ref USER_AGENT_PARSER: UserAgentParser = UserAgentParser::new();
+}
 
 // MARK: Auth login
 pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
@@ -71,11 +76,10 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
     };
 
     // Parse user agent info
-    let user_agent_parser = woothee::parser::Parser::new();
     let user_agent = req
         .headers
         .get("User-Agent")
-        .and_then(|user_agent| user_agent_parser.parse(user_agent));
+        .map(|user_agent| USER_AGENT_PARSER.parse(user_agent));
 
     // Generate token
     let mut token_bytes = [0u8; 256];
@@ -109,9 +113,15 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
         }),
         ip_country: ip_info.as_ref().map(|info| info.country.clone()),
         ip_city: ip_info.as_ref().map(|info| info.city.clone()),
-        client_name: user_agent.as_ref().map(|ua| ua.name.to_string()),
-        client_version: user_agent.as_ref().map(|ua| ua.version.to_string()),
-        client_os: user_agent.as_ref().map(|ua| ua.os.to_string()),
+        client_name: user_agent.as_ref().map(|ua| ua.client.family.to_string()),
+        client_version: user_agent.as_ref().map(|ua| {
+            format!(
+                "{}.{}",
+                ua.client.major.as_ref().unwrap_or(&"0".to_string()),
+                ua.client.minor.as_ref().unwrap_or(&"0".to_string())
+            )
+        }),
+        client_os: user_agent.as_ref().map(|ua| ua.os.family.to_string()),
         ..Default::default()
     };
     ctx.database.execute(

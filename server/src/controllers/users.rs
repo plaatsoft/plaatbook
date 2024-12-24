@@ -200,8 +200,7 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Response {
     }
     let body = match serde_urlencoded::from_str::<Body>(&req.body) {
         Ok(body) => body,
-        Err(e) => {
-            println!("{:?}", e);
+        Err(_) => {
             return Response::new()
                 .status(Status::BadRequest)
                 .body("400 Bad Request");
