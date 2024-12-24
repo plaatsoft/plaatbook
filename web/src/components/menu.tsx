@@ -6,9 +6,11 @@
 
 import { useState, useEffect } from 'preact/hooks';
 // eslint-disable-next-line import/named
-import { RouterOnChangeArgs } from 'preact-router';
-import { AuthService, $authUser } from '../services/auth.service.ts';
-import { AppIcon, LogoutIcon, SearchIcon, SettingsIcon } from './icons.tsx';
+import { RouterOnChangeArgs, route } from 'preact-router';
+import { AuthService, $authUser, $authUsers } from '../services/auth.service.ts';
+import { AppIcon, LoginIcon, LogoutIcon, RegisterIcon, SearchIcon, SettingsIcon } from './icons.tsx';
+import { DialogService } from '../services/dialog.service.tsx';
+import { LoginDialog } from './dialogs/login-dialog.tsx';
 
 const styles = css`
     .avatar {
@@ -16,12 +18,26 @@ const styles = css`
     }
 `;
 
-export function Menu({ route }: { route: RouterOnChangeArgs | null }) {
+export function Menu({ routeArgs }: { routeArgs: RouterOnChangeArgs | null }) {
     const [isOpen, setIsOpen] = useState(false);
+    const [isAuthOpen, setIsAuthOpen] = useState(false);
 
     useEffect(() => {
         setIsOpen(false);
-    }, [route]);
+        setIsAuthOpen(false);
+    }, [routeArgs]);
+
+    const selectToken = async (event: MouseEvent, index: number) => {
+        event.preventDefault();
+        await AuthService.getInstance().selectToken(index);
+    };
+
+    const addAccount = async (event: MouseEvent) => {
+        event.preventDefault();
+        if (await DialogService.getInstance().open<boolean>(LoginDialog)) {
+            route('/');
+        }
+    };
 
     const logout = async (event: MouseEvent) => {
         event.preventDefault();
@@ -52,14 +68,35 @@ export function Menu({ route }: { route: RouterOnChangeArgs | null }) {
                 </div>
 
                 <div className="navbar-end">
-                    {$authUser.value && (
+                    {$authUsers.value && (
                         <>
-                            <div className="navbar-item has-dropdown is-hoverable">
-                                <a className="navbar-link" href={`/users/${$authUser.value.username}`}>
+                            <div
+                                className={`navbar-item has-dropdown ${isAuthOpen ? 'is-active' : ''}`}
+                                onClick={() => setIsAuthOpen(!isAuthOpen)}
+                            >
+                                <div className="navbar-link">
                                     <img className={styles.avatar} src="/images/avatar.svg" />
-                                    <strong>@{$authUser.value.username}</strong>
-                                </a>
+                                    <strong>@{$authUsers.value[0].username}</strong>
+                                </div>
+
                                 <div className="navbar-dropdown">
+                                    {$authUsers.value.slice(1).map((user, index) => (
+                                        <a
+                                            className="navbar-item"
+                                            href="#"
+                                            onClick={(e) => selectToken(e, index + 1)}
+                                            style="height: 52px;"
+                                            key={user.id}
+                                        >
+                                            <img className={styles.avatar} src="/images/avatar.svg" />@{user.username}
+                                        </a>
+                                    ))}
+                                    <a className="navbar-item" href="#" onClick={addAccount}>
+                                        <LoginIcon className="is-small" />
+                                        Add account
+                                    </a>
+                                    <hr className="navbar-divider" />
+
                                     <a className="navbar-item" href="/settings">
                                         <SettingsIcon className="is-small" />
                                         Settings
@@ -74,16 +111,16 @@ export function Menu({ route }: { route: RouterOnChangeArgs | null }) {
                     )}
 
                     {$authUser.value === null && (
-                        <div className="navbar-item">
-                            <div className="buttons">
-                                <a className="button is-link" href="/auth/login">
-                                    Login
-                                </a>
-                                <a className="button" href="/auth/register">
-                                    Register
-                                </a>
-                            </div>
-                        </div>
+                        <>
+                            <a className="navbar-item" href="/auth/login">
+                                <LoginIcon />
+                                Login
+                            </a>
+                            <a className="navbar-item" href="/auth/register">
+                                <RegisterIcon />
+                                Register
+                            </a>
+                        </>
                     )}
                 </div>
             </div>

@@ -7,7 +7,7 @@
 import { signal } from '@preact/signals';
 import { Errors } from '../models/errors.ts';
 import { Post } from '../models/post.ts';
-import { $authUser } from './auth.service.ts';
+import { $authToken, $authUser } from './auth.service.ts';
 
 export const $addPost = signal<Post | null>(null);
 
@@ -24,7 +24,7 @@ export class PostsService {
     async getAll(page: number): Promise<Post[]> {
         const headers = new Headers();
         if ($authUser.value !== null) {
-            headers.append('Authorization', `Bearer ${localStorage.getItem('token')}`);
+            headers.append('Authorization', `Bearer ${$authToken.value}`);
         }
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts?page=${page}`, { headers });
         return (await res.json()) as Post[];
@@ -33,7 +33,7 @@ export class PostsService {
     async get(id: string): Promise<Post | null> {
         const headers = new Headers();
         if ($authUser.value !== null) {
-            headers.append('Authorization', `Bearer ${localStorage.getItem('token')}`);
+            headers.append('Authorization', `Bearer ${$authToken.value}`);
         }
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}`, { headers });
         if (res.status === 404) {
@@ -43,11 +43,10 @@ export class PostsService {
     }
 
     async create(text: string): Promise<[boolean, Post | Errors]> {
-        // Try to create a post with text
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
             body: new URLSearchParams({ text }),
         });
@@ -58,11 +57,10 @@ export class PostsService {
     }
 
     async update(id: string, text: string): Promise<[boolean, Post | Errors]> {
-        // Try to update a post with text
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}`, {
             method: 'PUT',
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
             body: new URLSearchParams({ text }),
         });
@@ -73,11 +71,10 @@ export class PostsService {
     }
 
     async delete(id: string): Promise<void> {
-        // Try to delete a post
         await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}`, {
             method: 'DELETE',
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
         });
     }
@@ -86,7 +83,7 @@ export class PostsService {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${parent_post_id}/reply`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
             body: new URLSearchParams({ text }),
         });
@@ -100,7 +97,7 @@ export class PostsService {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/repost`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
         });
         if (res.status == 200) {
@@ -113,7 +110,7 @@ export class PostsService {
         await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/like`, {
             method: 'PUT',
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
         });
     }
@@ -122,7 +119,7 @@ export class PostsService {
         await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/like`, {
             method: 'DELETE',
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
         });
     }
@@ -131,7 +128,7 @@ export class PostsService {
         await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/dislike`, {
             method: 'PUT',
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
         });
     }
@@ -140,7 +137,7 @@ export class PostsService {
         await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}/dislike`, {
             method: 'DELETE',
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
         });
     }

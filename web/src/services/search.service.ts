@@ -6,7 +6,7 @@
 
 import { Post } from '../models/post.ts';
 import { User } from '../models/user.ts';
-import { $authUser } from './auth.service.ts';
+import { $authToken, $authUser } from './auth.service.ts';
 
 export class SearchService {
     static instance?: SearchService;
@@ -21,7 +21,7 @@ export class SearchService {
     async search(query: string, page: number): Promise<{ posts: Post[]; users: User[] } | null> {
         const headers = new Headers();
         if ($authUser.value !== null) {
-            headers.append('Authorization', `Bearer ${localStorage.getItem('token')}`);
+            headers.append('Authorization', `Bearer ${$authToken.value}`);
         }
         const res = await fetch(`${import.meta.env.VITE_API_URL}/search?q=${encodeURIComponent(query)}&page=${page}`, {
             headers,

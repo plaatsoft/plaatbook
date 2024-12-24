@@ -6,14 +6,14 @@
 
 // eslint-disable-next-line import/named
 import { FunctionComponent, render } from 'preact';
-import { ConfirmModal } from '../components/modals/confirm-modal.tsx';
+import { ConfirmDialog } from '../components/dialogs/confirm-dialog.tsx';
 
 export class DialogService {
     static instance?: DialogService;
-    modalContainer: HTMLElement;
+    dialogContainer: HTMLElement;
 
     constructor() {
-        this.modalContainer = document.getElementById('modal-container')!;
+        this.dialogContainer = document.getElementById('dialog-container')!;
     }
 
     static getInstance(): DialogService {
@@ -24,17 +24,17 @@ export class DialogService {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async open<T>(component: any, props: object): Promise<T> {
+    async open<T>(component: any, props = {}): Promise<T> {
         return new Promise((resolve) => {
             const onConfirm = (result: T) => {
                 document.documentElement.classList.remove('is-clipped');
-                render(null, this.modalContainer);
+                render(null, this.dialogContainer);
                 resolve(result);
             };
             document.documentElement.classList.add('is-clipped');
             const Component = component as FunctionComponent;
             // @ts-expect-error Preact types are not up to date
-            render(<Component {...props} onConfirm={onConfirm} />, this.modalContainer);
+            render(<Component {...props} onConfirm={onConfirm} />, this.dialogContainer);
         });
     }
 
@@ -44,6 +44,6 @@ export class DialogService {
         action: string,
         ActionIcon?: FunctionComponent<{ className: string }>,
     ): Promise<boolean> {
-        return this.open<boolean>(ConfirmModal, { title, message, action, ActionIcon });
+        return this.open<boolean>(ConfirmDialog, { title, message, action, ActionIcon });
     }
 }

@@ -10,8 +10,10 @@ import { Session } from '../models/session.ts';
 import { User } from '../models/user.ts';
 import { Errors } from '../models/errors.ts';
 
+export const $authToken = signal<(string | null) | undefined>(undefined);
 export const $authSession = signal<(Session | null) | undefined>(undefined);
 export const $authUser = signal<(User | null) | undefined>(undefined);
+export const $authUsers = signal<(User[] | null) | undefined>(undefined);
 
 export class AuthService {
     static instance?: AuthService;
@@ -24,7 +26,17 @@ export class AuthService {
     }
 
     async login(logon: string, password: string): Promise<boolean> {
-        // Try to login with logon and password
+        // Check if user is already logged in
+        if ($authUsers.value) {
+            for (let i = 0; i < $authUsers.value.length; i++) {
+                if ($authUsers.value[i].username === logon || $authUsers.value[i].email === logon) {
+                    await this.selectToken(i);
+                    return true;
+                }
+            }
+        }
+
+        // Login
         const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
             method: 'POST',
             body: new URLSearchParams({ logon, password }),
@@ -32,17 +44,17 @@ export class AuthService {
         if (res.status != 200) {
             return false;
         }
+        const { token } = (await res.json()) as { token: string; session: Session; user: User };
 
-        // Save token
-        const { token, session, user } = (await res.json()) as { token: string; session: Session; user: User };
-        localStorage.setItem('token', token);
-        $authSession.value = session;
-        $authUser.value = user;
+        // Update stores
+        const tokens = JSON.parse(localStorage.getItem('tokens') || '[]') as string[];
+        tokens.unshift(token);
+        localStorage.setItem('tokens', JSON.stringify(tokens));
+        await this.updateAuth();
         return true;
     }
 
     async register(username: string, email: string, password: string): Promise<Errors | null> {
-        // Try to register with username, email and password
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
             method: 'POST',
             body: new URLSearchParams({ username, email, password }),
@@ -53,52 +65,75 @@ export class AuthService {
         return null;
     }
 
-    async auth(): Promise<void> {
-        // Get token
-        const token = localStorage.getItem('token');
-        if (token === null) {
+    async updateAuth(): Promise<void> {
+        const tokens = JSON.parse(localStorage.getItem('tokens') || '[]') as string[];
+        if (tokens.length === 0) {
+            $authToken.value = null;
             $authSession.value = null;
             $authUser.value = null;
+            $authUsers.value = null;
             return;
         }
 
-        // Try to get user
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/validate`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-        });
-        if (res.status != 200) {
-            await this.logout();
+        const authUsers = [];
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
+
+            // Validate token
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/validate`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (res.status != 200) {
+                const tokens = (JSON.parse(localStorage.getItem('tokens') || '[]') as string[]).filter(
+                    (t) => t !== token,
+                );
+                localStorage.setItem('tokens', JSON.stringify(tokens));
+                continue;
+            }
+
+            const { session, user } = (await res.json()) as { session: Session; user: User };
+            if (i == 0) {
+                $authToken.value = token;
+                $authSession.value = session;
+                $authUser.value = user;
+            }
+            authUsers.push(user);
         }
-        const { session, user } = (await res.json()) as { session: Session; user: User };
-        $authSession.value = session;
-        $authUser.value = user;
+        $authUsers.value = authUsers;
+    }
+
+    async selectToken(index: number): Promise<void> {
+        const tokens = JSON.parse(localStorage.getItem('tokens') || '[]') as string[];
+        const [selectedToken] = tokens.splice(index, 1);
+        tokens.unshift(selectedToken);
+        localStorage.setItem('tokens', JSON.stringify(tokens));
+        await this.updateAuth();
     }
 
     async logout(): Promise<boolean> {
-        // Try to logout current token
         await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
             method: 'PUT',
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
         });
 
         // Clear stores
-        localStorage.removeItem('token');
-        $authSession.value = null;
-        $authUser.value = null;
-
-        // Redirect to login
-        route('/auth/login');
+        const tokens = (JSON.parse(localStorage.getItem('tokens') || '[]') as string[]).filter(
+            (t) => t !== $authToken.value,
+        );
+        localStorage.setItem('tokens', JSON.stringify(tokens));
+        await this.updateAuth();
+        if ($authToken.value === null) route('/auth/login');
         return true;
     }
 
     async getActiveSessions(): Promise<Session[]> {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}/sessions`, {
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
         });
         if (res.status != 200) {
@@ -114,7 +149,7 @@ export class AuthService {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/sessions/${session.id}`, {
             method: 'DELETE',
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
         });
         if (res.status != 200) {
@@ -124,11 +159,10 @@ export class AuthService {
     }
 
     async changePassword(current_password: string, password: string): Promise<Errors | null> {
-        // Try to change user password
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}/change_password`, {
             method: 'PUT',
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                Authorization: `Bearer ${$authToken.value}`,
             },
             body: new URLSearchParams({ current_password, password }),
         });

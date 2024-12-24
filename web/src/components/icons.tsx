@@ -28,6 +28,22 @@ export function SettingsIcon({ className }: { className?: string }) {
     );
 }
 
+export function LoginIcon({ className }: { className?: string }) {
+    return (
+        <svg className={`icon ${className}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M11 7L9.6 8.4L12.2 11H2V13H12.2L9.6 15.6L11 17L16 12L11 7M20 19H12V21H20C21.1 21 22 20.1 22 19V5C22 3.9 21.1 3 20 3H12V5H20V19Z" />
+        </svg>
+    );
+}
+
+export function RegisterIcon({ className }: { className?: string }) {
+    return (
+        <svg className={`icon ${className}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,10V7H4V10H1V12H4V15H6V12H9V10M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z" />
+        </svg>
+    );
+}
+
 export function LogoutIcon({ className }: { className?: string }) {
     return (
         <svg className={`icon ${className}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">

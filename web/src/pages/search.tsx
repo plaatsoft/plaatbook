@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'preact/hooks';
 import { route } from 'preact-router';
-import { Field } from '../components/field.tsx';
+import { Field } from '../components/forms/field.tsx';
 import { SearchService } from '../services/search.service.ts';
 import { UserComponent } from '../components/user.tsx';
 import { PostComponent } from '../components/post.tsx';

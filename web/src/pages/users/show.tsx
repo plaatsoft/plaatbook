@@ -13,11 +13,11 @@ import { PostComponent } from '../../components/post.tsx';
 import { dateFormatAgo } from '../../utils.ts';
 import { $authUser } from '../../services/auth.service.ts';
 import { $addPost } from '../../services/posts.service.ts';
-import { PostCreateForm } from '../../components/post-create-form.tsx';
+import { PostCreateForm } from '../../components/forms/post-create-form.tsx';
 import { InfiniteList } from '../../components/infinite-list.tsx';
 import { BirthdateIcon, CalendarIcon, EditIcon, LinkIcon, LocationIcon, OptionsIcon } from '../../components/icons.tsx';
 import { DialogService } from '../../services/dialog.service.tsx';
-import { UserEditModal } from '../../components/modals/user-edit-modal.tsx';
+import { UserEditDialog } from '../../components/dialogs/user-edit-dialog.tsx';
 
 export function UsersShow({ user_id }: { user_id: string }) {
     const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -36,7 +36,7 @@ export function UsersShow({ user_id }: { user_id: string }) {
 
     const editProfile = async (event: MouseEvent) => {
         event.preventDefault();
-        const updatedUser = await DialogService.getInstance().open<User>(UserEditModal, { user: user! });
+        const updatedUser = await DialogService.getInstance().open<User>(UserEditDialog, { user: user! });
         console.log('close', updatedUser);
         if (updatedUser) setUser(updatedUser);
     };

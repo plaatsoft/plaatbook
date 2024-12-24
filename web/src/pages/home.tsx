@@ -9,7 +9,7 @@ import { $authUser } from '../services/auth.service.ts';
 import { PostsService, $addPost } from '../services/posts.service.ts';
 import { Post } from '../models/post.ts';
 import { PostComponent } from '../components/post.tsx';
-import { PostCreateForm } from '../components/post-create-form.tsx';
+import { PostCreateForm } from '../components/forms/post-create-form.tsx';
 import { InfiniteList } from '../components/infinite-list.tsx';
 
 export function Home() {
