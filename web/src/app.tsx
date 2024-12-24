@@ -19,22 +19,19 @@ import { Search } from './pages/search.tsx';
 import { PostsShow } from './pages/posts/show.tsx';
 
 export function App() {
-    const [route, setRoute] = useState<RouterOnChangeArgs | null>(null);
+    const [routeArgs, setRouteArgs] = useState<RouterOnChangeArgs | null>(null);
 
     // Auth user
-    const auth = async () => {
-        await AuthService.getInstance().auth();
-    };
     useEffect(() => {
-        auth();
+        AuthService.getInstance().updateAuth();
     }, []);
 
     return (
         <>
-            <Menu route={route} />
+            <Menu routeArgs={routeArgs} />
 
             {$authUser.value !== undefined && $authUser.value !== null && (
-                <Router onChange={setRoute}>
+                <Router onChange={setRouteArgs}>
                     <Route path="/" component={Home} />
                     <Route path="/search" component={Search} />
                     <Route path="/posts/:post_id" component={PostsShow} />
@@ -44,7 +41,7 @@ export function App() {
                 </Router>
             )}
             {$authUser.value !== undefined && $authUser.value === null && (
-                <Router onChange={setRoute}>
+                <Router onChange={setRouteArgs}>
                     <Route path="/" component={Home} />
                     <Route path="/search" component={Search} />
                     <Route path="/posts/:post_id" component={PostsShow} />

@@ -6,9 +6,10 @@
 
 import { useEffect, useState } from 'preact/hooks';
 import { route } from 'preact-router';
-import { Field } from '../../components/field.tsx';
+import { Field } from '../../components/forms/field.tsx';
 import { AuthService } from '../../services/auth.service.ts';
 import { Errors } from '../../models/errors.ts';
+import { RegisterIcon } from '../../components/icons.tsx';
 
 export function Register() {
     const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +46,7 @@ export function Register() {
 
     return (
         <form className="section" onSubmit={register}>
-            <h2 className="title">Register</h2>
+            <h2 className="title">Register account</h2>
 
             <Field
                 type="text"
@@ -86,6 +87,7 @@ export function Register() {
 
             <div className="field">
                 <button type="submit" className="button is-link">
+                    <RegisterIcon className="mr-2" />
                     Register
                 </button>
             </div>

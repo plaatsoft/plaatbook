@@ -5,13 +5,13 @@
  */
 
 import { useState } from 'preact/hooks';
-import { PostsService, $addPost } from '../services/posts.service.ts';
-import { Errors } from '../models/errors.ts';
-import { Field } from '../components/field.tsx';
-import { CommentIcon } from './icons.tsx';
-import { POST_TEXT_MAX } from '../consts.ts';
-import { Post } from '../models/post.ts';
-import { $authUser } from '../services/auth.service.ts';
+import { PostsService, $addPost } from '../../services/posts.service.ts';
+import { Errors } from '../../models/errors.ts';
+import { Field } from './field.tsx';
+import { CommentIcon } from '../icons.tsx';
+import { POST_TEXT_MAX } from '../../consts.ts';
+import { Post } from '../../models/post.ts';
+import { $authUser } from '../../services/auth.service.ts';
 
 export function PostCreateForm() {
     const [isLoading, setIsLoading] = useState(false);

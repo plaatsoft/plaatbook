@@ -21,9 +21,9 @@ import {
     ShareIcon,
     StatsIcon,
 } from './icons.tsx';
-import { PostEditModal } from './modals/post-edit-modal.tsx';
-import { PostReplyModal } from './modals/post-reply-modal.tsx';
-import { PostShareModal } from './modals/post-share-modal.tsx';
+import { PostEditDialog } from './dialogs/post-edit-dialog.tsx';
+import { PostReplyDialog } from './dialogs/post-reply-dialog.tsx';
+import { PostShareDialog } from './dialogs/post-share-dialog.tsx';
 
 export function PostComponent({
     post,
@@ -112,7 +112,7 @@ export function PostComponent({
 function PostOptions({ post, onUpdate }: { post: Post; onUpdate?: (post: Post | null) => void }) {
     const editPost = async (event: MouseEvent) => {
         event.stopPropagation();
-        const updatedPost = await DialogService.getInstance().open<Post | null>(PostEditModal, { post });
+        const updatedPost = await DialogService.getInstance().open<Post | null>(PostEditDialog, { post });
         if (updatedPost !== null && onUpdate) onUpdate(updatedPost);
     };
 
@@ -164,7 +164,7 @@ function PostOptions({ post, onUpdate }: { post: Post; onUpdate?: (post: Post | 
 function PostActions({ post, onUpdate }: { post: Post; onUpdate?: (post: Post) => void }) {
     const replyPost = async (event: MouseEvent) => {
         event.stopPropagation();
-        const replyPost = await DialogService.getInstance().open<Post | null>(PostReplyModal, { post });
+        const replyPost = await DialogService.getInstance().open<Post | null>(PostReplyDialog, { post });
         if (replyPost !== null) {
             route(`/posts/${replyPost.id}`);
         }
@@ -223,7 +223,7 @@ function PostActions({ post, onUpdate }: { post: Post; onUpdate?: (post: Post) =
                 url: `${window.location.host}/posts/${post.id}`,
             });
         } else {
-            await DialogService.getInstance().open(PostShareModal, { post });
+            await DialogService.getInstance().open(PostShareDialog, { post });
         }
     };
 

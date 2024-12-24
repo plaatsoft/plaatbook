@@ -7,13 +7,13 @@
 import { useState, useEffect } from 'preact/hooks';
 import { $authSession, $authUser, AuthService } from '../services/auth.service.ts';
 import { Errors } from '../models/errors.ts';
-import { Field } from '../components/field.tsx';
+import { Field } from '../components/forms/field.tsx';
 import { Notification } from '../components/notification.tsx';
 import { Session } from '../models/session.ts';
 import { dateFormat } from '../utils.ts';
 import { DialogService } from '../services/dialog.service.tsx';
 import { DeleteIcon, KeyIcon, OptionsIcon, SecurityEditIcon } from '../components/icons.tsx';
-import { UserEditForm } from '../components/user-edit-form.tsx';
+import { UserEditForm } from '../components/forms/user-edit-form.tsx';
 
 export function Settings() {
     useEffect(() => {

@@ -7,7 +7,7 @@
 // eslint-disable-next-line import/named
 import { FunctionComponent } from 'preact';
 
-export function ConfirmModal({
+export function ConfirmDialog({
     title,
     message,
     action,

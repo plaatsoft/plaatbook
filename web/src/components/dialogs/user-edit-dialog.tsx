@@ -5,9 +5,9 @@
  */
 
 import { User } from '../../models/user.ts';
-import { UserEditForm } from '../user-edit-form.tsx';
+import { UserEditForm } from '../forms/user-edit-form.tsx';
 
-export function UserEditModal({ user, onConfirm }: { user: User; onConfirm: (updatedUser: User | null) => void }) {
+export function UserEditDialog({ user, onConfirm }: { user: User; onConfirm: (updatedUser: User | null) => void }) {
     return (
         <div className="modal is-active">
             <div className="modal-background" onClick={() => onConfirm(null)}></div>

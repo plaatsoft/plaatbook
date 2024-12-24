@@ -7,7 +7,7 @@
 import { Post } from '../../models/post.ts';
 import { CopyIcon } from '../icons.tsx';
 
-export function PostShareModal({ post, onConfirm }: { post: Post; onConfirm: (updatedPost: null) => void }) {
+export function PostShareDialog({ post, onConfirm }: { post: Post; onConfirm: (updatedPost: null) => void }) {
     const copyUrl = async () => {
         await navigator.clipboard.writeText(`${window.location.host}/posts/${post.id}`);
     };

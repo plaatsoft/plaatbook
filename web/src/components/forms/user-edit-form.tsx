@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { useState } from 'preact/hooks';
-import { Errors } from '../models/errors.ts';
-import { Field } from '../components/field.tsx';
-import { $authUser } from '../services/auth.service.ts';
-import { Notification } from './notification.tsx';
-import { AccountEditIcon } from './icons.tsx';
-import { User } from '../models/user.ts';
-import { UsersService } from '../services/users.service.ts';
+import { useEffect, useState } from 'preact/hooks';
+import { Errors } from '../../models/errors.ts';
+import { Field } from './field.tsx';
+import { $authUser } from '../../services/auth.service.ts';
+import { Notification } from '../notification.tsx';
+import { AccountEditIcon } from '../icons.tsx';
+import { User } from '../../models/user.ts';
+import { UsersService } from '../../services/users.service.ts';
 
 export function UserEditForm({
     user,
@@ -23,7 +23,6 @@ export function UserEditForm({
     onConfirm?: (updatedUser: User | null) => void;
 }) {
     const [isLoading, setIsLoading] = useState(false);
-    const [isDone, setIsDone] = useState(false);
     const [username, setUsername] = useState(user.username ?? '');
     const [email, setEmail] = useState(user.email ?? '');
     const [firstname, setFirstname] = useState(user.firstname ?? '');
@@ -33,6 +32,20 @@ export function UserEditForm({
     const [location, setLocation] = useState(user.location ?? '');
     const [website, setWebsite] = useState(user.website ?? '');
     const [errors, setErrors] = useState<Errors>({});
+    const [isDone, setIsDone] = useState(false);
+
+    useEffect(() => {
+        setUsername(user.username ?? '');
+        setEmail(user.email ?? '');
+        setFirstname(user.firstname ?? '');
+        setLastname(user.lastname ?? '');
+        setBirthdate(user.birthdate ?? '');
+        setBio(user.bio ?? '');
+        setLocation(user.location ?? '');
+        setWebsite(user.website ?? '');
+        setErrors({});
+        setIsDone(false);
+    }, [user]);
 
     const update = async (event: SubmitEvent) => {
         console.log('test');
