@@ -5,9 +5,24 @@
  */
 
 import { signal } from '@preact/signals';
+import { useEffect } from 'preact/hooks';
 
 export const $route = signal(window.location.pathname);
 let matches = false;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function Router({ children }: { children: any }) {
+    // Listen to popstate event for back navigation
+    useEffect(() => {
+        const handlePopState = () => {
+            $route.value = new URL(window.location.href).pathname;
+            matches = false;
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, []);
+    return children;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function Route({ path, component, fallback }: { path?: string; component: any; fallback?: boolean }) {

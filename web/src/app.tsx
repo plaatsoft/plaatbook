@@ -15,7 +15,7 @@ import { NotFound } from './pages/not-found.tsx';
 import { UsersShow } from './pages/users/show.tsx';
 import { Search } from './pages/search.tsx';
 import { PostsShow } from './pages/posts/show.tsx';
-import { Route } from './router.tsx';
+import { Route, Router } from './router.tsx';
 
 export function App() {
     useEffect(() => {
@@ -23,7 +23,7 @@ export function App() {
     }, []);
 
     return (
-        <>
+        <Router>
             <Menu />
 
             {$authUser.value !== undefined && (
@@ -45,6 +45,6 @@ export function App() {
                     <Route fallback component={NotFound} />
                 </>
             )}
-        </>
+        </Router>
     );
 }
