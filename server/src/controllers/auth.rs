@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-use base64::prelude::*;
 use chrono::Utc;
 use http::{Request, Response, Status};
+use pbkdf2::password_verify;
 use router::Path;
 use serde::Deserialize;
 use serde_json::json;
@@ -57,7 +57,7 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
     };
 
     // Check password
-    if !bcrypt::verify(&body.password, &user.password).expect("Can't verify password") {
+    if !password_verify(&body.password, &user.password).expect("Can't verify password") {
         return Response::new()
             .status(Status::Unauthorized)
             .body("Wrong username, email address or password");
@@ -84,7 +84,7 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
     // Generate token
     let mut token_bytes = [0u8; 256];
     getrandom::getrandom(&mut token_bytes).expect("Can't get random bytes");
-    let token = BASE64_STANDARD.encode(token_bytes);
+    let token = base64::encode(&token_bytes, true);
 
     // Create new session
     let session = Session {

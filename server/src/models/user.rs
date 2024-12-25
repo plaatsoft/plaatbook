@@ -5,6 +5,7 @@
  */
 
 use chrono::{DateTime, NaiveDate, Utc};
+use pbkdf2::password_verify;
 use serde::Serialize;
 use sqlite::{FromRow, FromValue};
 use uuid::Uuid;
@@ -108,7 +109,7 @@ pub fn is_unique_email_or_auth_user_email(value: &str, context: &Context) -> val
 
 pub fn is_current_password(value: &str, context: &Context) -> validate::Result {
     let user = context.auth_user.as_ref().expect("Not authed");
-    if !bcrypt::verify(value, &user.password).expect("Can't verify password") {
+    if !password_verify(value, &user.password).expect("Can't verify password") {
         return Err(validate::Error::new("incorrect"));
     }
     Ok(())

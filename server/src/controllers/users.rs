@@ -6,6 +6,7 @@
 
 use chrono::{NaiveDate, Utc};
 use http::{Request, Response, Status};
+use pbkdf2::password_hash;
 use router::Path;
 use serde::{Deserialize, Deserializer};
 use uuid::Uuid;
@@ -112,7 +113,7 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Response {
     let user = User {
         username: body.username,
         email: body.email,
-        password: bcrypt::hash(body.password, bcrypt::DEFAULT_COST).expect("Can't hash password"),
+        password: password_hash(&body.password),
         role: UserRole::Normal,
         ..Default::default()
     };
@@ -278,7 +279,7 @@ pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Respo
     }
 
     // Update user
-    user.password = bcrypt::hash(body.password, bcrypt::DEFAULT_COST).expect("Can't hash password");
+    user.password = password_hash(&body.password);
     user.updated_at = Utc::now();
     ctx.database.execute(
         "UPDATE users SET password = ?, updated_at = ? WHERE id = ?",

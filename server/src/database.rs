@@ -5,6 +5,7 @@
  */
 
 use chrono::NaiveDate;
+use pbkdf2::password_hash;
 
 use crate::consts::DATABASE_PATH;
 use crate::models::{User, UserRole};
@@ -92,7 +93,7 @@ pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
         let admin = User {
             username: "admin".to_string(),
             email: "admin@plaatsoft.nl".to_string(),
-            password: bcrypt::hash("admin", bcrypt::DEFAULT_COST).expect("Can't hash password"),
+            password: password_hash("admin"),
             firstname: Some("Admin".to_string()),
             birthdate: NaiveDate::from_ymd_opt(2024, 12, 2),
             bio: Some("Admin of PlaatBook".to_string()),

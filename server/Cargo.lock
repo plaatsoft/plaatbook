@@ -34,44 +34,14 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
 name = "base64"
-version = "0.22.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
-
-[[package]]
-name = "bcrypt"
-version = "0.16.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b1866ecef4f2d06a0bb77880015fdf2b89e25a1c2e5addacb87e459c86dc67e"
-dependencies = [
- "base64",
- "blowfish",
- "getrandom 0.2.15",
- "subtle",
- "zeroize",
-]
-
-[[package]]
-name = "blowfish"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e412e2cd0f2b2d93e02543ceae7917b3c70331573df19ee046bcbc35e45e87d7"
-dependencies = [
- "byteorder",
- "cipher",
-]
+version = "0.1.0"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 
 [[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
-
-[[package]]
-name = "byteorder"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "cc"
@@ -104,30 +74,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "cipher"
-version = "0.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "773f3b9af64447d2ce9850330c473515014aa235e6a783b02db81ff39e4a3dad"
-dependencies = [
- "crypto-common",
- "inout",
-]
-
-[[package]]
 name = "core-foundation-sys"
 version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
-
-[[package]]
-name = "crypto-common"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bfb12502f3fc46cca1bb51ac28df9d618d813cdc3d2f25b9fe775a34af26bb3"
-dependencies = [
- "generic-array",
- "typenum",
-]
 
 [[package]]
 name = "equivalent"
@@ -145,30 +95,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "generic-array"
-version = "0.14.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
-dependencies = [
- "typenum",
- "version_check",
-]
-
-[[package]]
 name = "getrandom"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
-
-[[package]]
-name = "getrandom"
-version = "0.2.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4567c8db10ae91089c99af84c68c38da3ec2f087c3f82960bcdbf3656b6f4d7"
-dependencies = [
- "cfg-if",
- "libc",
- "wasi",
-]
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 
 [[package]]
 name = "hashbrown"
@@ -179,7 +108,7 @@ checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
 [[package]]
 name = "http"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 dependencies = [
  "serde",
  "serde_json",
@@ -218,15 +147,6 @@ checksum = "62f822373a4fe84d4bb149bf54e584a7f4abec90e072ed49cda0edea5b95471f"
 dependencies = [
  "equivalent",
  "hashbrown",
-]
-
-[[package]]
-name = "inout"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0c10553d664a4d0bcff9f4215d0aac67a639cc68ef660840afe309b807bc9f5"
-dependencies = [
- "generic-array",
 ]
 
 [[package]]
@@ -285,6 +205,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1261fe7e33c73b354eab43b1273a57c8f967d0391e80353e51f764ac02cf6775"
 
 [[package]]
+name = "pbkdf2"
+version = "0.1.0"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
+dependencies = [
+ "base64",
+ "getrandom",
+]
+
+[[package]]
 name = "percent-encoding"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -295,11 +224,11 @@ name = "plaatbook"
 version = "0.1.0"
 dependencies = [
  "base64",
- "bcrypt",
  "chrono",
- "getrandom 0.1.0",
+ "getrandom",
  "http",
  "lazy_static",
+ "pbkdf2",
  "regex",
  "router",
  "serde",
@@ -361,7 +290,7 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 [[package]]
 name = "router"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 dependencies = [
  "http",
 ]
@@ -438,7 +367,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "sqlite"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 dependencies = [
  "chrono",
  "sqlite3-sys",
@@ -449,23 +378,17 @@ dependencies = [
 [[package]]
 name = "sqlite3-sys"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 
 [[package]]
 name = "sqlite_derive"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn",
 ]
-
-[[package]]
-name = "subtle"
-version = "2.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "syn"
@@ -481,13 +404,7 @@ dependencies = [
 [[package]]
 name = "threadpool"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
-
-[[package]]
-name = "typenum"
-version = "1.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 
 [[package]]
 name = "unicode-ident"
@@ -504,12 +421,12 @@ checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 [[package]]
 name = "url"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 
 [[package]]
 name = "useragent"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 dependencies = [
  "regex",
  "serde",
@@ -519,16 +436,16 @@ dependencies = [
 [[package]]
 name = "uuid"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 dependencies = [
- "getrandom 0.1.0",
+ "getrandom",
  "serde",
 ]
 
 [[package]]
 name = "validate"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 dependencies = [
  "lazy_static",
  "regex",
@@ -539,24 +456,12 @@ dependencies = [
 [[package]]
 name = "validate_derive"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
+source = "git+https://github.com/bplaat/crates.git#96d716730b3a0039f4e394c00525d897c7ebb495"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn",
 ]
-
-[[package]]
-name = "version_check"
-version = "0.9.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
-
-[[package]]
-name = "wasi"
-version = "0.11.0+wasi-snapshot-preview1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 
 [[package]]
 name = "wasm-bindgen"
@@ -684,9 +589,3 @@ name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
-
-[[package]]
-name = "zeroize"
-version = "1.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ced3678a2879b30306d323f4542626697a464a97c0a07c9aebf7ebca65cd4dde"
