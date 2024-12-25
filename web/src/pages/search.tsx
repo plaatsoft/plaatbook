@@ -5,7 +5,6 @@
  */
 
 import { useEffect, useState } from 'preact/hooks';
-import { route } from 'preact-router';
 import { Field } from '../components/forms/field.tsx';
 import { SearchService } from '../services/search.service.ts';
 import { UserComponent } from '../components/user.tsx';
@@ -13,6 +12,7 @@ import { PostComponent } from '../components/post.tsx';
 import { User } from '../models/user.ts';
 import { Post } from '../models/post.ts';
 import { SearchIcon } from '../components/icons.tsx';
+import { route } from '../router.tsx';
 
 const styles = css`
     .no-results {
@@ -34,11 +34,11 @@ export function Search() {
 
     const search = async (event?: SubmitEvent) => {
         if (event) event.preventDefault();
-        route(`/search?q=${query}`);
-        updateTitle();
         if (query.length < 1) {
             return;
         }
+        route(`/search?q=${query}`);
+        updateTitle();
         const res = await SearchService.getInstance().search(query, 1);
         if (res !== null) {
             const { posts, users } = res;

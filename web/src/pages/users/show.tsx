@@ -18,6 +18,7 @@ import { InfiniteList } from '../../components/infinite-list.tsx';
 import { BirthdateIcon, CalendarIcon, EditIcon, LinkIcon, LocationIcon, OptionsIcon } from '../../components/icons.tsx';
 import { DialogService } from '../../services/dialog.service.tsx';
 import { UserEditDialog } from '../../components/dialogs/user-edit-dialog.tsx';
+import { Link } from '../../router.tsx';
 
 export function UsersShow({ user_id }: { user_id: string }) {
     const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -69,10 +70,10 @@ export function UsersShow({ user_id }: { user_id: string }) {
                             )}
 
                             <h2 className="title mb-2">
-                                <a href={`/users/${user.username}`} style="color: inherit;">
+                                <Link href={`/users/${user.username}`} style="color: inherit;">
                                     {user.firstname && `${user.firstname} `}
                                     {user.lastname && `${user.lastname} `}@{user.username}
-                                </a>
+                                </Link>
                             </h2>
                             {user.bio && <p className="mb-3">{user.bio}</p>}
                             <p>

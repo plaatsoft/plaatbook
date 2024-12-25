@@ -5,12 +5,11 @@
  */
 
 import { useState, useEffect } from 'preact/hooks';
-// eslint-disable-next-line import/named
-import { RouterOnChangeArgs, route } from 'preact-router';
 import { AuthService, $authUser, $authUsers } from '../services/auth.service.ts';
-import { AppIcon, LoginIcon, LogoutIcon, RegisterIcon, SearchIcon, SettingsIcon } from './icons.tsx';
+import { AccountIcon, AppIcon, LoginIcon, LogoutIcon, RegisterIcon, SearchIcon, SettingsIcon } from './icons.tsx';
 import { DialogService } from '../services/dialog.service.tsx';
 import { LoginDialog } from './dialogs/login-dialog.tsx';
+import { $route, Link, route } from '../router.tsx';
 
 const styles = css`
     .avatar {
@@ -18,14 +17,14 @@ const styles = css`
     }
 `;
 
-export function Menu({ routeArgs }: { routeArgs: RouterOnChangeArgs | null }) {
+export function Menu() {
     const [isOpen, setIsOpen] = useState(false);
     const [isAuthOpen, setIsAuthOpen] = useState(false);
 
     useEffect(() => {
         setIsOpen(false);
         setIsAuthOpen(false);
-    }, [routeArgs]);
+    }, [$route.value]);
 
     const selectToken = async (event: MouseEvent, index: number) => {
         event.preventDefault();
@@ -47,24 +46,30 @@ export function Menu({ routeArgs }: { routeArgs: RouterOnChangeArgs | null }) {
     return (
         <div className="navbar is-fixed-top">
             <div className="navbar-brand has-text-weight-bold">
-                <a className="navbar-item" href="/">
+                <Link className="navbar-item" href="/">
                     <AppIcon />
                     PlaatBook
-                </a>
+                </Link>
 
-                <a className="navbar-burger" onClick={() => setIsOpen(!isOpen)}>
+                <button className="navbar-burger" onClick={() => setIsOpen(!isOpen)}>
                     <span aria-hidden="true"></span>
                     <span aria-hidden="true"></span>
                     <span aria-hidden="true"></span>
                     <span aria-hidden="true"></span>
-                </a>
+                </button>
             </div>
             <div className={`navbar-menu ${isOpen ? 'is-active' : ''}`}>
                 <div className="navbar-start">
-                    <a className="navbar-item" href="/search">
+                    <Link className="navbar-item" href="/search">
                         <SearchIcon />
                         Search
-                    </a>
+                    </Link>
+                    {$authUser.value && (
+                        <Link className="navbar-item" href={`/users/${$authUser.value.username}`}>
+                            <AccountIcon />
+                            Profile
+                        </Link>
+                    )}
                 </div>
 
                 <div className="navbar-end">
@@ -97,10 +102,10 @@ export function Menu({ routeArgs }: { routeArgs: RouterOnChangeArgs | null }) {
                                     </a>
                                     <hr className="navbar-divider" />
 
-                                    <a className="navbar-item" href="/settings">
+                                    <Link className="navbar-item" href="/settings">
                                         <SettingsIcon className="is-small" />
                                         Settings
-                                    </a>
+                                    </Link>
                                     <a className="navbar-item" href="#" onClick={logout}>
                                         <LogoutIcon className="is-small" />
                                         Logout
@@ -112,14 +117,14 @@ export function Menu({ routeArgs }: { routeArgs: RouterOnChangeArgs | null }) {
 
                     {$authUser.value === null && (
                         <>
-                            <a className="navbar-item" href="/auth/login">
+                            <Link className="navbar-item" href="/auth/login">
                                 <LoginIcon />
                                 Login
-                            </a>
-                            <a className="navbar-item" href="/auth/register">
+                            </Link>
+                            <Link className="navbar-item" href="/auth/register">
                                 <RegisterIcon />
                                 Register
-                            </a>
+                            </Link>
                         </>
                     )}
                 </div>

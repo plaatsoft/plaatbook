@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { route } from 'preact-router';
 import { Post, PostType } from '../models/post.ts';
 import { $authUser } from '../services/auth.service.ts';
 import { DialogService } from '../services/dialog.service.tsx';
@@ -24,6 +23,7 @@ import {
 import { PostEditDialog } from './dialogs/post-edit-dialog.tsx';
 import { PostReplyDialog } from './dialogs/post-reply-dialog.tsx';
 import { PostShareDialog } from './dialogs/post-share-dialog.tsx';
+import { Link, route } from '../router.tsx';
 
 export function PostComponent({
     post,
@@ -50,33 +50,33 @@ export function PostComponent({
 
             <div className="media" onClick={openPost}>
                 <div className="media-left">
-                    <a href={`/users/${contentPost.user!.username}`}>
+                    <Link href={`/users/${contentPost.user!.username}`}>
                         <img className="image is-64x64" src="/images/avatar.svg" />
-                    </a>
+                    </Link>
                 </div>
 
                 <div className="media-content">
                     {post.type === PostType.REPLY && (
                         <div className="mb-1">
-                            <a href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
+                            <Link href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
                                 <CommentIcon className="is-small mr-1" />
                                 {post.user!.username} replied
-                            </a>
+                            </Link>
                         </div>
                     )}
                     {post.type === PostType.REPOST && (
                         <div className="mb-1">
-                            <a href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
+                            <Link href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
                                 <RepostIcon className="is-small mr-1" />
                                 {post.user!.username} reposted
-                            </a>
+                            </Link>
                         </div>
                     )}
 
                     <div className="mb-1" style="position: relative;">
-                        <a className="mr-2" href={`/users/${contentPost.user!.username}`}>
+                        <Link className="mr-2" href={`/users/${contentPost.user!.username}`}>
                             <strong>@{contentPost.user!.username}</strong>
-                        </a>
+                        </Link>
                         <small className="mr-2">{dateFormatAgo(contentPost.created_at)}</small>
                         {contentPost.created_at !== contentPost.updated_at && (
                             <span className="tag" style="position: absolute; top: 0;">
@@ -275,32 +275,32 @@ function ParentPost({ post }: { post: Post }) {
     return (
         <div className="media" onClick={openPost}>
             <div className="media-left">
-                <a href={`/users/${contentPost.user!.username}`}>
+                <Link href={`/users/${contentPost.user!.username}`}>
                     <img className="image is-64x64" src="/images/avatar.svg" />
-                </a>
+                </Link>
             </div>
             <div className="media-content">
                 {post.type === PostType.REPLY && (
                     <div className="mb-1">
-                        <a href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
+                        <Link href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
                             <CommentIcon className="is-small mr-1" />
                             {post.user!.username} replied
-                        </a>
+                        </Link>
                     </div>
                 )}
                 {post.type === PostType.REPOST && (
                     <div className="mb-1">
-                        <a href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
+                        <Link href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
                             <RepostIcon className="is-small mr-1" />
                             {post.user!.username} reposted
-                        </a>
+                        </Link>
                     </div>
                 )}
 
                 <div className="mb-1" style="position: relative;">
-                    <a className="mr-2" href={`/users/${contentPost.user!.username}`}>
+                    <Link className="mr-2" href={`/users/${contentPost.user!.username}`}>
                         <strong>@{contentPost.user!.username}</strong>
-                    </a>
+                    </Link>
                     <small className="mr-2">{dateFormatAgo(contentPost.created_at)}</small>
                     {contentPost.created_at !== contentPost.updated_at && (
                         <span className="tag" style="position: absolute; top: 0;">

@@ -5,11 +5,11 @@
  */
 
 import { useEffect, useState } from 'preact/hooks';
-import { route } from 'preact-router';
 import { Field } from '../../components/forms/field.tsx';
 import { AuthService } from '../../services/auth.service.ts';
 import { Errors } from '../../models/errors.ts';
 import { RegisterIcon } from '../../components/icons.tsx';
+import { route } from '../../router.tsx';
 
 export function Register() {
     const [isLoading, setIsLoading] = useState(false);
