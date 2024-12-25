@@ -36,6 +36,7 @@ export function Route({ path, component, fallback }: { path?: string; component:
 
 export function route(to: string) {
     window.history.pushState({}, '', to);
+    window.scrollTo(0, 0);
     $route.value = new URL(to, window.location.origin).pathname;
     matches = false;
 }
