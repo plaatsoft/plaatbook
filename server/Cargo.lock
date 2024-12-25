@@ -46,7 +46,7 @@ checksum = "2b1866ecef4f2d06a0bb77880015fdf2b89e25a1c2e5addacb87e459c86dc67e"
 dependencies = [
  "base64",
  "blowfish",
- "getrandom",
+ "getrandom 0.2.15",
  "subtle",
  "zeroize",
 ]
@@ -156,6 +156,11 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
+version = "0.1.0"
+source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
+
+[[package]]
+name = "getrandom"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4567c8db10ae91089c99af84c68c38da3ec2f087c3f82960bcdbf3656b6f4d7"
@@ -174,7 +179,7 @@ checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
 [[package]]
 name = "http"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#847e1fa7c452e10401d69921bfbdf537eca49183"
+source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
 dependencies = [
  "serde",
  "serde_json",
@@ -292,7 +297,7 @@ dependencies = [
  "base64",
  "bcrypt",
  "chrono",
- "getrandom",
+ "getrandom 0.1.0",
  "http",
  "lazy_static",
  "regex",
@@ -356,7 +361,7 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 [[package]]
 name = "router"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#847e1fa7c452e10401d69921bfbdf537eca49183"
+source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
 dependencies = [
  "http",
 ]
@@ -433,7 +438,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "sqlite"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#847e1fa7c452e10401d69921bfbdf537eca49183"
+source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
 dependencies = [
  "chrono",
  "sqlite3-sys",
@@ -444,12 +449,12 @@ dependencies = [
 [[package]]
 name = "sqlite3-sys"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#847e1fa7c452e10401d69921bfbdf537eca49183"
+source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
 
 [[package]]
 name = "sqlite_derive"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#847e1fa7c452e10401d69921bfbdf537eca49183"
+source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -476,7 +481,7 @@ dependencies = [
 [[package]]
 name = "threadpool"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#847e1fa7c452e10401d69921bfbdf537eca49183"
+source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
 
 [[package]]
 name = "typenum"
@@ -499,12 +504,12 @@ checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 [[package]]
 name = "url"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#847e1fa7c452e10401d69921bfbdf537eca49183"
+source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
 
 [[package]]
 name = "useragent"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#847e1fa7c452e10401d69921bfbdf537eca49183"
+source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
 dependencies = [
  "regex",
  "serde",
@@ -514,16 +519,16 @@ dependencies = [
 [[package]]
 name = "uuid"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#847e1fa7c452e10401d69921bfbdf537eca49183"
+source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
 dependencies = [
- "getrandom",
+ "getrandom 0.1.0",
  "serde",
 ]
 
 [[package]]
 name = "validate"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#847e1fa7c452e10401d69921bfbdf537eca49183"
+source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
 dependencies = [
  "lazy_static",
  "regex",
@@ -534,7 +539,7 @@ dependencies = [
 [[package]]
 name = "validate_derive"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#847e1fa7c452e10401d69921bfbdf537eca49183"
+source = "git+https://github.com/bplaat/crates.git#7fbf6c753b6bb1a01ceeb289c7b5d788eb4e00c5"
 dependencies = [
  "proc-macro2",
  "quote",
