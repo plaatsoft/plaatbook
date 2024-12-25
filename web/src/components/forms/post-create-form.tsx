@@ -12,6 +12,7 @@ import { CommentIcon } from '../icons.tsx';
 import { POST_TEXT_MAX } from '../../consts.ts';
 import { Post } from '../../models/post.ts';
 import { $authUser } from '../../services/auth.service.ts';
+import { Link } from '../../router.tsx';
 
 export function PostCreateForm() {
     const [isLoading, setIsLoading] = useState(false);
@@ -36,9 +37,9 @@ export function PostCreateForm() {
         <>
             <form className="media" onSubmit={createPost}>
                 <div className="media-left">
-                    <a href={`/users/${$authUser.value!.username}`}>
+                    <Link href={`/users/${$authUser.value!.username}`}>
                         <img className="image is-64x64" src="/images/avatar.svg" />{' '}
-                    </a>
+                    </Link>
                 </div>
                 <div className="media-content">
                     <Field

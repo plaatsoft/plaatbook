@@ -5,10 +5,10 @@
  */
 
 import { signal } from '@preact/signals';
-import { route } from 'preact-router';
 import { Session } from '../models/session.ts';
 import { User } from '../models/user.ts';
 import { Errors } from '../models/errors.ts';
+import { route } from '../router.tsx';
 
 export const $authToken = signal<(string | null) | undefined>(undefined);
 export const $authSession = signal<(Session | null) | undefined>(undefined);

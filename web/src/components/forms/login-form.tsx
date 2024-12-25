@@ -7,8 +7,8 @@
 import { useState } from 'preact/hooks';
 import { Field } from './field.tsx';
 import { AuthService } from '../../services/auth.service.ts';
-import { route } from 'preact-router';
 import { LoginIcon } from '../icons.tsx';
+import { route } from '../../router.tsx';
 
 export function LoginForm({ dialog, onConfirm }: { dialog?: boolean; onConfirm?: (success: boolean) => void }) {
     const [isLoading, setIsLoading] = useState(false);

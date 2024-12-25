@@ -5,6 +5,7 @@
  */
 
 import { User } from '../models/user.ts';
+import { Link } from '../router.tsx';
 import { dateFormatAgo } from '../utils.ts';
 
 export function UserComponent({ user }: { user: User }) {
@@ -15,9 +16,9 @@ export function UserComponent({ user }: { user: User }) {
             </div>
             <div className="media-content">
                 <p>
-                    <a href={`/users/${user.username}`}>
+                    <Link href={`/users/${user.username}`}>
                         <strong>@{user.username}</strong>
-                    </a>
+                    </Link>
                 </p>
                 <p>Joined {dateFormatAgo(user.created_at)}</p>
             </div>

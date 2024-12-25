@@ -5,11 +5,11 @@
  */
 
 import { useEffect, useState } from 'preact/hooks';
-import { route } from 'preact-router';
 import { PostsService } from '../../services/posts.service.ts';
 import { PostComponent } from '../../components/post.tsx';
 import { NotFound } from '../not-found.tsx';
 import { Post } from '../../models/post.ts';
+import { route } from '../../router.tsx';
 
 export function PostsShow({ post_id }: { post_id: string }) {
     const [post, setPost] = useState<Post | null | undefined>(undefined);
