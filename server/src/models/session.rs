@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 use super::User;
 use crate::consts::SESSION_EXPIRE_DURATION;
-use crate::Context;
+use crate::{api, Context};
 
 #[derive(Clone, Serialize, FromRow)]
 pub struct Session {
@@ -54,6 +54,27 @@ impl Default for Session {
             created_at: now,
             updated_at: now,
             user: None,
+        }
+    }
+}
+
+impl From<Session> for api::Session {
+    fn from(session: Session) -> Self {
+        Self {
+            id: session.id,
+            token: session.token,
+            ip_address: session.ip_address,
+            ip_latitude: session.ip_latitude,
+            ip_longitude: session.ip_longitude,
+            ip_country: session.ip_country,
+            ip_city: session.ip_city,
+            client_name: session.client_name,
+            client_version: session.client_version,
+            client_os: session.client_os,
+            expires_at: session.expires_at,
+            created_at: session.created_at,
+            updated_at: session.updated_at,
+            user: session.user.map(|user| user.into()),
         }
     }
 }

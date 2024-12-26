@@ -7,62 +7,6 @@ info:
 servers:
   - url: "http://localhost:8080"
 
-# MARK: Components
-components:
-  securitySchemes:
-    TokenAuth:
-      type: http
-      scheme: bearer
-
-  parameters:
-    # MARK: Path parameters
-    PostID:
-      name: id
-      in: path
-      description: Post ID
-      required: true
-      schema:
-        type: string
-        format: uuid
-    SessionID:
-      name: id
-      in: path
-      description: Session ID
-      required: true
-      schema:
-        type: string
-        format: uuid
-    UserID:
-      name: id
-      in: path
-      description: User ID or username
-      required: true
-      schema:
-        type: string
-
-    # MARK: Query parameters
-    Query:
-      name: q
-      in: query
-      description: Search query
-      schema:
-        type: string
-    Page:
-      name: page
-      in: query
-      description: Page number
-      schema:
-        type: integer
-        minimum: 1
-    Limit:
-      name: limit
-      in: query
-      description: Number of items per page
-      schema:
-        type: integer
-        minimum: 1
-        maximum: 50
-
 paths:
   # MARK: Misc
   /:
@@ -72,6 +16,10 @@ paths:
       responses:
         "200":
           description: Name and version of REST API
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiInfo"
 
   # MARK: Auth
   /auth/login:
@@ -83,20 +31,20 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              type: object
-              properties:
-                logon:
-                  type: string
-                password:
-                  type: string
-              required:
-                - logon
-                - password
+              $ref: "#/components/schemas/AuthLoginBody"
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthLoginResponse"
         "400":
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
   /auth/validate:
     get:
       tags: [Auth]
@@ -106,6 +54,10 @@ paths:
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthValidateResponse"
         "401":
           description: Authorization error
   /auth/logout:
@@ -121,6 +73,7 @@ paths:
           description: Authorization error
 
   # MARK: Posts
+  # FIXME: Fix and use generated types
   /posts:
     get:
       tags: [Posts]
@@ -162,7 +115,7 @@ paths:
       tags: [Posts]
       summary: Get post
       parameters:
-        - $ref: "#/components/parameters/PostID"
+        - $ref: "#/components/parameters/Id"
       responses:
         "200":
           description: Successful response
@@ -174,7 +127,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/PostID"
+        - $ref: "#/components/parameters/Id"
       requestBody:
         required: true
         content:
@@ -199,7 +152,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/PostID"
+        - $ref: "#/components/parameters/Id"
       responses:
         "200":
           description: Successful response
@@ -212,7 +165,7 @@ paths:
       tags: [Posts]
       summary: Get post replies
       parameters:
-        - $ref: "#/components/parameters/PostID"
+        - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/Query"
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Limit"
@@ -228,7 +181,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/PostID"
+        - $ref: "#/components/parameters/Id"
       requestBody:
         required: true
         content:
@@ -256,7 +209,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/PostID"
+        - $ref: "#/components/parameters/Id"
       responses:
         "200":
           description: Successful response
@@ -273,7 +226,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/PostID"
+        - $ref: "#/components/parameters/Id"
       responses:
         "200":
           description: Successful response
@@ -287,7 +240,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/PostID"
+        - $ref: "#/components/parameters/Id"
       responses:
         "200":
           description: Successful response
@@ -302,7 +255,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/PostID"
+        - $ref: "#/components/parameters/Id"
       responses:
         "200":
           description: Successful response
@@ -316,7 +269,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/PostID"
+        - $ref: "#/components/parameters/Id"
       responses:
         "200":
           description: Successful response
@@ -326,6 +279,7 @@ paths:
           description: Post not found
 
   # MARK: Search
+  # FIXME: Fix and use generated types
   /search:
     get:
       tags: [Search]
@@ -341,6 +295,7 @@ paths:
           description: Bad Request
 
   # MARK: Users
+  # FIXME: Fix and use generated types
   /users:
     get:
       tags: [Users]
@@ -393,7 +348,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Id"
       responses:
         "200":
           description: Successful response
@@ -405,7 +360,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Id"
       requestBody:
         required: true
         content:
@@ -434,7 +389,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Id"
       requestBody:
         required: true
         content:
@@ -462,7 +417,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Id"
       responses:
         "200":
           description: Successful response
@@ -477,7 +432,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/Query"
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Limit"
@@ -488,6 +443,7 @@ paths:
           description: User not found
 
   # MARK: Sessions
+  # FIXME: Fix and use generated types
   /sessions:
     get:
       tags: [Sessions]
@@ -508,7 +464,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/SessionID"
+        - $ref: "#/components/parameters/Id"
       responses:
         "200":
           description: Successful response
@@ -522,7 +478,7 @@ paths:
       security:
         - TokenAuth: []
       parameters:
-        - $ref: "#/components/parameters/SessionID"
+        - $ref: "#/components/parameters/Id"
       responses:
         "200":
           description: Successful response
@@ -530,3 +486,262 @@ paths:
           description: Authorization error
         "404":
           description: Session not found
+
+# MARK: Components
+components:
+  securitySchemes:
+    TokenAuth:
+      type: http
+      scheme: bearer
+
+  # MARK: Parameters
+  parameters:
+    Id:
+      name: id
+      in: path
+      description: ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    Query:
+      name: q
+      in: query
+      description: Search query
+      schema:
+        type: string
+
+    Page:
+      name: page
+      in: query
+      description: Page number
+      schema:
+        type: integer
+        minimum: 1
+
+    Limit:
+      name: limit
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+
+  schemas:
+    # MARK: General schemas
+    Report:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+      required:
+        - page
+        - limit
+        - total
+
+    # MARK: Models schemas
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        firstname:
+          type: string
+        lastname:
+          type: string
+        birthdate:
+          type: string
+        bio:
+          type: string
+        location:
+          type: string
+        website:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - username
+        - email
+        - created_at
+        - updated_at
+
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        token:
+          type: string
+        ip_address:
+          type: string
+        ip_latitude:
+          type: number
+          nullable: true
+        ip_longitude:
+          type: number
+          nullable: true
+        ip_country:
+          type: string
+          nullable: true
+        ip_city:
+          type: string
+          nullable: true
+        client_name:
+          type: string
+          nullable: true
+        client_version:
+          type: string
+          nullable: true
+        client_os:
+          type: string
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - id
+        - token
+        - ip_address
+        - expires_at
+        - created_at
+        - updated_at
+
+    PostType:
+      type: string
+      enum:
+        - normal
+        - reply
+        - repost
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: "#/components/schemas/PostType"
+        text:
+          type: string
+        replies_count:
+          type: integer
+        reposts_count:
+          type: integer
+        likes_count:
+          type: integer
+        dislikes_count:
+          type: integer
+        views_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        text_html:
+          type: string
+        parent_post:
+          $ref: "#/components/schemas/Post"
+        user:
+          $ref: "#/components/schemas/User"
+        replies:
+          type: array
+          items:
+            $ref: "#/components/schemas/Post"
+        auth_user_liked:
+          type: boolean
+        auth_user_disliked:
+          type: boolean
+      required:
+        - id
+        - type
+        - text
+        - replies_count
+        - reposts_count
+        - likes_count
+        - dislikes_count
+        - views_count
+        - created_at
+        - updated_at
+
+    # MARK: Page schemas
+    ApiInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+      required:
+        - name
+        - version
+
+    AuthLoginBody:
+      type: object
+      properties:
+        logon:
+          type: string
+        password:
+          type: string
+      required:
+        - logon
+        - password
+
+    AuthLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        session:
+          $ref: "#/components/schemas/Session"
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - session
+        - user
+
+    AuthValidateResponse:
+      type: object
+      properties:
+        session:
+          $ref: "#/components/schemas/Session"
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - session
+        - user
