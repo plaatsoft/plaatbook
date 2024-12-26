@@ -27,6 +27,9 @@ use crate::layers::{
 };
 use crate::models::{Session, User};
 
+mod api {
+    include!(concat!(env!("OUT_DIR"), "/api.rs"));
+}
 mod consts;
 mod controllers;
 mod database;

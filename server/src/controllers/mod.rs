@@ -7,7 +7,7 @@
 use http::{Request, Response, Status};
 use router::Path;
 
-use crate::Context;
+use crate::{api, Context};
 
 pub mod auth;
 pub mod posts;
@@ -16,7 +16,10 @@ pub mod sessions;
 pub mod users;
 
 pub fn home(_: &Request, _: &Context, _: &Path) -> Response {
-    Response::new().body(concat!("PlaatBook v", env!("CARGO_PKG_VERSION")))
+    Response::new().json(api::ApiInfo {
+        name: "PlaatBook".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
+    })
 }
 
 pub fn not_found(_: &Request, _: &Context, _: &Path) -> Response {

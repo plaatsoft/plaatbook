@@ -10,7 +10,7 @@ use serde::Serialize;
 use sqlite::{FromRow, FromValue};
 use uuid::Uuid;
 
-use crate::Context;
+use crate::{api, Context};
 
 // MARK: User
 #[derive(Clone, Serialize, FromRow)]
@@ -57,6 +57,24 @@ impl Default for User {
 pub enum UserRole {
     Normal = 0,
     Admin = 1,
+}
+
+impl From<User> for api::User {
+    fn from(user: User) -> Self {
+        Self {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            birthdate: user.birthdate.map(|date| date.to_string()),
+            bio: user.bio,
+            location: user.location,
+            website: user.website,
+            created_at: user.created_at,
+            updated_at: user.updated_at,
+        }
+    }
 }
 
 // MARK: Validators

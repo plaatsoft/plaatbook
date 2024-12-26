@@ -9,11 +9,10 @@ use http::{Request, Response, Status};
 use pbkdf2::password_verify;
 use router::Path;
 use serde::Deserialize;
-use serde_json::json;
 use useragent::UserAgentParser;
 
 use crate::models::{Session, User};
-use crate::Context;
+use crate::{api, Context};
 
 lazy_static::lazy_static! {
     static ref USER_AGENT_PARSER: UserAgentParser = UserAgentParser::new();
@@ -89,7 +88,7 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
     // Create new session
     let session = Session {
         user_id: user.id,
-        token,
+        token: token.clone(),
         ip_address: req
             .client_addr
             .expect("Should have client address")
@@ -134,19 +133,19 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
     );
 
     // Return session
-    Response::new().json(json!({
-        "token": session.token,
-        "session": session,
-        "user": user,
-    }))
+    Response::new().json(api::AuthLoginResponse {
+        token,
+        session: session.into(),
+        user: user.into(),
+    })
 }
 
 // MARK: Auth validate
 pub fn auth_validate(_: &Request, ctx: &Context, _: &Path) -> Response {
-    Response::new().json(json!({
-        "session": ctx.auth_session,
-        "user": ctx.auth_user,
-    }))
+    Response::new().json(api::AuthValidateResponse {
+        session: ctx.auth_session.clone().expect("Should be authed").into(),
+        user: ctx.auth_user.clone().expect("Should be authed").into(),
+    })
 }
 
 // MARK: Auth logout
