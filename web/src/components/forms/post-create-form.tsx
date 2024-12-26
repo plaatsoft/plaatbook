@@ -6,30 +6,29 @@
 
 import { useState } from 'preact/hooks';
 import { PostsService, $addPost } from '../../services/posts.service.ts';
-import { Errors } from '../../models/errors.ts';
+import { Report, Post } from '../../api.ts';
 import { Field } from './field.tsx';
 import { CommentIcon } from '../icons.tsx';
 import { POST_TEXT_MAX } from '../../consts.ts';
-import { Post } from '../../models/post.ts';
 import { $authUser } from '../../services/auth.service.ts';
 import { Link } from '../../router.tsx';
 
 export function PostCreateForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [text, setText] = useState('');
-    const [errors, setErrors] = useState<Errors>({});
+    const [report, setReport] = useState<Report>({});
 
     const createPost = async (event: SubmitEvent) => {
         event.preventDefault();
         setIsLoading(true);
-        setErrors({});
+        setReport({});
         const [success, result] = await PostsService.getInstance().create(text);
         setIsLoading(false);
         if (success) {
             setText('');
             $addPost.value = result as Post;
         } else {
-            setErrors(result as Errors);
+            setReport(result as Report);
         }
     };
 
@@ -47,7 +46,7 @@ export function PostCreateForm() {
                         placeholder="What's on your mind?"
                         value={text}
                         setValue={setText}
-                        error={errors.text?.join(', ')}
+                        error={report.text?.join(', ')}
                         disabled={isLoading}
                     />
 

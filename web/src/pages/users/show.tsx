@@ -6,9 +6,8 @@
 
 import { useEffect, useState } from 'preact/hooks';
 import { UsersService } from '../../services/users.service.ts';
-import { User } from '../../models/user.ts';
+import { User, Post } from '../../api.ts';
 import { NotFound } from '../not-found.tsx';
-import { Post } from '../../models/post.ts';
 import { PostComponent } from '../../components/post.tsx';
 import { dateFormatAgo } from '../../utils.ts';
 import { $authUser } from '../../services/auth.service.ts';

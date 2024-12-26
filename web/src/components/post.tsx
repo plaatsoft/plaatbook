@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { Post, PostType } from '../models/post.ts';
+import { Post, PostType } from '../api.ts';
 import { $authUser } from '../services/auth.service.ts';
 import { DialogService } from '../services/dialog.service.tsx';
 import { PostsService } from '../services/posts.service.ts';

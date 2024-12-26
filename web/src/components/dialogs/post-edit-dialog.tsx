@@ -5,9 +5,8 @@
  */
 
 import { useState } from 'preact/hooks';
-import { Post, PostType } from '../../models/post.ts';
+import { Post, PostType, Report } from '../../api.ts';
 import { Field } from '../forms/field.tsx';
-import { Errors } from '../../models/errors.ts';
 import { PostsService } from '../../services/posts.service.ts';
 import { EditIcon } from '../icons.tsx';
 import { POST_TEXT_MAX } from '../../consts.ts';
@@ -15,18 +14,18 @@ import { POST_TEXT_MAX } from '../../consts.ts';
 export function PostEditDialog({ post, onConfirm }: { post: Post; onConfirm: (updatedPost: Post | null) => void }) {
     const [isLoading, setIsLoading] = useState(false);
     const [text, setText] = useState(post.text);
-    const [errors, setErrors] = useState<Errors>({});
+    const [report, setReport] = useState<Report>({});
 
     const update = async (event: SubmitEvent) => {
         event.preventDefault();
         setIsLoading(true);
-        setErrors({});
+        setReport({});
         const [success, result] = await PostsService.getInstance().update(post.id, text);
         if (success) {
             onConfirm(result as Post);
         } else {
             setIsLoading(false);
-            setErrors(result as Errors);
+            setReport(result as Report);
         }
     };
 
@@ -52,7 +51,7 @@ export function PostEditDialog({ post, onConfirm }: { post: Post; onConfirm: (up
                                 {POST_TEXT_MAX - text.length}
                             </span>
                         }
-                        error={errors.text?.join(', ')}
+                        error={report.text?.join(', ')}
                         disabled={isLoading}
                         autofocus
                     />

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { User } from '../models/user.ts';
+import { User } from '../api.ts';
 import { Link } from '../router.tsx';
 import { dateFormatAgo } from '../utils.ts';
 

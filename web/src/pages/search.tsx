@@ -9,8 +9,7 @@ import { Field } from '../components/forms/field.tsx';
 import { SearchService } from '../services/search.service.ts';
 import { UserComponent } from '../components/user.tsx';
 import { PostComponent } from '../components/post.tsx';
-import { User } from '../models/user.ts';
-import { Post } from '../models/post.ts';
+import { User, Post } from '../api.ts';
 import { SearchIcon } from '../components/icons.tsx';
 import { route } from '../router.tsx';
 

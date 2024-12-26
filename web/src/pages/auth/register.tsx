@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { Field } from '../../components/forms/field.tsx';
 import { AuthService } from '../../services/auth.service.ts';
-import { Errors } from '../../models/errors.ts';
+import { Report } from '../../api.ts';
 import { RegisterIcon } from '../../components/icons.tsx';
 import { route } from '../../router.tsx';
 
@@ -17,7 +17,7 @@ export function Register() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [errors, setErrors] = useState<Errors>({});
+    const [report, setReport] = useState<Report>({});
 
     useEffect(() => {
         document.title = 'Register - PlaatBook';
@@ -26,21 +26,21 @@ export function Register() {
     const register = async (event: SubmitEvent) => {
         event.preventDefault();
         if (password !== confirmPassword) {
-            setErrors({ confirm_password: ['Passwords do not match'] });
+            setReport({ confirm_password: ['Passwords do not match'] });
             return;
         }
         setIsLoading(true);
-        setErrors({});
-        const errors = await AuthService.getInstance().register(username, email, password);
-        if (errors === null) {
+        setReport({});
+        const report = await AuthService.getInstance().register(username, email, password);
+        if (report === null) {
             await AuthService.getInstance().login(email, password);
             route('/');
         } else {
             if (password !== confirmPassword) {
-                errors.confirm_password = ['Passwords do not match'];
+                report.confirm_password = ['Passwords do not match'];
             }
             setIsLoading(false);
-            setErrors(errors);
+            setReport(report);
         }
     };
 
@@ -53,7 +53,7 @@ export function Register() {
                 label="Username"
                 value={username}
                 setValue={setUsername}
-                error={errors.username?.join(', ')}
+                error={report.username?.join(', ')}
                 disabled={isLoading}
                 autofocus
             />
@@ -63,7 +63,7 @@ export function Register() {
                 label="Email address"
                 value={email}
                 setValue={setEmail}
-                error={errors.email?.join(', ')}
+                error={report.email?.join(', ')}
                 disabled={isLoading}
             />
 
@@ -72,7 +72,7 @@ export function Register() {
                 label="Password"
                 value={password}
                 setValue={setPassword}
-                error={errors.password?.join(', ')}
+                error={report.password?.join(', ')}
                 disabled={isLoading}
             />
 
@@ -82,7 +82,7 @@ export function Register() {
                 value={confirmPassword}
                 setValue={setConfirmPassword}
                 disabled={isLoading}
-                error={errors.confirm_password?.join(', ')}
+                error={report.confirm_password?.join(', ')}
             />
 
             <div className="field">

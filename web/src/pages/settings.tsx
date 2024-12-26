@@ -6,10 +6,9 @@
 
 import { useState, useEffect } from 'preact/hooks';
 import { $authSession, $authUser, AuthService } from '../services/auth.service.ts';
-import { Errors } from '../models/errors.ts';
+import { Report, Session } from '../api.ts';
 import { Field } from '../components/forms/field.tsx';
 import { Notification } from '../components/notification.tsx';
-import { Session } from '../models/session.ts';
 import { dateFormat } from '../utils.ts';
 import { DialogService } from '../services/dialog.service.tsx';
 import { DeleteIcon, KeyIcon, OptionsIcon, SecurityEditIcon } from '../components/icons.tsx';
@@ -37,25 +36,25 @@ function ChangePasswordForm() {
     const [currentPassword, setCurrentPassword] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [errors, setErrors] = useState<Errors>({});
+    const [report, setReport] = useState<Report>({});
 
     const changePassword = async (event: SubmitEvent) => {
         event.preventDefault();
         if (password !== confirmPassword) {
-            setErrors({ confirm_password: ['Passwords do not match'] });
+            setReport({ confirm_password: ['Passwords do not match'] });
             return;
         }
         setIsLoading(true);
-        setErrors({});
-        const errors = await authService.changePassword(currentPassword, password);
+        setReport({});
+        const report = await authService.changePassword(currentPassword, password);
         setIsLoading(false);
-        if (errors === null) {
+        if (report === null) {
             setIsDone(true);
         } else {
             if (password !== confirmPassword) {
-                errors.confirm_password = ['Passwords do not match'];
+                report.confirm_password = ['Passwords do not match'];
             }
-            setErrors(errors);
+            setReport(report);
         }
     };
 
@@ -70,7 +69,7 @@ function ChangePasswordForm() {
                 label="Current password"
                 value={currentPassword}
                 setValue={setCurrentPassword}
-                error={errors.current_password?.join(', ')}
+                error={report.current_password?.join(', ')}
                 disabled={isLoading}
             />
 
@@ -79,7 +78,7 @@ function ChangePasswordForm() {
                 label="New password"
                 value={password}
                 setValue={setPassword}
-                error={errors.password?.join(', ')}
+                error={report.password?.join(', ')}
                 disabled={isLoading}
             />
 
@@ -89,7 +88,7 @@ function ChangePasswordForm() {
                 value={confirmPassword}
                 setValue={setConfirmPassword}
                 disabled={isLoading}
-                error={errors.confirm_password?.join(', ')}
+                error={report.confirm_password?.join(', ')}
             />
 
             <div className="field">
