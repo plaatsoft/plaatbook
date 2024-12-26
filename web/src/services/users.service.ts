@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { Errors } from '../models/errors.ts';
-import { Post } from '../models/post.ts';
-import { User } from '../models/user.ts';
+import { Report, Post, User } from '../api.ts';
 import { $authToken, $authUser } from './auth.service.ts';
 
 export class UsersService {
@@ -43,7 +41,7 @@ export class UsersService {
             location: string;
             website: string;
         },
-    ): Promise<[boolean, User | Errors]> {
+    ): Promise<[boolean, User | Report]> {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${id}`, {
             method: 'PUT',
             headers: {
@@ -54,7 +52,7 @@ export class UsersService {
         if (res.status == 200) {
             return [true, (await res.json()) as User];
         } else {
-            return [false, (await res.json()) as Errors];
+            return [false, (await res.json()) as Report];
         }
     }
 

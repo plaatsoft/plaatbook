@@ -5,8 +5,7 @@
  */
 
 import { signal } from '@preact/signals';
-import { Errors } from '../models/errors.ts';
-import { Post } from '../models/post.ts';
+import { Report, Post } from '../api.ts';
 import { $authToken, $authUser } from './auth.service.ts';
 
 export const $addPost = signal<Post | null>(null);
@@ -42,7 +41,7 @@ export class PostsService {
         return (await res.json()) as Post;
     }
 
-    async create(text: string): Promise<[boolean, Post | Errors]> {
+    async create(text: string): Promise<[boolean, Post | Report]> {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts`, {
             method: 'POST',
             headers: {
@@ -51,12 +50,12 @@ export class PostsService {
             body: new URLSearchParams({ text }),
         });
         if (res.status != 200) {
-            return [false, (await res.json()) as Errors];
+            return [false, (await res.json()) as Report];
         }
         return [true, (await res.json()) as Post];
     }
 
-    async update(id: string, text: string): Promise<[boolean, Post | Errors]> {
+    async update(id: string, text: string): Promise<[boolean, Post | Report]> {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${id}`, {
             method: 'PUT',
             headers: {
@@ -67,7 +66,7 @@ export class PostsService {
         if (res.status == 200) {
             return [true, (await res.json()) as Post];
         }
-        return [false, (await res.json()) as Errors];
+        return [false, (await res.json()) as Report];
     }
 
     async delete(id: string): Promise<void> {
@@ -79,7 +78,7 @@ export class PostsService {
         });
     }
 
-    async reply(parent_post_id: string, text: string): Promise<[boolean, Post | Errors]> {
+    async reply(parent_post_id: string, text: string): Promise<[boolean, Post | Report]> {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts/${parent_post_id}/reply`, {
             method: 'POST',
             headers: {
@@ -90,7 +89,7 @@ export class PostsService {
         if (res.status == 200) {
             return [true, (await res.json()) as Post];
         }
-        return [false, (await res.json()) as Errors];
+        return [false, (await res.json()) as Report];
     }
 
     async repost(id: string): Promise<Post | null> {

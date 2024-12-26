@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { User } from '../../models/user.ts';
+import { User } from '../../api.ts';
 import { UserEditForm } from '../forms/user-edit-form.tsx';
 
 export function UserEditDialog({ user, onConfirm }: { user: User; onConfirm: (updatedUser: User | null) => void }) {

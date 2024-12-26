@@ -5,12 +5,11 @@
  */
 
 import { useEffect, useState } from 'preact/hooks';
-import { Errors } from '../../models/errors.ts';
+import { Report, User } from '../../api.ts';
 import { Field } from './field.tsx';
 import { $authUser } from '../../services/auth.service.ts';
 import { Notification } from '../notification.tsx';
 import { AccountEditIcon } from '../icons.tsx';
-import { User } from '../../models/user.ts';
 import { UsersService } from '../../services/users.service.ts';
 
 export function UserEditForm({
@@ -31,7 +30,7 @@ export function UserEditForm({
     const [bio, setBio] = useState(user.bio ?? '');
     const [location, setLocation] = useState(user.location ?? '');
     const [website, setWebsite] = useState(user.website ?? '');
-    const [errors, setErrors] = useState<Errors>({});
+    const [report, setReport] = useState<Report>({});
     const [isDone, setIsDone] = useState(false);
 
     useEffect(() => {
@@ -43,7 +42,7 @@ export function UserEditForm({
         setBio(user.bio ?? '');
         setLocation(user.location ?? '');
         setWebsite(user.website ?? '');
-        setErrors({});
+        setReport({});
         setIsDone(false);
     }, [user]);
 
@@ -51,7 +50,7 @@ export function UserEditForm({
         console.log('test');
         event.preventDefault();
         setIsLoading(true);
-        setErrors({});
+        setReport({});
         const [sucess, result] = await UsersService.getInstance().update(user.id, {
             firstname,
             lastname,
@@ -74,7 +73,7 @@ export function UserEditForm({
                 setIsDone(true);
             }
         } else {
-            setErrors(result as Errors);
+            setReport(result as Report);
         }
     };
 
@@ -87,7 +86,7 @@ export function UserEditForm({
                         label="First name"
                         value={firstname}
                         setValue={setFirstname}
-                        error={errors.firstname?.join(', ')}
+                        error={report.firstname?.join(', ')}
                         disabled={isLoading}
                     />
                 </div>
@@ -97,7 +96,7 @@ export function UserEditForm({
                         label="Last name"
                         value={lastname}
                         setValue={setLastname}
-                        error={errors.lastname?.join(', ')}
+                        error={report.lastname?.join(', ')}
                         disabled={isLoading}
                     />
                 </div>
@@ -108,7 +107,7 @@ export function UserEditForm({
                 label="Username"
                 value={username}
                 setValue={setUsername}
-                error={errors.username?.join(', ')}
+                error={report.username?.join(', ')}
                 required
                 disabled={isLoading}
                 addonPre={<div className="button is-static">@</div>}
@@ -119,7 +118,7 @@ export function UserEditForm({
                 label="Email address"
                 value={email}
                 setValue={setEmail}
-                error={errors.email?.join(', ')}
+                error={report.email?.join(', ')}
                 required
                 disabled={isLoading}
             />
@@ -129,7 +128,7 @@ export function UserEditForm({
                 label="Birthdate"
                 value={birthdate}
                 setValue={setBirthdate}
-                error={errors.birthdate?.join(', ')}
+                error={report.birthdate?.join(', ')}
                 disabled={isLoading}
             />
 
@@ -138,7 +137,7 @@ export function UserEditForm({
                 label="Bio"
                 value={bio}
                 setValue={setBio}
-                error={errors.bio?.join(', ')}
+                error={report.bio?.join(', ')}
                 disabled={isLoading}
             />
 
@@ -149,7 +148,7 @@ export function UserEditForm({
                         label="Location"
                         value={location}
                         setValue={setLocation}
-                        error={errors.location?.join(', ')}
+                        error={report.location?.join(', ')}
                         disabled={isLoading}
                     />
                 </div>
@@ -159,7 +158,7 @@ export function UserEditForm({
                         label="Website"
                         value={website}
                         setValue={setWebsite}
-                        error={errors.website?.join(', ')}
+                        error={report.website?.join(', ')}
                         disabled={isLoading}
                     />
                 </div>

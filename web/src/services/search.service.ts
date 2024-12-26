@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { Post } from '../models/post.ts';
-import { User } from '../models/user.ts';
+import { Post, User } from '../api.ts';
 import { $authToken, $authUser } from './auth.service.ts';
 
 export class SearchService {

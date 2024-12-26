@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { Post } from '../../models/post.ts';
+import { Post } from '../../api.ts';
 import { CopyIcon } from '../icons.tsx';
 
 export function PostShareDialog({ post, onConfirm }: { post: Post; onConfirm: (updatedPost: null) => void }) {

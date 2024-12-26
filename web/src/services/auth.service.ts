@@ -5,9 +5,7 @@
  */
 
 import { signal } from '@preact/signals';
-import { Session } from '../models/session.ts';
-import { User } from '../models/user.ts';
-import { Errors } from '../models/errors.ts';
+import { Session, Report, User } from '../api.ts';
 import { route } from '../router.tsx';
 
 export const $authToken = signal<(string | null) | undefined>(undefined);
@@ -54,13 +52,13 @@ export class AuthService {
         return true;
     }
 
-    async register(username: string, email: string, password: string): Promise<Errors | null> {
+    async register(username: string, email: string, password: string): Promise<Report | null> {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
             method: 'POST',
             body: new URLSearchParams({ username, email, password }),
         });
         if (res.status != 200) {
-            return (await res.json()) as Errors;
+            return (await res.json()) as Report;
         }
         return null;
     }
@@ -158,7 +156,7 @@ export class AuthService {
         return true;
     }
 
-    async changePassword(current_password: string, password: string): Promise<Errors | null> {
+    async changePassword(current_password: string, password: string): Promise<Report | null> {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}/change_password`, {
             method: 'PUT',
             headers: {
@@ -167,7 +165,7 @@ export class AuthService {
             body: new URLSearchParams({ current_password, password }),
         });
         if (res.status != 200) {
-            return (await res.json()) as Errors;
+            return (await res.json()) as Report;
         }
         return null;
     }
