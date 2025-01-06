@@ -6,9 +6,11 @@ on:
     branches:
       - master
     paths:
+      - ".github/workflows/server.yml"
       - "server/**"
   pull_request:
     paths:
+      - ".github/workflows/server.yml"
       - "server/**"
 
 permissions:

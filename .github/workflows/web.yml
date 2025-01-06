@@ -6,9 +6,11 @@ on:
     branches:
       - master
     paths:
+      - ".github/workflows/web.yml"
       - "web/**"
   pull_request:
     paths:
+      - ".github/workflows/web.yml"
       - "web/**"
 
 permissions:
