@@ -7,7 +7,6 @@
 use chrono::{NaiveDate, Utc};
 use http::{Request, Response, Status};
 use pbkdf2::password_hash;
-use router::Path;
 use serde::{Deserialize, Deserializer};
 use uuid::Uuid;
 use validate::Validate;
@@ -22,8 +21,8 @@ use crate::models::{IndexQuery, Post, Session, User, UserRole};
 use crate::Context;
 
 // MARK: Helpers
-fn find_user(ctx: &Context, path: &Path) -> Option<User> {
-    let user_id = path.get("user_id").expect("Should be some");
+fn find_user(req: &Request, ctx: &Context) -> Option<User> {
+    let user_id = req.params.get("user_id").expect("Should be some");
     let parsed_user_id = match user_id.parse::<Uuid>() {
         Ok(id) => id,
         Err(_) => Uuid::nil(),
@@ -41,7 +40,7 @@ fn find_user(ctx: &Context, path: &Path) -> Option<User> {
 }
 
 // MARK: Users index
-pub fn users_index(req: &Request, ctx: &Context, _: &Path) -> Response {
+pub fn users_index(req: &Request, ctx: &Context) -> Response {
     // Authorization
     let auth_user = ctx.auth_user.as_ref().expect("Not authed");
     if !(auth_user.role == UserRole::Admin) {
@@ -82,7 +81,7 @@ pub fn users_index(req: &Request, ctx: &Context, _: &Path) -> Response {
 }
 
 // MARK: Users create
-pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Response {
+pub fn users_create(req: &Request, ctx: &Context) -> Response {
     // Authorization
     // -
 
@@ -97,7 +96,7 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Response {
         #[validate(ascii, length(min = 6, max = 128))]
         password: String,
     }
-    let body = match serde_urlencoded::from_str::<Body>(&req.body) {
+    let body = match serde_urlencoded::from_bytes::<Body>(req.body.as_deref().unwrap_or(&[])) {
         Ok(body) => body,
         Err(_) => {
             return Response::new()
@@ -130,10 +129,10 @@ pub fn users_create(req: &Request, ctx: &Context, _: &Path) -> Response {
 }
 
 // MARK: Users show
-pub fn users_show(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let user = match find_user(ctx, path) {
+pub fn users_show(req: &Request, ctx: &Context) -> Response {
+    let user = match find_user(req, ctx) {
         Some(user) => user,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -155,10 +154,10 @@ where
     }
 }
 
-pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let mut user = match find_user(ctx, path) {
+pub fn users_update(req: &Request, ctx: &Context) -> Response {
+    let mut user = match find_user(req, ctx) {
         Some(user) => user,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -199,7 +198,7 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Response {
         #[validate(url, length(max = 512))]
         website: Option<String>,
     }
-    let body = match serde_urlencoded::from_str::<Body>(&req.body) {
+    let body = match serde_urlencoded::from_bytes::<Body>(req.body.as_deref().unwrap_or(&[])) {
         Ok(body) => body,
         Err(_) => {
             return Response::new()
@@ -243,10 +242,10 @@ pub fn users_update(req: &Request, ctx: &Context, path: &Path) -> Response {
 }
 
 // MARK: Users change password
-pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let mut user = match find_user(ctx, path) {
+pub fn users_change_password(req: &Request, ctx: &Context) -> Response {
+    let mut user = match find_user(req, ctx) {
         Some(user) => user,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -266,7 +265,7 @@ pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Respo
         #[validate(ascii, length(min = 6, max = 128))]
         password: String,
     }
-    let body = match serde_urlencoded::from_str::<Body>(&req.body) {
+    let body = match serde_urlencoded::from_bytes::<Body>(req.body.as_deref().unwrap_or(&[])) {
         Ok(body) => body,
         Err(_) => {
             return Response::new()
@@ -290,10 +289,10 @@ pub fn users_change_password(req: &Request, ctx: &Context, path: &Path) -> Respo
 }
 
 // MARK: Users sessions
-pub fn users_sessions(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let user = match find_user(ctx, path) {
+pub fn users_sessions(req: &Request, ctx: &Context) -> Response {
+    let user = match find_user(req, ctx) {
         Some(user) => user,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -318,10 +317,10 @@ pub fn users_sessions(req: &Request, ctx: &Context, path: &Path) -> Response {
 }
 
 // MARK: Users posts
-pub fn users_posts(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let user = match find_user(ctx, path) {
+pub fn users_posts(req: &Request, ctx: &Context) -> Response {
+    let user = match find_user(req, ctx) {
         Some(user) => user,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization

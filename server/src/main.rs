@@ -6,7 +6,7 @@
 
 use std::net::{Ipv4Addr, TcpListener};
 
-use router::Router;
+use router::RouterBuilder;
 
 use crate::consts::HTTP_PORT;
 use crate::controllers::auth::{auth_login, auth_logout, auth_validate};
@@ -51,7 +51,7 @@ fn main() {
     };
 
     // Guest routes
-    let router = Router::<Context>::with(ctx)
+    let router = RouterBuilder::<Context>::with(ctx)
         .pre_layer(log_layer)
         .pre_layer(cors_pre_layer)
         .post_layer(cors_post_layer)

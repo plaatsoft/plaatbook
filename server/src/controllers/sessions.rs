@@ -6,7 +6,6 @@
 
 use chrono::Utc;
 use http::{Request, Response, Status};
-use router::Path;
 use uuid::Uuid;
 
 use crate::controllers::not_found;
@@ -14,8 +13,9 @@ use crate::models::{Session, User, UserRole};
 use crate::Context;
 
 // MARK: Helpers
-fn find_session(ctx: &Context, path: &Path) -> Option<Session> {
-    let session_id = match path
+fn find_session(req: &Request, ctx: &Context) -> Option<Session> {
+    let session_id = match req
+        .params
         .get("session_id")
         .expect("Should be some")
         .parse::<Uuid>()
@@ -35,7 +35,7 @@ fn find_session(ctx: &Context, path: &Path) -> Option<Session> {
 }
 
 // MARK: Sessions index
-pub fn sessions_index(_: &Request, ctx: &Context, _: &Path) -> Response {
+pub fn sessions_index(_: &Request, ctx: &Context) -> Response {
     // Authorization
     let auth_user = ctx.auth_user.as_ref().expect("Not authed");
     if !(auth_user.role == UserRole::Admin) {
@@ -68,10 +68,10 @@ pub fn sessions_index(_: &Request, ctx: &Context, _: &Path) -> Response {
 }
 
 // MARK: Sessions show
-pub fn sessions_show(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let mut session = match find_session(ctx, path) {
+pub fn sessions_show(req: &Request, ctx: &Context) -> Response {
+    let mut session = match find_session(req, ctx) {
         Some(session) => session,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -88,10 +88,10 @@ pub fn sessions_show(req: &Request, ctx: &Context, path: &Path) -> Response {
 }
 
 // MARK: Sessions revoke
-pub fn sessions_revoke(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let session = match find_session(ctx, path) {
+pub fn sessions_revoke(req: &Request, ctx: &Context) -> Response {
+    let session = match find_session(req, ctx) {
         Some(session) => session,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization

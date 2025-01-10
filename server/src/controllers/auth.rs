@@ -7,7 +7,6 @@
 use chrono::Utc;
 use http::{Request, Response, Status};
 use pbkdf2::password_verify;
-use router::Path;
 use serde::Deserialize;
 use useragent::UserAgentParser;
 
@@ -19,14 +18,14 @@ lazy_static::lazy_static! {
 }
 
 // MARK: Auth login
-pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
+pub fn auth_login(req: &Request, ctx: &Context) -> Response {
     // Parse body
     #[derive(Deserialize)]
     struct Body {
         logon: String,
         password: String,
     }
-    let body = match serde_urlencoded::from_str::<Body>(&req.body) {
+    let body = match serde_urlencoded::from_bytes::<Body>(req.body.as_deref().unwrap_or(&[])) {
         Ok(body) => body,
         Err(_) => {
             return Response::new()
@@ -70,7 +69,7 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
         loc: String,
     }
     let ip_info = match http::fetch(Request::with_url("http://ipinfo.io/json")) {
-        Ok(res) => serde_json::from_str::<IpInfo>(&res.body).ok(),
+        Ok(res) => serde_json::from_slice::<IpInfo>(&res.body).ok(),
         Err(_) => None,
     };
 
@@ -141,7 +140,7 @@ pub fn auth_login(req: &Request, ctx: &Context, _: &Path) -> Response {
 }
 
 // MARK: Auth validate
-pub fn auth_validate(_: &Request, ctx: &Context, _: &Path) -> Response {
+pub fn auth_validate(_: &Request, ctx: &Context) -> Response {
     Response::new().json(api::AuthValidateResponse {
         session: ctx.auth_session.clone().expect("Should be authed").into(),
         user: ctx.auth_user.clone().expect("Should be authed").into(),
@@ -149,7 +148,7 @@ pub fn auth_validate(_: &Request, ctx: &Context, _: &Path) -> Response {
 }
 
 // MARK: Auth logout
-pub fn auth_logout(_: &Request, ctx: &Context, _: &Path) -> Response {
+pub fn auth_logout(_: &Request, ctx: &Context) -> Response {
     // Expire session
     ctx.database.execute(
         "UPDATE sessions SET expires_at = ? WHERE token = ?",

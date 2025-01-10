@@ -5,7 +5,6 @@
  */
 
 use http::{Request, Response, Status};
-use router::Path;
 use serde_json::json;
 use validate::Validate;
 
@@ -13,7 +12,7 @@ use crate::consts::LIMIT_DEFAULT;
 use crate::models::{IndexQuery, Post, User};
 use crate::Context;
 
-pub fn search(req: &Request, ctx: &Context, _: &Path) -> Response {
+pub fn search(req: &Request, ctx: &Context) -> Response {
     // Parse request query
     let query = match req.url.query.as_ref() {
         Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {

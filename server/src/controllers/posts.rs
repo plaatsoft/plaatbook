@@ -6,7 +6,6 @@
 
 use chrono::Utc;
 use http::{Request, Response, Status};
-use router::Path;
 use serde::Deserialize;
 use uuid::Uuid;
 use validate::Validate;
@@ -19,8 +18,13 @@ use crate::models::{
 use crate::Context;
 
 // MARK: Helpers
-fn find_post(ctx: &Context, path: &Path) -> Option<Post> {
-    let post_id = match path.get("post_id").expect("Should exists").parse::<Uuid>() {
+fn find_post(req: &Request, ctx: &Context) -> Option<Post> {
+    let post_id = match req
+        .params
+        .get("post_id")
+        .expect("Should exists")
+        .parse::<Uuid>()
+    {
         Ok(id) => id,
         Err(_) => return None,
     };
@@ -59,7 +63,7 @@ fn remove_post_dislike(database: &sqlite::Connection, post_id: Uuid, auth_user: 
 }
 
 // MARK: Posts index
-pub fn posts_index(req: &Request, ctx: &Context, _: &Path) -> Response {
+pub fn posts_index(req: &Request, ctx: &Context) -> Response {
     // Authorization
     // -
 
@@ -106,7 +110,7 @@ struct PostBody {
     text: String,
 }
 
-pub fn posts_create(req: &Request, ctx: &Context, _: &Path) -> Response {
+pub fn posts_create(req: &Request, ctx: &Context) -> Response {
     // Authorization
     let auth_user = match ctx.auth_user.as_ref() {
         Some(user) => user,
@@ -118,7 +122,7 @@ pub fn posts_create(req: &Request, ctx: &Context, _: &Path) -> Response {
     };
 
     // Parse and validate body
-    let body = match serde_urlencoded::from_str::<PostBody>(&req.body) {
+    let body = match serde_urlencoded::from_bytes::<PostBody>(req.body.as_deref().unwrap_or(&[])) {
         Ok(body) => body,
         Err(_) => {
             return Response::new()
@@ -152,10 +156,10 @@ pub fn posts_create(req: &Request, ctx: &Context, _: &Path) -> Response {
 }
 
 // MARK: Posts show
-pub fn posts_show(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let mut post = match find_post(ctx, path) {
+pub fn posts_show(req: &Request, ctx: &Context) -> Response {
+    let mut post = match find_post(req, ctx) {
         Some(post) => post,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -186,10 +190,10 @@ pub fn posts_show(req: &Request, ctx: &Context, path: &Path) -> Response {
 }
 
 // MARK: Posts update
-pub fn posts_update(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let mut post = match find_post(ctx, path) {
+pub fn posts_update(req: &Request, ctx: &Context) -> Response {
+    let mut post = match find_post(req, ctx) {
         Some(post) => post,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -201,7 +205,7 @@ pub fn posts_update(req: &Request, ctx: &Context, path: &Path) -> Response {
     }
 
     // Parse and validate body
-    let body = match serde_urlencoded::from_str::<PostBody>(&req.body) {
+    let body = match serde_urlencoded::from_bytes::<PostBody>(req.body.as_deref().unwrap_or(&[])) {
         Ok(body) => body,
         Err(_) => {
             return Response::new()
@@ -227,10 +231,10 @@ pub fn posts_update(req: &Request, ctx: &Context, path: &Path) -> Response {
 }
 
 // MARK: Posts delete
-pub fn posts_delete(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let post = match find_post(ctx, path) {
+pub fn posts_delete(req: &Request, ctx: &Context) -> Response {
+    let post = match find_post(req, ctx) {
         Some(post) => post,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -263,10 +267,10 @@ pub fn posts_delete(req: &Request, ctx: &Context, path: &Path) -> Response {
 }
 
 // MARK: Posts replies
-pub fn posts_replies(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let post = match find_post(ctx, path) {
+pub fn posts_replies(req: &Request, ctx: &Context) -> Response {
+    let post = match find_post(req, ctx) {
         Some(post) => post,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -310,10 +314,10 @@ pub fn posts_replies(req: &Request, ctx: &Context, path: &Path) -> Response {
 }
 
 // MARK: Post create reply
-pub fn posts_create_reply(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let post = match find_post(ctx, path) {
+pub fn posts_create_reply(req: &Request, ctx: &Context) -> Response {
+    let post = match find_post(req, ctx) {
         Some(post) => post,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -327,7 +331,7 @@ pub fn posts_create_reply(req: &Request, ctx: &Context, path: &Path) -> Response
     };
 
     // Parse and validate body
-    let body = match serde_urlencoded::from_str::<PostBody>(&req.body) {
+    let body = match serde_urlencoded::from_bytes::<PostBody>(req.body.as_deref().unwrap_or(&[])) {
         Ok(body) => body,
         Err(_) => {
             return Response::new()
@@ -373,10 +377,10 @@ pub fn posts_create_reply(req: &Request, ctx: &Context, path: &Path) -> Response
 }
 
 // MARK: Posts repost
-pub fn posts_repost(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let post = match find_post(ctx, path) {
+pub fn posts_repost(req: &Request, ctx: &Context) -> Response {
+    let post = match find_post(req, ctx) {
         Some(post) => post,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -422,10 +426,10 @@ pub fn posts_repost(req: &Request, ctx: &Context, path: &Path) -> Response {
 }
 
 // MARK: Posts like
-pub fn posts_like(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let post = match find_post(ctx, path) {
+pub fn posts_like(req: &Request, ctx: &Context) -> Response {
+    let post = match find_post(req, ctx) {
         Some(post) => post,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -469,10 +473,10 @@ pub fn posts_like(req: &Request, ctx: &Context, path: &Path) -> Response {
 }
 
 // MARK: Posts like delete
-pub fn posts_like_delete(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let post = match find_post(ctx, path) {
+pub fn posts_like_delete(req: &Request, ctx: &Context) -> Response {
+    let post = match find_post(req, ctx) {
         Some(post) => post,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -491,10 +495,10 @@ pub fn posts_like_delete(req: &Request, ctx: &Context, path: &Path) -> Response 
 }
 
 // MARK: Posts dislike
-pub fn posts_dislike(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let post = match find_post(ctx, path) {
+pub fn posts_dislike(req: &Request, ctx: &Context) -> Response {
+    let post = match find_post(req, ctx) {
         Some(post) => post,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
@@ -538,10 +542,10 @@ pub fn posts_dislike(req: &Request, ctx: &Context, path: &Path) -> Response {
 }
 
 // MARK: Posts dislike delete
-pub fn posts_dislike_delete(req: &Request, ctx: &Context, path: &Path) -> Response {
-    let post = match find_post(ctx, path) {
+pub fn posts_dislike_delete(req: &Request, ctx: &Context) -> Response {
+    let post = match find_post(req, ctx) {
         Some(post) => post,
-        None => return not_found(req, ctx, path),
+        None => return not_found(req, ctx),
     };
 
     // Authorization
