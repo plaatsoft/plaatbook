@@ -17,10 +17,10 @@
 ### Server
 
 -   Install the latest Rust toolchain with [rustup](https://rustup.rs/)
--   Install `cargo-udeps`, `cargo-deny`, `cargo-watch` and `openapi-generator`:
+-   Install `cargo-udeps`, `cargo-deny`, `cargo-watch`, `cargo-nextest` and `openapi-generator`:
 
     ```sh
-    cargo install cargo-udeps cargo-deny cargo-watch
+    cargo install cargo-udeps cargo-deny cargo-watch cargo-nextest
     cargo install --git https://github.com/bplaat/crates.git openapi-generator
     ```
 
