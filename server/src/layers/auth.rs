@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 PlaatSoft
+ * Copyright (c) 2024-2025 PlaatSoft
  *
  * SPDX-License-Identifier: MIT
  */
@@ -9,7 +9,8 @@ use http::{Request, Response};
 use crate::models::{self, Session};
 use crate::Context;
 
-pub fn auth_optional_layer(req: &Request, ctx: &mut Context) -> Option<Response> {
+// MARK: Auth optional
+pub fn auth_optional_pre_layer(req: &Request, ctx: &mut Context) -> Option<Response> {
     // Get token from Authorization header
     let authorization = match req
         .headers
@@ -53,7 +54,8 @@ pub fn auth_optional_layer(req: &Request, ctx: &mut Context) -> Option<Response>
     None
 }
 
-pub fn auth_required_layer(req: &Request, ctx: &mut Context) -> Option<Response> {
+// MARK: Auth required
+pub fn auth_required_pre_layer(req: &Request, ctx: &mut Context) -> Option<Response> {
     // Get token from Authorization header
     let authorization = match req
         .headers
@@ -107,4 +109,71 @@ pub fn auth_required_layer(req: &Request, ctx: &mut Context) -> Option<Response>
     ctx.auth_session = Some(session);
 
     None
+}
+
+// MARK: Tests
+#[cfg(test)]
+mod test {
+    use chrono::{Duration, Utc};
+    use models::User;
+
+    use super::*;
+    use crate::router;
+
+    #[test]
+    fn test_unauthed() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+
+        // Create a test user
+        let user = User::default();
+        ctx.database.execute(
+            format!(
+                "INSERT INTO users ({}) VALUES ({})",
+                User::columns(),
+                User::values()
+            ),
+            user.clone(),
+        );
+
+        let res = router.handle(&Request::with_url("http://localhost/auth/validate"));
+        assert_eq!(res.status, http::Status::Unauthorized);
+    }
+
+    #[test]
+    fn test_authed() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+
+        // Create a test user and session
+        let user = User::default();
+        ctx.database.execute(
+            format!(
+                "INSERT INTO users ({}) VALUES ({})",
+                User::columns(),
+                User::values()
+            ),
+            user.clone(),
+        );
+        let session = Session {
+            user_id: user.id,
+            token: "test".to_string(),
+            expires_at: Utc::now() + Duration::days(1),
+            ..Default::default()
+        };
+        ctx.database.execute(
+            format!(
+                "INSERT INTO sessions ({}) VALUES ({})",
+                Session::columns(),
+                Session::values()
+            ),
+            session.clone(),
+        );
+
+        // Add Authorization header to request
+        let req = Request::with_url("http://localhost/auth/validate")
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, http::Status::Ok);
+    }
 }

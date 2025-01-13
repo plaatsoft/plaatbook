@@ -1,12 +1,14 @@
 /*
- * Copyright (c) 2024 PlaatSoft
+ * Copyright (c) 2024-2025 PlaatSoft
  *
  * SPDX-License-Identifier: MIT
  */
 
 use std::net::{Ipv4Addr, TcpListener};
+use std::path::Path;
 
-use router::RouterBuilder;
+use consts::DATABASE_PATH;
+use router::{Router, RouterBuilder};
 
 use crate::consts::HTTP_PORT;
 use crate::controllers::auth::{auth_login, auth_logout, auth_validate};
@@ -23,7 +25,8 @@ use crate::controllers::users::{
 };
 use crate::controllers::{home, not_found};
 use crate::layers::{
-    auth_optional_layer, auth_required_layer, cors_post_layer, cors_pre_layer, log_layer,
+    auth_optional_pre_layer, auth_required_pre_layer, cors_post_layer, cors_pre_layer,
+    log_pre_layer,
 };
 use crate::models::{Session, User};
 
@@ -36,26 +39,44 @@ mod database;
 mod layers;
 mod models;
 
+// MARK: Context
 #[derive(Clone)]
-struct Context {
+pub(crate) struct Context {
     database: sqlite::Connection,
     auth_user: Option<User>,
     auth_session: Option<Session>,
 }
 
-fn main() {
-    let ctx = Context {
-        database: database::open().expect("Can't open database"),
-        auth_user: None,
-        auth_session: None,
-    };
+impl Context {
+    pub(crate) fn with_database(database_path: impl AsRef<Path>) -> Self {
+        let database = database::open(database_path.as_ref()).expect("Can't open database");
+        database::seed(&database);
+        Self {
+            database,
+            auth_user: None,
+            auth_session: None,
+        }
+    }
 
-    // Guest routes
+    #[cfg(test)]
+    pub(crate) fn with_test_database() -> Self {
+        let database = database::open(Path::new(":memory:")).expect("Can't open database");
+        Self {
+            database,
+            auth_user: None,
+            auth_session: None,
+        }
+    }
+}
+
+// MARK: Router
+pub(crate) fn router(ctx: Context) -> Router<Context> {
+    // Guests routes
     let router = RouterBuilder::<Context>::with(ctx)
-        .pre_layer(log_layer)
+        .pre_layer(log_pre_layer)
         .pre_layer(cors_pre_layer)
         .post_layer(cors_post_layer)
-        .pre_layer(auth_optional_layer)
+        .pre_layer(auth_optional_pre_layer)
         .get("/", home)
         // Auth
         .post("/auth/login", auth_login)
@@ -73,8 +94,8 @@ fn main() {
         .fallback(not_found);
 
     // Authed routes
-    let router = router
-        .pre_layer(auth_required_layer)
+    router
+        .pre_layer(auth_required_pre_layer)
         // Auth
         .get("/auth/validate", auth_validate)
         .put("/auth/logout", auth_logout)
@@ -97,8 +118,12 @@ fn main() {
         .get("/sessions", sessions_index)
         .get("/sessions/:session_id", sessions_show)
         .delete("/sessions/:session_id", sessions_revoke)
-        .build();
+        .build()
+}
 
+// MARK: Main
+fn main() {
+    let router = router(Context::with_database(DATABASE_PATH));
     println!("Server is listening on: http://localhost:{}/", HTTP_PORT);
     let listener = TcpListener::bind((Ipv4Addr::UNSPECIFIED, HTTP_PORT))
         .unwrap_or_else(|_| panic!("Can't bind to port: {}", HTTP_PORT));

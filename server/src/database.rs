@@ -1,18 +1,19 @@
 /*
- * Copyright (c) 2024 PlaatSoft
+ * Copyright (c) 2024-2025 PlaatSoft
  *
  * SPDX-License-Identifier: MIT
  */
 
+use std::path::Path;
+
 use chrono::NaiveDate;
 use pbkdf2::password_hash;
 
-use crate::consts::DATABASE_PATH;
 use crate::models::{User, UserRole};
 
-pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
-    // Open database and create tables
-    let database = sqlite::Connection::open(DATABASE_PATH)?;
+// MARK: Open database
+pub fn open(path: &Path) -> Result<sqlite::Connection, sqlite::ConnectionError> {
+    let database = sqlite::Connection::open(path)?;
     database.execute(
         "CREATE TABLE IF NOT EXISTS users (
             id BLOB PRIMARY KEY,
@@ -83,8 +84,11 @@ pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
         )",
         (),
     );
+    Ok(database)
+}
 
-    // Seed database
+// MARK: Seed database
+pub fn seed(database: &sqlite::Connection) {
     let users_count = database
         .query::<i64>("SELECT COUNT(id) FROM users", ())
         .next()
@@ -111,6 +115,4 @@ pub fn open() -> Result<sqlite::Connection, sqlite::ConnectionError> {
             admin,
         );
     }
-
-    Ok(database)
 }

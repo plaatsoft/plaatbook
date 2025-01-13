@@ -20,6 +20,12 @@ ci:
 	cargo clippy --locked --all --all-targets -- -D warnings
 	CARGO_TARGET_DIR=target/udeps cargo +nightly udeps --locked --all-targets
 	cargo deny check --hide-inclusion-graph
+# 	Test
+	cargo nextest run
+
+.PHONY: coverage
+coverage:
+	cargo llvm-cov nextest
 
 .PHONY: release
 release:
