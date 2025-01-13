@@ -55,6 +55,6 @@
 
 ## License
 
-Copyright © 2024 [PlaatSoft](https://www.plaatsoft.nl/)
+Copyright © 2024-2025 [PlaatSoft](https://www.plaatsoft.nl/)
 
 Licensed under the [MIT](LICENSE) license.
