@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-use chrono::Utc;
 use http::{Request, Response, Status};
 use pbkdf2::password_verify;
 use serde::Deserialize;
+use time::DateTime;
 use useragent::UserAgentParser;
 
 use crate::models::{Session, User};
@@ -153,7 +153,7 @@ pub fn auth_logout(_: &Request, ctx: &Context) -> Response {
     ctx.database.execute(
         "UPDATE sessions SET expires_at = ? WHERE token = ?",
         (
-            Utc::now(),
+            DateTime::now(),
             ctx.auth_session.as_ref().expect("Not authed").token.clone(),
         ),
     );

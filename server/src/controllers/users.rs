@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-use chrono::{NaiveDate, Utc};
+use std::str::FromStr;
+
 use http::{Request, Response, Status};
 use pbkdf2::password_hash;
 use serde::{Deserialize, Deserializer};
+use time::{Date, DateTime};
 use uuid::Uuid;
 use validate::Validate;
 
@@ -217,11 +219,11 @@ pub fn users_update(req: &Request, ctx: &Context) -> Response {
     user.lastname = body.lastname;
     user.birthdate = body
         .birthdate
-        .and_then(|birthdate| NaiveDate::parse_from_str(&birthdate, "%Y-%m-%d").ok());
+        .and_then(|birthdate| Date::from_str(&birthdate).ok());
     user.bio = body.bio;
     user.location = body.location;
     user.website = body.website;
-    user.updated_at = Utc::now();
+    user.updated_at = DateTime::now();
     ctx.database.execute(
         "UPDATE users SET username = ?, email = ?, firstname = ?, lastname = ?, birthdate = ?, bio = ?, location = ?, website = ?, updated_at = ? WHERE id = ?",
         (
@@ -279,7 +281,7 @@ pub fn users_change_password(req: &Request, ctx: &Context) -> Response {
 
     // Update user
     user.password = password_hash(&body.password);
-    user.updated_at = Utc::now();
+    user.updated_at = DateTime::now();
     ctx.database.execute(
         "UPDATE users SET password = ?, updated_at = ? WHERE id = ?",
         (user.password.clone(), user.updated_at, user.id),
@@ -310,7 +312,7 @@ pub fn users_sessions(req: &Request, ctx: &Context) -> Response {
                     "SELECT {} FROM sessions WHERE user_id = ? AND expires_at > ? ORDER BY expires_at DESC",
                     Session::columns()
                 ),
-                (user.id, Utc::now()),
+                (user.id, DateTime::now()),
             )
             .collect::<Vec<_>>();
     Response::new().json(user_sessions)

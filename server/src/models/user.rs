@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-use chrono::{DateTime, NaiveDate, Utc};
 use pbkdf2::password_verify;
 use serde::Serialize;
 use sqlite::{FromRow, FromValue};
+use time::{Date, DateTime};
 use uuid::Uuid;
 
 use crate::{api, Context};
@@ -22,19 +22,19 @@ pub struct User {
     pub password: String,
     pub firstname: Option<String>,
     pub lastname: Option<String>,
-    pub birthdate: Option<NaiveDate>,
+    pub birthdate: Option<Date>,
     pub bio: Option<String>,
     pub location: Option<String>,
     pub website: Option<String>,
     #[serde(skip)]
     pub role: UserRole,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
 }
 
 impl Default for User {
     fn default() -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         User {
             id: Uuid::now_v7(),
             username: "".to_string(),

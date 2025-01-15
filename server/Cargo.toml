@@ -14,8 +14,9 @@ router = { git = "https://github.com/bplaat/crates.git" }
 sqlite = { git = "https://github.com/bplaat/crates.git", features = [
     "derive",
     "uuid",
-    "chrono",
+    "time",
 ] }
+time = { git = "https://github.com/bplaat/crates.git", features = ["serde"] }
 useragent = { git = "https://github.com/bplaat/crates.git" }
 uuid = { git = "https://github.com/bplaat/crates.git", features = [
     "v7",
@@ -27,7 +28,6 @@ validate = { git = "https://github.com/bplaat/crates.git", features = [
     "serde",
 ] }
 
-chrono = { version = "0.4.38", default-features = false, features = ["serde"] }
 lazy_static = "1.5.0"
 regex = { version = "1.11", default-features = false }
 serde = { version = "1.0", features = ["derive"] }

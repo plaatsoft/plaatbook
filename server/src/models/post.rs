@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlite::{FromRow, FromValue};
+use time::DateTime;
 use uuid::Uuid;
 
 use super::{PostInteractionType, User};
@@ -31,8 +31,8 @@ pub struct Post {
     pub dislikes_count: i64,
     #[sqlite(rename = "views")]
     pub views_count: i64,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
     #[sqlite(skip)]
     pub text_html: Option<String>,
     #[sqlite(skip)]
@@ -59,7 +59,7 @@ pub enum PostType {
 
 impl Default for Post {
     fn default() -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             id: Uuid::now_v7(),
             r#type: PostType::Normal,

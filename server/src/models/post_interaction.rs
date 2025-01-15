@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-use chrono::{DateTime, Utc};
 use sqlite::{FromRow, FromValue};
+use time::DateTime;
 use uuid::Uuid;
 
 #[derive(FromRow)]
@@ -14,8 +14,8 @@ pub struct PostInteraction {
     pub post_id: Uuid,
     pub user_id: Uuid,
     pub r#type: PostInteractionType,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
 }
 
 #[derive(FromValue)]

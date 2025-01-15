@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-use chrono::Utc;
 use http::{Request, Response, Status};
 use serde::Deserialize;
+use time::DateTime;
 use uuid::Uuid;
 use validate::Validate;
 
@@ -219,7 +219,7 @@ pub fn posts_update(req: &Request, ctx: &Context) -> Response {
 
     // Update post
     post.text = body.text;
-    post.updated_at = Utc::now();
+    post.updated_at = DateTime::now();
     ctx.database.execute(
         "UPDATE posts SET text = ?, updated_at = ? WHERE id = ?",
         (post.text.clone(), post.updated_at, post.id),
@@ -344,7 +344,7 @@ pub fn posts_create_reply(req: &Request, ctx: &Context) -> Response {
     }
 
     // Create new reply post
-    let now = Utc::now();
+    let now = DateTime::now();
     let mut reply = Post {
         id: Uuid::now_v7(),
         r#type: PostType::Reply,
@@ -394,7 +394,7 @@ pub fn posts_repost(req: &Request, ctx: &Context) -> Response {
     };
 
     // Create new repost
-    let now = Utc::now();
+    let now = DateTime::now();
     let mut repost = Post {
         id: Uuid::now_v7(),
         r#type: PostType::Repost,
@@ -447,7 +447,7 @@ pub fn posts_like(req: &Request, ctx: &Context) -> Response {
     remove_post_dislike(&ctx.database, post.content_post_id(), auth_user);
 
     // Create new post like interaction
-    let now = Utc::now();
+    let now = DateTime::now();
     let post_interaction = PostInteraction {
         id: Uuid::now_v7(),
         post_id: post.content_post_id(),
@@ -516,7 +516,7 @@ pub fn posts_dislike(req: &Request, ctx: &Context) -> Response {
     remove_post_dislike(&ctx.database, post.content_post_id(), auth_user);
 
     // Create new post dislike interaction
-    let now = Utc::now();
+    let now = DateTime::now();
     let post_interaction = PostInteraction {
         id: Uuid::now_v7(),
         post_id: post.content_post_id(),

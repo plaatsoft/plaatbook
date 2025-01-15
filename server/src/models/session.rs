@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlite::FromRow;
+use time::DateTime;
 use uuid::Uuid;
 
 use super::User;
@@ -28,16 +28,16 @@ pub struct Session {
     pub client_name: Option<String>,
     pub client_version: Option<String>,
     pub client_os: Option<String>,
-    pub expires_at: DateTime<Utc>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub expires_at: DateTime,
+    pub created_at: DateTime,
+    pub updated_at: DateTime,
     #[sqlite(skip)]
     pub user: Option<User>,
 }
 
 impl Default for Session {
     fn default() -> Self {
-        let now = Utc::now();
+        let now = DateTime::now();
         Self {
             id: Uuid::now_v7(),
             user_id: Uuid::now_v7(),

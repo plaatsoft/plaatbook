@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-use chrono::Utc;
 use http::{Request, Response, Status};
+use time::DateTime;
 use uuid::Uuid;
 
 use crate::controllers::not_found;
@@ -104,7 +104,7 @@ pub fn sessions_revoke(req: &Request, ctx: &Context) -> Response {
 
     ctx.database.execute(
         "UPDATE sessions SET expires_at = ? WHERE id = ?",
-        (Utc::now(), session.id),
+        (DateTime::now(), session.id),
     );
     Response::new()
 }

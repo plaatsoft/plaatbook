@@ -6,8 +6,8 @@
 
 use std::path::Path;
 
-use chrono::NaiveDate;
 use pbkdf2::password_hash;
+use time::Date;
 
 use crate::models::{User, UserRole};
 
@@ -99,7 +99,7 @@ pub fn seed(database: &sqlite::Connection) {
             email: "admin@plaatsoft.nl".to_string(),
             password: password_hash("admin"),
             firstname: Some("Admin".to_string()),
-            birthdate: NaiveDate::from_ymd_opt(2024, 12, 2),
+            birthdate: Date::from_ymd(2024, 12, 2),
             bio: Some("Admin of PlaatBook".to_string()),
             location: Some("Gouda, Netherlands".to_string()),
             website: Some("https://www.plaatsoft.nl/".to_string()),

@@ -5,6 +5,7 @@
  */
 
 use http::{Request, Response};
+use time::DateTime;
 
 use crate::models::{self, Session};
 use crate::Context;
@@ -30,7 +31,7 @@ pub fn auth_optional_pre_layer(req: &Request, ctx: &mut Context) -> Option<Respo
                 "SELECT {} FROM sessions WHERE token = ? AND expires_at > ? LIMIT 1",
                 Session::columns()
             ),
-            (token, chrono::Utc::now()),
+            (token, DateTime::now()),
         )
         .next();
     let session = match session {
@@ -81,7 +82,7 @@ pub fn auth_required_pre_layer(req: &Request, ctx: &mut Context) -> Option<Respo
                 "SELECT {} FROM sessions WHERE token = ? AND expires_at > ? LIMIT 1",
                 Session::columns()
             ),
-            (token, chrono::Utc::now()),
+            (token, DateTime::now()),
         )
         .next();
     let session = match session {
@@ -114,8 +115,10 @@ pub fn auth_required_pre_layer(req: &Request, ctx: &mut Context) -> Option<Respo
 // MARK: Tests
 #[cfg(test)]
 mod test {
-    use chrono::{Duration, Utc};
+    use std::time::Duration;
+
     use models::User;
+    use time::DateTime;
 
     use super::*;
     use crate::router;
@@ -158,7 +161,7 @@ mod test {
         let session = Session {
             user_id: user.id,
             token: "test".to_string(),
-            expires_at: Utc::now() + Duration::days(1),
+            expires_at: DateTime::now() + Duration::from_secs(60 * 60),
             ..Default::default()
         };
         ctx.database.execute(
