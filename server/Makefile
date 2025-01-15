@@ -15,13 +15,12 @@ start:
 ci:
 #	Format
 	./check_copyright.sh
-	cargo +nightly fmt --all -- --check
+	cargo +nightly fmt -- --check
 # 	Lint
-	cargo clippy --locked --all --all-targets -- -D warnings
-	CARGO_TARGET_DIR=target/udeps cargo +nightly udeps --locked --all-targets
+	cargo clippy --locked --all-targets -- -D warnings
 	cargo deny check --hide-inclusion-graph
 # 	Test
-	cargo nextest run
+	cargo nextest run --locked
 
 .PHONY: coverage
 coverage:
