@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
+use std::sync::LazyLock;
+
 use http::{Request, Response, Status};
 use pbkdf2::password_verify;
 use serde::Deserialize;
@@ -13,9 +15,7 @@ use useragent::UserAgentParser;
 use crate::models::{Session, User};
 use crate::{api, Context};
 
-lazy_static::lazy_static! {
-    static ref USER_AGENT_PARSER: UserAgentParser = UserAgentParser::new();
-}
+static USER_AGENT_PARSER: LazyLock<UserAgentParser> = LazyLock::new(UserAgentParser::new);
 
 // MARK: Auth login
 pub fn auth_login(req: &Request, ctx: &Context) -> Response {

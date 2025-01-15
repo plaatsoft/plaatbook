@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
+use std::sync::LazyLock;
+
+use regex::Regex;
 use serde::Serialize;
 use sqlite::{FromRow, FromValue};
 use time::DateTime;
@@ -182,12 +185,14 @@ impl Post {
 }
 
 // MARK: Post Markdown
-lazy_static::lazy_static! {
-    static ref URL_REGEX: regex::Regex = regex::Regex::new(r"(https?://[^\s]+)").expect("Should compile");
-    static ref BOLD_REGEX: regex::Regex = regex::Regex::new(r"\*\*(.*?)\*\*").expect("Should compile");
-    static ref ITALIC_REGEX: regex::Regex = regex::Regex::new(r"\*(.*?)\*").expect("Should compile");
-    static ref PARAGRAPH_REGEX: regex::Regex = regex::Regex::new(r"\n\n").expect("Should compile");
-}
+static URL_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(https?://[^\s]+)").expect("Should compile"));
+static BOLD_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\*\*(.*?)\*\*").expect("Should compile"));
+static ITALIC_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\*(.*?)\*").expect("Should compile"));
+static PARAGRAPH_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\n\n").expect("Should compile"));
 
 fn render_markdown(text: &str) -> String {
     // Convert URLs to links
