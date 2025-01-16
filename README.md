@@ -17,9 +17,10 @@
 ### Server
 
 -   Install the latest Rust toolchain with [rustup](https://rustup.rs/)
--   Install `cargo-deny`, `cargo-watch`, `cargo-nextest` and `openapi-generator`:
+-   Install nightly `rustfmt`, `cargo-deny`, `cargo-watch`, `cargo-nextest` and `openapi-generator`:
 
     ```sh
+    rustup toolchain add nightly --component rustfmt
     cargo install cargo-deny cargo-watch cargo-nextest
     cargo install --git https://github.com/bplaat/crates.git openapi-generator
     ```
@@ -30,10 +31,10 @@
     make -C server start
     ```
 
--   Run CI checks:
+-   Run checks:
 
     ```sh
-    make -C server ci
+    make -C server check
     ```
 
 ### Web
@@ -45,10 +46,10 @@
     make -C web start
     ```
 
--   Run CI checks:
+-   Run checks:
 
     ```sh
-    make -C web ci
+    make -C web check
     ```
 
 -   Open page in browser

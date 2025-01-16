@@ -1,5 +1,5 @@
 .PHONY: all
-all: ci
+all: check
 
 .PHONY: clean
 clean:
@@ -14,8 +14,8 @@ start: generate-api
 	@if [ ! -d "node_modules" ]; then npm ci; fi
 	npm start
 
-.PHONY: ci
-ci: generate-api
+.PHONY: check
+check: generate-api
 	./check_copyright.sh
 	@if [ ! -d "node_modules" ]; then npm ci; fi
 	npm run lint

@@ -1,7 +1,7 @@
-export DATABASE_URL=sqlite://database.db
+PROFILE ?= default
 
 .PHONY: all
-all: ci
+all: check
 
 .PHONY: clean
 clean:
@@ -11,8 +11,8 @@ clean:
 start:
 	cargo watch -x run
 
-.PHONY: ci
-ci:
+.PHONY: check
+check:
 #	Format
 	./check_copyright.sh
 	cargo +nightly fmt -- --check
@@ -20,11 +20,11 @@ ci:
 	cargo clippy --locked --all-targets -- -D warnings
 	cargo deny check --hide-inclusion-graph
 # 	Test
-	cargo nextest run --locked
+	cargo nextest run --locked --config-file nextest.toml --profile $(PROFILE)
 
 .PHONY: coverage
 coverage:
-	cargo llvm-cov nextest
+	cargo llvm-cov nextest --config-file nextest.toml --profile $(PROFILE)
 
 .PHONY: release
 release:

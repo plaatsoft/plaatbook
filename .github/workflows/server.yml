@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  checks: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,11 +29,14 @@ jobs:
       - run: |
           sudo apt-get update
           sudo apt-get install -y libsqlite3-dev
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          components: rustfmt
+      - run: rustup toolchain add nightly --component rustfmt
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-deny,cargo-nextest
-      - run: make -C server ci
+      - run: PROFILE=ci make -C server check
+      - uses: mikepenz/action-junit-report@v5
+        if: always()
+        with:
+          check_name: Rust Tests
+          report_paths: server/target/nextest/ci/junit.xml
+          require_tests: true
