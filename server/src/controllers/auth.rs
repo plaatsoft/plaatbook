@@ -88,11 +88,7 @@ pub fn auth_login(req: &Request, ctx: &Context) -> Response {
     let session = Session {
         user_id: user.id,
         token: token.clone(),
-        ip_address: req
-            .client_addr
-            .expect("Should have client address")
-            .ip()
-            .to_string(),
+        ip_address: req.client_addr.ip().to_string(),
         ip_latitude: ip_info.as_ref().and_then(|info| {
             info.loc
                 .split(',')
@@ -112,13 +108,7 @@ pub fn auth_login(req: &Request, ctx: &Context) -> Response {
         ip_country: ip_info.as_ref().map(|info| info.country.clone()),
         ip_city: ip_info.as_ref().map(|info| info.city.clone()),
         client_name: user_agent.as_ref().map(|ua| ua.client.family.to_string()),
-        client_version: user_agent.as_ref().map(|ua| {
-            format!(
-                "{}.{}",
-                ua.client.major.as_ref().unwrap_or(&"0".to_string()),
-                ua.client.minor.as_ref().unwrap_or(&"0".to_string())
-            )
-        }),
+        client_version: user_agent.as_ref().and_then(|ua| ua.client.version.clone()),
         client_os: user_agent.as_ref().map(|ua| ua.os.family.to_string()),
         ..Default::default()
     };
