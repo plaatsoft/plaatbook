@@ -6,18 +6,17 @@
 
 use std::net::{Ipv4Addr, TcpListener};
 use std::path::Path;
+use std::sync::LazyLock;
 
-use consts::DATABASE_PATH;
 use router::{Router, RouterBuilder};
+use useragent::UserAgentParser;
 
-use crate::consts::HTTP_PORT;
 use crate::controllers::auth::{auth_login, auth_logout, auth_validate};
 use crate::controllers::posts::{
     posts_create, posts_create_reply, posts_delete, posts_dislike, posts_dislike_delete,
     posts_index, posts_like, posts_like_delete, posts_replies, posts_repost, posts_show,
     posts_update,
 };
-use crate::controllers::search::search;
 use crate::controllers::sessions::{sessions_index, sessions_revoke, sessions_show};
 use crate::controllers::users::{
     users_change_password, users_create, users_index, users_posts, users_sessions, users_show,
@@ -33,13 +32,16 @@ use crate::models::{Session, User};
 mod api {
     include!(concat!(env!("OUT_DIR"), "/api.rs"));
 }
-mod consts;
 mod controllers;
 mod database;
 mod layers;
 mod models;
+#[cfg(test)]
+mod test_utils;
 
 // MARK: Context
+static USER_AGENT_PARSER: LazyLock<UserAgentParser> = LazyLock::new(UserAgentParser::new);
+
 #[derive(Clone)]
 pub(crate) struct Context {
     database: sqlite::Connection,
@@ -84,8 +86,6 @@ pub(crate) fn router(ctx: Context) -> Router<Context> {
         .get("/posts", posts_index)
         .get("/posts/:post_id", posts_show)
         .get("/posts/:post_id/replies", posts_replies)
-        // Search
-        .get("/search", search)
         // Users
         .post("/users", users_create)
         .get("/users/:user_id", users_show)
@@ -123,7 +123,14 @@ pub(crate) fn router(ctx: Context) -> Router<Context> {
 
 // MARK: Main
 fn main() {
-    let router = router(Context::with_database(DATABASE_PATH));
+    println!("Starting PlaatBook server...");
+
+    // Init database and user agent parser
+    let router = router(Context::with_database("database.db"));
+    let _ = &*USER_AGENT_PARSER;
+
+    // Start server
+    const HTTP_PORT: u16 = 8080;
     println!("Server is listening on: http://localhost:{}/", HTTP_PORT);
     let listener = TcpListener::bind((Ipv4Addr::UNSPECIFIED, HTTP_PORT))
         .unwrap_or_else(|_| panic!("Can't bind to port: {}", HTTP_PORT));

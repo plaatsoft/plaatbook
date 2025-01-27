@@ -115,29 +115,15 @@ pub fn auth_required_pre_layer(req: &Request, ctx: &mut Context) -> Option<Respo
 // MARK: Tests
 #[cfg(test)]
 mod test {
-    use std::time::Duration;
-
-    use models::User;
-    use time::DateTime;
-
     use super::*;
+    use crate::models::UserRole;
     use crate::router;
+    use crate::test_utils::create_user_session;
 
     #[test]
     fn test_unauthed() {
         let ctx = Context::with_test_database();
         let router = router(ctx.clone());
-
-        // Create a test user
-        let user = User::default();
-        ctx.database.execute(
-            format!(
-                "INSERT INTO users ({}) VALUES ({})",
-                User::columns(),
-                User::values()
-            ),
-            user.clone(),
-        );
 
         let res = router.handle(&Request::with_url("http://localhost/auth/validate"));
         assert_eq!(res.status, http::Status::Unauthorized);
@@ -149,29 +135,7 @@ mod test {
         let router = router(ctx.clone());
 
         // Create a test user and session
-        let user = User::default();
-        ctx.database.execute(
-            format!(
-                "INSERT INTO users ({}) VALUES ({})",
-                User::columns(),
-                User::values()
-            ),
-            user.clone(),
-        );
-        let session = Session {
-            user_id: user.id,
-            token: "test".to_string(),
-            expires_at: DateTime::now() + Duration::from_secs(60 * 60),
-            ..Default::default()
-        };
-        ctx.database.execute(
-            format!(
-                "INSERT INTO sessions ({}) VALUES ({})",
-                Session::columns(),
-                Session::values()
-            ),
-            session.clone(),
-        );
+        let (_, session) = create_user_session(&ctx, UserRole::Normal);
 
         // Add Authorization header to request
         let req = Request::with_url("http://localhost/auth/validate")

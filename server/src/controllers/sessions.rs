@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 PlaatSoft
+ * Copyright (c) 2024-2025 PlaatSoft
  *
  * SPDX-License-Identifier: MIT
  */
@@ -7,10 +7,11 @@
 use http::{Request, Response, Status};
 use time::DateTime;
 use uuid::Uuid;
+use validate::Validate;
 
 use crate::controllers::not_found;
-use crate::models::{Session, User, UserRole};
-use crate::Context;
+use crate::models::{IndexQuery, Session, User, UserRole};
+use crate::{api, Context};
 
 // MARK: Helpers
 fn find_session(req: &Request, ctx: &Context) -> Option<Session> {
@@ -35,7 +36,7 @@ fn find_session(req: &Request, ctx: &Context) -> Option<Session> {
 }
 
 // MARK: Sessions index
-pub fn sessions_index(_: &Request, ctx: &Context) -> Response {
+pub fn sessions_index(req: &Request, ctx: &Context) -> Response {
     // Authorization
     let auth_user = ctx.auth_user.as_ref().expect("Not authed");
     if !(auth_user.role == UserRole::Admin) {
@@ -44,14 +45,31 @@ pub fn sessions_index(_: &Request, ctx: &Context) -> Response {
             .body("401 Unauthorized");
     }
 
+    // Parse index query
+    let query = match req.url.query.as_ref() {
+        Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {
+            Ok(query) => query,
+            Err(_) => return Response::with_status(Status::BadRequest),
+        },
+        None => IndexQuery::default(),
+    };
+    if let Err(report) = query.validate() {
+        return Response::with_status(Status::BadRequest).json(report);
+    }
+
+    let total = ctx
+        .database
+        .query::<i64>("SELECT COUNT(id) FROM sessions", ())
+        .next()
+        .expect("Can't count sessions");
     let sessions = ctx
         .database
         .query::<Session>(
             format!(
-                "SELECT {} FROM sessions ORDER BY expires_at DESC",
+                "SELECT {} FROM sessions ORDER BY expires_at DESC LIMIT ? OFFSET ?",
                 Session::columns()
             ),
-            (),
+            (query.limit, (query.page - 1) * query.limit),
         )
         .map(|mut session| {
             session.user = ctx
@@ -63,8 +81,16 @@ pub fn sessions_index(_: &Request, ctx: &Context) -> Response {
                 .next();
             session
         })
+        .map(Into::<api::Session>::into)
         .collect::<Vec<_>>();
-    Response::new().json(sessions)
+    Response::new().json(api::SessionIndexResponse {
+        pagination: api::Pagination {
+            total,
+            page: query.page,
+            limit: query.limit,
+        },
+        data: sessions,
+    })
 }
 
 // MARK: Sessions show
@@ -84,7 +110,7 @@ pub fn sessions_show(req: &Request, ctx: &Context) -> Response {
 
     // Return session
     session.fetch_relationships(ctx);
-    Response::new().json(session)
+    Response::new().json(Into::<api::Session>::into(session))
 }
 
 // MARK: Sessions revoke
@@ -107,4 +133,107 @@ pub fn sessions_revoke(req: &Request, ctx: &Context) -> Response {
         (DateTime::now(), session.id),
     );
     Response::new()
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::controllers::auth::generate_random_token;
+    use crate::database::Extension;
+    use crate::router;
+    use crate::test_utils::create_user_session;
+
+    // MARK: Test Sessions index
+    #[test]
+    fn test_sessions_index() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Admin);
+
+        for _ in 0..10 {
+            ctx.database.insert_session(Session {
+                user_id: user.id,
+                token: generate_random_token(),
+                ..Default::default()
+            });
+        }
+
+        let req = Request::with_url("http://localhost/sessions")
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let res = serde_json::from_slice::<api::SessionIndexResponse>(&res.body).unwrap();
+        assert_eq!(res.pagination.total, 10 + 1);
+    }
+
+    // MARK: Test Sessions show
+    #[test]
+    fn test_sessions_show() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+
+        // Show your own session
+        let (_, user_session) = create_user_session(&ctx, UserRole::Normal);
+        let req = Request::with_url(format!("http://localhost/sessions/{}", user_session.id))
+            .header("Authorization", format!("Bearer {}", user_session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let res = serde_json::from_slice::<api::Session>(&res.body).unwrap();
+        assert_eq!(res.id, user_session.id);
+
+        // Admin show user session
+        let (_, admin_session) = create_user_session(&ctx, UserRole::Admin);
+        let req = Request::with_url(format!("http://localhost/sessions/{}", user_session.id))
+            .header("Authorization", format!("Bearer {}", admin_session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let res = serde_json::from_slice::<api::Session>(&res.body).unwrap();
+        assert_eq!(res.id, user_session.id);
+
+        // Unauthorized show user session
+        let (_, other_user_session) = create_user_session(&ctx, UserRole::Normal);
+        let req = Request::with_url(format!("http://localhost/sessions/{}", user_session.id))
+            .header(
+                "Authorization",
+                format!("Bearer {}", other_user_session.token),
+            );
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Unauthorized);
+    }
+
+    // MARK: Test Sessions revoke
+    #[test]
+    fn test_sessions_revoke() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+
+        // Revoke your own session
+        let (_, user_session) = create_user_session(&ctx, UserRole::Normal);
+        let req = Request::with_url(format!("http://localhost/sessions/{}", user_session.id))
+            .method(http::Method::Delete)
+            .header("Authorization", format!("Bearer {}", user_session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+
+        // Check if session is revoked
+        let req = Request::with_url(format!("http://localhost/sessions/{}", user_session.id))
+            .header("Authorization", format!("Bearer {}", user_session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Unauthorized);
+
+        // Admin revoke user session
+        let (_, admin_session) = create_user_session(&ctx, UserRole::Admin);
+        let (_, user_session) = create_user_session(&ctx, UserRole::Normal);
+        let req = Request::with_url(format!("http://localhost/sessions/{}", user_session.id))
+            .method(http::Method::Delete)
+            .header("Authorization", format!("Bearer {}", admin_session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+
+        // Check if session is revoked
+        let req = Request::with_url(format!("http://localhost/sessions/{}", user_session.id))
+            .header("Authorization", format!("Bearer {}", user_session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Unauthorized);
+    }
 }

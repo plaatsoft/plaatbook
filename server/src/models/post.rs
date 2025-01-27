@@ -1,27 +1,26 @@
 /*
- * Copyright (c) 2024 PlaatSoft
+ * Copyright (c) 2024-2025 PlaatSoft
  *
  * SPDX-License-Identifier: MIT
  */
 
 use std::sync::LazyLock;
 
+use from_enum::FromEnum;
 use regex::Regex;
-use serde::Serialize;
 use sqlite::{FromRow, FromValue};
 use time::DateTime;
 use uuid::Uuid;
 
 use super::{PostInteractionType, User};
-use crate::Context;
+use crate::{api, Context};
 
-#[derive(Clone, Serialize, FromRow)]
+// MARK: Post
+#[derive(Clone, FromRow)]
 pub struct Post {
     pub id: Uuid,
     pub r#type: PostType,
-    #[serde(skip)]
     pub parent_post_id: Option<Uuid>,
-    #[serde(skip)]
     pub user_id: Uuid,
     pub text: String,
     #[sqlite(rename = "replies")]
@@ -37,8 +36,6 @@ pub struct Post {
     pub created_at: DateTime,
     pub updated_at: DateTime,
     #[sqlite(skip)]
-    pub text_html: Option<String>,
-    #[sqlite(skip)]
     pub parent_post: Option<Box<Post>>,
     #[sqlite(skip)]
     pub user: Option<User>,
@@ -50,13 +47,11 @@ pub struct Post {
     pub auth_user_disliked: Option<bool>,
 }
 
-#[derive(Clone, Copy, Serialize, FromValue, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, FromEnum, FromValue)]
+#[from_enum(api::PostType)]
 pub enum PostType {
-    #[serde(rename = "normal")]
     Normal = 0,
-    #[serde(rename = "reply")]
     Reply = 1,
-    #[serde(rename = "repost")]
     Repost = 2,
 }
 
@@ -67,8 +62,8 @@ impl Default for Post {
             id: Uuid::now_v7(),
             r#type: PostType::Normal,
             parent_post_id: None,
-            user_id: Uuid::now_v7(),
-            text: String::new(),
+            user_id: Uuid::nil(),
+            text: "".to_string(),
             replies_count: 0,
             reposts_count: 0,
             likes_count: 0,
@@ -76,7 +71,6 @@ impl Default for Post {
             views_count: 0,
             created_at: now,
             updated_at: now,
-            text_html: None,
             parent_post: None,
             user: None,
             replies: None,
@@ -86,6 +80,33 @@ impl Default for Post {
     }
 }
 
+impl From<Post> for api::Post {
+    fn from(post: Post) -> Self {
+        let text_html = render_markdown(&post.text);
+        Self {
+            id: post.id,
+            r#type: post.r#type.into(),
+            text: post.text,
+            text_html,
+            replies_count: post.replies_count,
+            reposts_count: post.reposts_count,
+            likes_count: post.likes_count,
+            dislikes_count: post.dislikes_count,
+            views_count: post.views_count,
+            created_at: post.created_at,
+            updated_at: post.updated_at,
+            parent_post: post.parent_post.map(|post| Box::new((*post).into())),
+            user: post.user.map(|user| user.into()),
+            replies: post
+                .replies
+                .map(|replies| replies.into_iter().map(|post| post.into()).collect()),
+            auth_user_liked: post.auth_user_liked,
+            auth_user_disliked: post.auth_user_disliked,
+        }
+    }
+}
+
+// MARK: Relationships
 impl Post {
     pub fn content_post_id(&self) -> Uuid {
         if self.r#type == PostType::Repost {
@@ -168,29 +189,21 @@ impl Post {
         }
     }
 
-    pub fn process(&mut self, ctx: &Context) {
+    pub fn fetch_relationships(&mut self, ctx: &Context) {
         self.fetch_user(ctx);
         self.fetch_parent_post(ctx);
         self.fetch_user_interactions(ctx);
         self.update_views(ctx);
-
-        // Render markdown text to html
-        if let Some(parent_post) = &mut self.parent_post {
-            parent_post.text_html = Some(render_markdown(&parent_post.text));
-        }
-        if self.r#type != PostType::Repost {
-            self.text_html = Some(render_markdown(&self.text));
-        }
     }
 }
 
 // MARK: Post Markdown
 static URL_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(https?://[^\s]+)").expect("Should compile"));
+    LazyLock::new(|| Regex::new(r"(https?://[\w./?=&-]+)").expect("Should compile"));
 static BOLD_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\*\*(.*?)\*\*").expect("Should compile"));
+    LazyLock::new(|| Regex::new(r"\*\*([^\*]*)\*\*").expect("Should compile"));
 static ITALIC_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\*(.*?)\*").expect("Should compile"));
+    LazyLock::new(|| Regex::new(r"\*([^\*]*)\*").expect("Should compile"));
 static PARAGRAPH_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\n\n").expect("Should compile"));
 
@@ -212,4 +225,45 @@ fn render_markdown(text: &str) -> String {
     // Convert paragraphs
     text = PARAGRAPH_REGEX.replace_all(&text, r#"</p><p>"#).to_string();
     format!("<p>{}</p>", text)
+}
+
+// MARK: Tests
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_render_markdown_urls() {
+        let input = "Check this out: https://example.com";
+        let expected = r#"<p>Check this out: <a href="https://example.com" target="_blank" rel="noreferrer">https://example.com</a></p>"#;
+        assert_eq!(render_markdown(input), expected);
+    }
+
+    #[test]
+    fn test_render_markdown_bold() {
+        let input = "This is **bold** text.";
+        let expected = r#"<p>This is <b>bold</b> text.</p>"#;
+        assert_eq!(render_markdown(input), expected);
+    }
+
+    #[test]
+    fn test_render_markdown_italic() {
+        let input = "This is *italic* text.";
+        let expected = r#"<p>This is <i>italic</i> text.</p>"#;
+        assert_eq!(render_markdown(input), expected);
+    }
+
+    #[test]
+    fn test_render_markdown_paragraphs() {
+        let input = "First paragraph.\n\nSecond paragraph.";
+        let expected = r#"<p>First paragraph.</p><p>Second paragraph.</p>"#;
+        assert_eq!(render_markdown(input), expected);
+    }
+
+    #[test]
+    fn test_render_markdown_combined() {
+        let input = "Visit **https://example.com** for more *details*.\n\nThank you!";
+        let expected = r#"<p>Visit <b><a href="https://example.com" target="_blank" rel="noreferrer">https://example.com</a></b> for more <i>details</i>.</p><p>Thank you!</p>"#;
+        assert_eq!(render_markdown(input), expected);
+    }
 }
