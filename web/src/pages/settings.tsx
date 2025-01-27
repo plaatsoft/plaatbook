@@ -105,7 +105,11 @@ function SessionsManagement() {
     const [sessions, setSessions] = useState<Session[]>([]);
 
     const fetchSessions = async () => {
-        setSessions(await AuthService.getInstance().getActiveSessions());
+        // FIXME: Fix pagination
+        const sessionsRes = await AuthService.getInstance().getActiveSessions(1);
+        if (sessionsRes !== null) {
+            setSessions(sessionsRes.data);
+        }
     };
     useEffect(() => {
         fetchSessions();
@@ -149,7 +153,7 @@ function SessionsManagement() {
                         </div>
 
                         <h3 className="subtitle mb-2">
-                            {session.client_name} on {session.client_os}
+                            {session.clientName} on {session.clientOs}
                             {session.id === $authSession.value!.id && (
                                 <span className="tag ml-2">
                                     <KeyIcon className="is-small mr-1" />
@@ -158,14 +162,13 @@ function SessionsManagement() {
                             )}
                         </h3>
                         <p>
-                            <strong>Location</strong> with {session.ip_address} at {session.ip_city},{' '}
-                            {session.ip_country}
+                            <strong>Location</strong> with {session.ipAddress} at {session.ipCity}, {session.ipCountry}
                         </p>
                         <p>
-                            <strong>Logged in</strong> on {dateFormat(session.created_at)}
+                            <strong>Logged in</strong> on {dateFormat(session.createdAt)}
                         </p>
                         <p>
-                            <strong>Expires</strong> om {dateFormat(session.expires_at)}
+                            <strong>Expires</strong> om {dateFormat(session.expiresAt)}
                         </p>
                     </div>
                 </div>

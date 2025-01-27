@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { Report, Post, User } from '../api.ts';
+import { Report, User, PostIndexResponse, UserIndexResponse } from '../api.ts';
 import { $authToken, $authUser } from './auth.service.ts';
 
 export class UsersService {
@@ -15,6 +15,20 @@ export class UsersService {
             UsersService.instance = new UsersService();
         }
         return UsersService.instance;
+    }
+
+    async search(query: string, page: number): Promise<UserIndexResponse | null> {
+        const headers = new Headers();
+        if ($authUser.value !== null) {
+            headers.append('Authorization', `Bearer ${$authToken.value}`);
+        }
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/users?q=${encodeURIComponent(query)}&page=${page}`, {
+            headers,
+        });
+        if (res.status !== 200) {
+            return null;
+        }
+        return (await res.json()) as UserIndexResponse;
     }
 
     async get(user_id: string): Promise<User | null> {
@@ -56,7 +70,7 @@ export class UsersService {
         }
     }
 
-    async getPosts(user_id: string, page: number): Promise<Post[] | null> {
+    async getPosts(user_id: string, page: number): Promise<PostIndexResponse | null> {
         const headers = new Headers();
         if ($authUser.value !== null) {
             headers.append('Authorization', `Bearer ${$authToken.value}`);
@@ -65,8 +79,8 @@ export class UsersService {
             headers,
         });
         if (res.status !== 200) {
-            return [];
+            return null;
         }
-        return (await res.json()) as Post[];
+        return (await res.json()) as PostIndexResponse;
     }
 }

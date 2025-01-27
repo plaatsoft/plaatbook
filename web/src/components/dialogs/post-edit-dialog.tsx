@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 PlaatSoft
+ * Copyright (c) 2024-2025 PlaatSoft
  *
  * SPDX-License-Identifier: MIT
  */
@@ -13,7 +13,7 @@ import { POST_TEXT_MAX } from '../../consts.ts';
 
 export function PostEditDialog({ post, onConfirm }: { post: Post; onConfirm: (updatedPost: Post | null) => void }) {
     const [isLoading, setIsLoading] = useState(false);
-    const [text, setText] = useState(post.text);
+    const [text, setText] = useState(post.text!);
     const [report, setReport] = useState<Report>({});
 
     const update = async (event: SubmitEvent) => {

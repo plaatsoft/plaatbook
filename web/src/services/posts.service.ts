@@ -5,7 +5,7 @@
  */
 
 import { signal } from '@preact/signals';
-import { Report, Post } from '../api.ts';
+import { Report, Post, PostIndexResponse } from '../api.ts';
 import { $authToken, $authUser } from './auth.service.ts';
 
 export const $addPost = signal<Post | null>(null);
@@ -20,13 +20,24 @@ export class PostsService {
         return PostsService.instance;
     }
 
-    async getAll(page: number): Promise<Post[]> {
+    async getPage(page: number): Promise<PostIndexResponse> {
         const headers = new Headers();
         if ($authUser.value !== null) {
             headers.append('Authorization', `Bearer ${$authToken.value}`);
         }
         const res = await fetch(`${import.meta.env.VITE_API_URL}/posts?page=${page}`, { headers });
-        return (await res.json()) as Post[];
+        return (await res.json()) as PostIndexResponse;
+    }
+
+    async search(query: string, page: number): Promise<PostIndexResponse> {
+        const headers = new Headers();
+        if ($authUser.value !== null) {
+            headers.append('Authorization', `Bearer ${$authToken.value}`);
+        }
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/posts?q=${encodeURIComponent(query)}&page=${page}`, {
+            headers,
+        });
+        return (await res.json()) as PostIndexResponse;
     }
 
     async get(id: string): Promise<Post | null> {

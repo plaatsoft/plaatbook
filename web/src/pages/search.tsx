@@ -6,12 +6,13 @@
 
 import { useEffect, useState } from 'preact/hooks';
 import { Field } from '../components/forms/field.tsx';
-import { SearchService } from '../services/search.service.ts';
 import { UserComponent } from '../components/user.tsx';
 import { PostComponent } from '../components/post.tsx';
 import { User, Post } from '../api.ts';
 import { SearchIcon } from '../components/icons.tsx';
 import { route } from '../router.tsx';
+import { PostsService } from '../services/posts.service.ts';
+import { UsersService } from '../services/users.service.ts';
 
 const styles = css`
     .no-results {
@@ -38,11 +39,15 @@ export function Search() {
         }
         route(`/search?q=${query}`);
         updateTitle();
-        const res = await SearchService.getInstance().search(query, 1);
-        if (res !== null) {
-            const { posts, users } = res;
-            setUsers(users);
-            setPosts(posts);
+
+        const usersRes = await UsersService.getInstance().search(query, 1);
+        if (usersRes !== null) {
+            setUsers(usersRes.data);
+        }
+
+        const postsRes = await PostsService.getInstance().search(query, 1);
+        if (postsRes !== null) {
+            setPosts(postsRes.data);
         }
     };
 

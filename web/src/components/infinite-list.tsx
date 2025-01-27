@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 PlaatSoft
+ * Copyright (c) 2024-2025 PlaatSoft
  *
  * SPDX-License-Identifier: MIT
  */
@@ -38,6 +38,7 @@ export class InfiniteList<T> extends Component<InfiniteListProps<T>> {
     }
 
     checkScroll() {
+        // FIXME: Fix bug with infinite scroll overflow
         if (
             !this.loading &&
             window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 200
