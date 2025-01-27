@@ -1,31 +1,25 @@
 /*
- * Copyright (c) 2024 PlaatSoft
+ * Copyright (c) 2024-2025 PlaatSoft
  *
  * SPDX-License-Identifier: MIT
  */
-
-use std::sync::LazyLock;
 
 use http::{Request, Response, Status};
 use pbkdf2::password_verify;
 use serde::Deserialize;
 use time::DateTime;
-use useragent::UserAgentParser;
+use validate::Report;
 
+use crate::database::Extension;
 use crate::models::{Session, User};
-use crate::{api, Context};
-
-static USER_AGENT_PARSER: LazyLock<UserAgentParser> = LazyLock::new(UserAgentParser::new);
+use crate::{api, Context, USER_AGENT_PARSER};
 
 // MARK: Auth login
 pub fn auth_login(req: &Request, ctx: &Context) -> Response {
     // Parse body
-    #[derive(Deserialize)]
-    struct Body {
-        logon: String,
-        password: String,
-    }
-    let body = match serde_urlencoded::from_bytes::<Body>(req.body.as_deref().unwrap_or(&[])) {
+    let body = match serde_urlencoded::from_bytes::<api::AuthLoginBody>(
+        req.body.as_deref().unwrap_or(&[]),
+    ) {
         Ok(body) => body,
         Err(_) => {
             return Response::new()
@@ -48,17 +42,17 @@ pub fn auth_login(req: &Request, ctx: &Context) -> Response {
     let user = match user {
         Some(user) => user,
         None => {
-            return Response::new()
-                .status(Status::Unauthorized)
-                .body("Wrong username, email address or password");
+            let mut report = Report::new();
+            report.insert_error("logon", "Wrong username, email address or password");
+            return Response::new().status(Status::Unauthorized).json(report);
         }
     };
 
     // Check password
     if !password_verify(&body.password, &user.password).expect("Can't verify password") {
-        return Response::new()
-            .status(Status::Unauthorized)
-            .body("Wrong username, email address or password");
+        let mut report = Report::new();
+        report.insert_error("logon", "Wrong username, email address or password");
+        return Response::new().status(Status::Unauthorized).json(report);
     }
 
     // Get IP information from ipinfo.io
@@ -68,7 +62,11 @@ pub fn auth_login(req: &Request, ctx: &Context) -> Response {
         country: String,
         loc: String,
     }
-    let ip_info = match http::fetch(Request::with_url("http://ipinfo.io/json")) {
+    let ip_address = req.client_addr.ip();
+    let ip_info = match http::fetch(Request::with_url(format!(
+        "http://ipinfo.io/{}/json",
+        ip_address
+    ))) {
         Ok(res) => serde_json::from_slice::<IpInfo>(&res.body).ok(),
         Err(_) => None,
     };
@@ -80,9 +78,7 @@ pub fn auth_login(req: &Request, ctx: &Context) -> Response {
         .map(|user_agent| USER_AGENT_PARSER.parse(user_agent));
 
     // Generate token
-    let mut token_bytes = [0u8; 256];
-    getrandom::getrandom(&mut token_bytes).expect("Can't get random bytes");
-    let token = base64::encode(&token_bytes, true);
+    let token = generate_random_token();
 
     // Create new session
     let session = Session {
@@ -112,14 +108,7 @@ pub fn auth_login(req: &Request, ctx: &Context) -> Response {
         client_os: user_agent.as_ref().map(|ua| ua.os.family.to_string()),
         ..Default::default()
     };
-    ctx.database.execute(
-        format!(
-            "INSERT INTO sessions ({}) VALUES ({})",
-            Session::columns(),
-            Session::values()
-        ),
-        session.clone(),
-    );
+    ctx.database.insert_session(session.clone());
 
     // Return session
     Response::new().json(api::AuthLoginResponse {
@@ -127,6 +116,12 @@ pub fn auth_login(req: &Request, ctx: &Context) -> Response {
         session: session.into(),
         user: user.into(),
     })
+}
+
+pub fn generate_random_token() -> String {
+    let mut token_bytes = [0u8; 256];
+    getrandom::getrandom(&mut token_bytes).expect("Can't get random bytes");
+    base64::encode(&token_bytes, true)
 }
 
 // MARK: Auth validate
@@ -148,4 +143,116 @@ pub fn auth_logout(_: &Request, ctx: &Context) -> Response {
         ),
     );
     Response::new().status(Status::Ok)
+}
+
+#[cfg(test)]
+mod test {
+    use pbkdf2::password_hash;
+
+    use super::*;
+    use crate::database::Extension;
+    use crate::models::UserRole;
+    use crate::router;
+    use crate::test_utils::create_user_session;
+
+    // MARK: Test Auth login
+    #[test]
+    fn test_auth_login() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+
+        ctx.database.insert_user(User {
+            username: "test".to_string(),
+            email: "test@example.com".to_string(),
+            password: password_hash("password"),
+            ..Default::default()
+        });
+
+        // Login with username
+        let req = Request::with_url("http://localhost/auth/login")
+            .method(http::Method::Post)
+            .body("logon=test&password=password");
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let json = serde_json::from_slice::<api::AuthLoginResponse>(&res.body).unwrap();
+        assert!(!json.token.is_empty());
+        assert_eq!(json.user.username, "test");
+
+        // Login with email
+        let req = Request::with_url("http://localhost/auth/login")
+            .method(http::Method::Post)
+            .body("logon=test@example.com&password=password");
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let json = serde_json::from_slice::<api::AuthLoginResponse>(&res.body).unwrap();
+        assert!(!json.token.is_empty());
+        assert_eq!(json.user.email, "test@example.com");
+
+        // Login with wrong username
+        let req = Request::with_url("http://localhost/auth/login")
+            .method(http::Method::Post)
+            .body("logon=wrongtest&password=password");
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Unauthorized);
+        let report = serde_json::from_slice::<Report>(&res.body).unwrap();
+        assert_eq!(
+            report.get_errors("logon").unwrap().as_slice(),
+            &["Wrong username, email address or password".to_string()]
+        );
+
+        // Login with wrong password
+        let req = Request::with_url("http://localhost/auth/login")
+            .method(http::Method::Post)
+            .body("logon=test&password=wrongpassword");
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Unauthorized);
+        let report = serde_json::from_slice::<Report>(&res.body).unwrap();
+        assert_eq!(
+            report.get_errors("logon").unwrap().as_slice(),
+            &["Wrong username, email address or password".to_string()]
+        );
+    }
+
+    // MARK: Test Auth validate
+    #[test]
+    fn test_auth_validate() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Normal);
+
+        // Validate session
+        let req = Request::with_url("http://localhost/auth/validate")
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let json = serde_json::from_slice::<api::AuthValidateResponse>(&res.body).unwrap();
+        assert_eq!(json.user.username, user.username);
+
+        // Validate session with wrong token
+        let req = Request::with_url("http://localhost/auth/validate")
+            .header("Authorization", "Bearer wrong_token");
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Unauthorized);
+    }
+
+    // MARK: Test Auth logout
+    #[test]
+    fn test_auth_logout() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (_, session) = create_user_session(&ctx, UserRole::Normal);
+
+        // Logout session
+        let req = Request::with_url("http://localhost/auth/logout")
+            .method(http::Method::Put)
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+
+        // Validate session should be expired
+        let req = Request::with_url("http://localhost/auth/validate")
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Unauthorized);
+    }
 }

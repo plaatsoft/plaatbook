@@ -1,24 +1,24 @@
 /*
- * Copyright (c) 2024 PlaatSoft
+ * Copyright (c) 2024-2025 PlaatSoft
  *
  * SPDX-License-Identifier: MIT
  */
 
-use serde::Serialize;
+use std::time::Duration;
+
 use sqlite::FromRow;
 use time::DateTime;
 use uuid::Uuid;
 
 use super::User;
-use crate::consts::SESSION_EXPIRE_DURATION;
 use crate::{api, Context};
 
-#[derive(Clone, Serialize, FromRow)]
+pub const SESSION_EXPIRE_DURATION: Duration = Duration::from_secs(365 * 24 * 60 * 60);
+
+#[derive(Clone, FromRow)]
 pub struct Session {
     pub id: Uuid,
-    #[serde(skip)]
     pub user_id: Uuid,
-    #[serde(skip)]
     pub token: String,
     pub ip_address: String,
     pub ip_latitude: Option<f64>,
@@ -40,7 +40,7 @@ impl Default for Session {
         let now = DateTime::now();
         Self {
             id: Uuid::now_v7(),
-            user_id: Uuid::now_v7(),
+            user_id: Uuid::nil(),
             token: String::new(),
             ip_address: String::new(),
             ip_latitude: None,
@@ -62,7 +62,6 @@ impl From<Session> for api::Session {
     fn from(session: Session) -> Self {
         Self {
             id: session.id,
-            token: session.token,
             ip_address: session.ip_address,
             ip_latitude: session.ip_latitude,
             ip_longitude: session.ip_longitude,
@@ -79,6 +78,7 @@ impl From<Session> for api::Session {
     }
 }
 
+// MARK: Relationships
 impl Session {
     pub fn fetch_relationships(&mut self, ctx: &Context) {
         self.user = ctx

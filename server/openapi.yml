@@ -19,7 +19,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiInfo"
+                $ref: "#/components/schemas/HomeResponse"
 
   # MARK: Auth
   /auth/login:
@@ -73,7 +73,6 @@ paths:
           description: Authorization error
 
   # MARK: Posts
-  # FIXME: Fix and use generated types
   /posts:
     get:
       tags: [Posts]
@@ -85,8 +84,16 @@ paths:
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostIndexResponse"
         "400":
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
     post:
       tags: [Posts]
       summary: Create new post
@@ -97,17 +104,20 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              type: object
-              properties:
-                text:
-                  type: string
-              required:
-                - text
+              $ref: "#/components/schemas/PostCreateUpdateBody"
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
         "400":
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
         "401":
           description: Authorization error
   /posts/{id}:
@@ -119,6 +129,10 @@ paths:
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
         "404":
           description: Post not found
     put:
@@ -133,15 +147,20 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              type: object
-              properties:
-                text:
-                  type: string
+              $ref: "#/components/schemas/PostCreateUpdateBody"
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
         "400":
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
         "401":
           description: Authorization error
         "404":
@@ -172,6 +191,10 @@ paths:
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostIndexResponse"
         "404":
           description: Post not found
   /posts/{id}/reply:
@@ -187,17 +210,20 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              type: object
-              properties:
-                text:
-                  type: string
-              required:
-                - text
+              $ref: "#/components/schemas/PostCreateUpdateBody"
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
         "400":
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
         "401":
           description: Authorization error
         "404":
@@ -213,8 +239,16 @@ paths:
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
         "400":
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
         "401":
           description: Authorization error
         "404":
@@ -278,24 +312,7 @@ paths:
         "404":
           description: Post not found
 
-  # MARK: Search
-  # FIXME: Fix and use generated types
-  /search:
-    get:
-      tags: [Search]
-      summary: Search content
-      parameters:
-        - $ref: "#/components/parameters/Query"
-        - $ref: "#/components/parameters/Page"
-        - $ref: "#/components/parameters/Limit"
-      responses:
-        "200":
-          description: Successful response
-        "400":
-          description: Bad Request
-
   # MARK: Users
-  # FIXME: Fix and use generated types
   /users:
     get:
       tags: [Users]
@@ -309,8 +326,16 @@ paths:
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserIndexResponse"
         "400":
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
         "401":
           description: Authorization error
     post:
@@ -323,24 +348,20 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-              required:
-                - username
-                - email
-                - password
+              $ref: "#/components/schemas/UserCreateBody"
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
         "400":
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
   /users/{id}:
     get:
       tags: [Users]
@@ -352,6 +373,10 @@ paths:
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
         "404":
           description: User not found
     put:
@@ -366,18 +391,20 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                email:
-                  type: string
-                  format: email
+              $ref: "#/components/schemas/UserUpdateBody"
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
         "400":
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
         "401":
           description: Authorization error
         "404":
@@ -395,17 +422,16 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              type: object
-              properties:
-                current_password:
-                  type: string
-                password:
-                  type: string
+              $ref: "#/components/schemas/UserUpdatePasswordBody"
       responses:
         "200":
           description: Successful response
         "400":
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
         "401":
           description: Authorization error
         "404":
@@ -421,6 +447,10 @@ paths:
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionIndexResponse"
         "401":
           description: Authorization error
         "404":
@@ -439,11 +469,14 @@ paths:
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostIndexResponse"
         "404":
           description: User not found
 
   # MARK: Sessions
-  # FIXME: Fix and use generated types
   /sessions:
     get:
       tags: [Sessions]
@@ -453,8 +486,16 @@ paths:
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionIndexResponse"
         "400":
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
         "401":
           description: Authorization error
   /sessions/{id}:
@@ -468,6 +509,10 @@ paths:
       responses:
         "200":
           description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
         "401":
           description: Authorization error
         "404":
@@ -529,8 +574,8 @@ components:
         minimum: 1
         maximum: 50
 
+  # MARK: Schemas
   schemas:
-    # MARK: General schemas
     Report:
       type: object
       additionalProperties:
@@ -552,7 +597,7 @@ components:
         - limit
         - total
 
-    # MARK: Models schemas
+    # MARK: Models
     User:
       type: object
       properties:
@@ -570,24 +615,25 @@ components:
           type: string
         birthdate:
           type: string
+          format: date
         bio:
           type: string
         location:
           type: string
         website:
           type: string
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
       required:
         - id
         - username
-        - email
-        - created_at
-        - updated_at
+        - email # FIXME: Hide when not owned in future
+        - createdAt
+        - updatedAt
 
     Session:
       type: object
@@ -595,56 +641,39 @@ components:
         id:
           type: string
           format: uuid
-        token:
+        ipAddress:
           type: string
-        ip_address:
-          type: string
-        ip_latitude:
+        ipLatitude:
           type: number
-          nullable: true
-        ip_longitude:
+        ipLongitude:
           type: number
-          nullable: true
-        ip_country:
+        ipCountry:
           type: string
-          nullable: true
-        ip_city:
+        ipCity:
           type: string
-          nullable: true
-        client_name:
+        clientName:
           type: string
-          nullable: true
-        client_version:
+        clientVersion:
           type: string
-          nullable: true
-        client_os:
+        clientOs:
           type: string
-          nullable: true
-        expires_at:
+        expiresAt:
           type: string
           format: date-time
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
         user:
           $ref: "#/components/schemas/User"
       required:
         - id
-        - token
-        - ip_address
-        - expires_at
-        - created_at
-        - updated_at
-
-    PostType:
-      type: string
-      enum:
-        - normal
-        - reply
-        - repost
+        - ipAddress
+        - expiresAt
+        - createdAt
+        - updatedAt
 
     Post:
       type: object
@@ -656,25 +685,25 @@ components:
           $ref: "#/components/schemas/PostType"
         text:
           type: string
-        replies_count:
+        textHtml:
+          type: string
+        repliesCount:
           type: integer
-        reposts_count:
+        repostsCount:
           type: integer
-        likes_count:
+        likesCount:
           type: integer
-        dislikes_count:
+        dislikesCount:
           type: integer
-        views_count:
+        viewsCount:
           type: integer
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
-        text_html:
-          type: string
-        parent_post:
+        parentPost:
           $ref: "#/components/schemas/Post"
         user:
           $ref: "#/components/schemas/User"
@@ -682,34 +711,31 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Post"
-        auth_user_liked:
+        authUserLiked:
           type: boolean
-        auth_user_disliked:
+        authUserDisliked:
           type: boolean
       required:
         - id
         - type
         - text
-        - replies_count
-        - reposts_count
-        - likes_count
-        - dislikes_count
-        - views_count
-        - created_at
-        - updated_at
+        - textHtml
+        - repliesCount
+        - repostsCount
+        - likesCount
+        - dislikesCount
+        - viewsCount
+        - createdAt
+        - updatedAt
 
-    # MARK: Page schemas
-    ApiInfo:
-      type: object
-      properties:
-        name:
-          type: string
-        version:
-          type: string
-      required:
-        - name
-        - version
+    PostType:
+      type: string
+      enum:
+        - normal
+        - reply
+        - repost
 
+    # MARK: Bodies
     AuthLoginBody:
       type: object
       properties:
@@ -720,6 +746,77 @@ components:
       required:
         - logon
         - password
+
+    PostCreateUpdateBody:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+        - text
+
+    UserCreateBody:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - username
+        - email
+        - password
+
+    UserUpdateBody:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        firstname:
+          type: string
+        lastname:
+          type: string
+        birthdate:
+          type: string
+          format: date
+        bio:
+          type: string
+        location:
+          type: string
+        website:
+          type: string
+      required:
+        - username
+        - email
+
+    UserUpdatePasswordBody:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+        password:
+          type: string
+      required:
+        - currentPassword
+        - password
+
+    # MARK: Responses
+    HomeResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+      required:
+        - name
+        - version
 
     AuthLoginResponse:
       type: object
@@ -745,3 +842,42 @@ components:
       required:
         - session
         - user
+
+    PostIndexResponse:
+      type: object
+      properties:
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Post"
+      required:
+        - pagination
+        - data
+
+    UserIndexResponse:
+      type: object
+      properties:
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+      required:
+        - pagination
+        - data
+
+    SessionIndexResponse:
+      type: object
+      properties:
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Session"
+      required:
+        - pagination
+        - data

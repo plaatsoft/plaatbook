@@ -18,6 +18,20 @@ pub struct PostInteraction {
     pub updated_at: DateTime,
 }
 
+impl Default for PostInteraction {
+    fn default() -> Self {
+        let now = DateTime::now();
+        Self {
+            id: Uuid::now_v7(),
+            post_id: Uuid::nil(),
+            user_id: Uuid::nil(),
+            r#type: PostInteractionType::Like,
+            created_at: now,
+            updated_at: now,
+        }
+    }
+}
+
 #[derive(FromValue)]
 pub enum PostInteractionType {
     Like = 0,

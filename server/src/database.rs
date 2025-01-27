@@ -9,7 +9,49 @@ use std::path::Path;
 use pbkdf2::password_hash;
 use time::Date;
 
-use crate::models::{User, UserRole};
+use crate::models::{Post, Session, User, UserRole};
+
+// MARK: Database extension
+pub trait Extension {
+    fn insert_user(&self, user: User);
+    fn insert_session(&self, session: Session);
+    fn insert_post(&self, post: Post);
+}
+
+impl Extension for sqlite::Connection {
+    fn insert_user(&self, user: User) {
+        self.execute(
+            format!(
+                "INSERT INTO users ({}) VALUES ({})",
+                User::columns(),
+                User::values()
+            ),
+            user,
+        );
+    }
+
+    fn insert_session(&self, session: Session) {
+        self.execute(
+            format!(
+                "INSERT INTO sessions ({}) VALUES ({})",
+                Session::columns(),
+                Session::values()
+            ),
+            session,
+        );
+    }
+
+    fn insert_post(&self, post: Post) {
+        self.execute(
+            format!(
+                "INSERT INTO posts ({}) VALUES ({})",
+                Post::columns(),
+                Post::values()
+            ),
+            post,
+        );
+    }
+}
 
 // MARK: Open database
 pub fn open(path: &Path) -> Result<sqlite::Connection, sqlite::ConnectionError> {
@@ -58,7 +100,7 @@ pub fn open(path: &Path) -> Result<sqlite::Connection, sqlite::ConnectionError> 
             type INTEGER NOT NULL,
             parent_post_id BLOB NULL,
             user_id BLOB NOT NULL,
-            text TEXT NOT NULL,
+            text TEXT NULL,
             replies INTEGER NOT NULL,
             reposts INTEGER NOT NULL,
             likes INTEGER NOT NULL,
@@ -94,7 +136,7 @@ pub fn seed(database: &sqlite::Connection) {
         .next()
         .expect("Should be some");
     if users_count == 0 {
-        let admin = User {
+        database.insert_user(User {
             username: "admin".to_string(),
             email: "admin@plaatsoft.nl".to_string(),
             password: password_hash("admin"),
@@ -105,14 +147,6 @@ pub fn seed(database: &sqlite::Connection) {
             website: Some("https://www.plaatsoft.nl/".to_string()),
             role: UserRole::Admin,
             ..Default::default()
-        };
-        database.execute(
-            format!(
-                "INSERT INTO users ({}) VALUES ({})",
-                User::columns(),
-                User::values()
-            ),
-            admin,
-        );
+        });
     }
 }

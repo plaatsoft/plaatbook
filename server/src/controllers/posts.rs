@@ -1,21 +1,20 @@
 /*
- * Copyright (c) 2024 PlaatSoft
+ * Copyright (c) 2024-2025 PlaatSoft
  *
  * SPDX-License-Identifier: MIT
  */
 
 use http::{Request, Response, Status};
-use serde::Deserialize;
 use time::DateTime;
 use uuid::Uuid;
 use validate::Validate;
 
-use crate::consts::LIMIT_DEFAULT;
 use crate::controllers::not_found;
+use crate::database::Extension;
 use crate::models::{
     IndexQuery, Post, PostInteraction, PostInteractionType, PostType, User, UserRole,
 };
-use crate::Context;
+use crate::{api, Context};
 
 // MARK: Helpers
 fn find_post(req: &Request, ctx: &Context) -> Option<Post> {
@@ -67,7 +66,7 @@ pub fn posts_index(req: &Request, ctx: &Context) -> Response {
     // Authorization
     // -
 
-    // Parse request query
+    // Parse index query
     let query = match req.url.query.as_ref() {
         Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {
             Ok(query) => query,
@@ -80,7 +79,15 @@ pub fn posts_index(req: &Request, ctx: &Context) -> Response {
     }
 
     // Get posts
-    let limit = query.limit.unwrap_or(LIMIT_DEFAULT);
+    let search_query = format!("%{}%", query.query.replace("%", "\\%"));
+    let total = ctx
+        .database
+        .query::<i64>(
+            "SELECT COUNT(id) FROM posts WHERE text LIKE ?",
+            search_query.clone(),
+        )
+        .next()
+        .expect("Can't count posts");
     let posts = ctx
         .database
         .query::<Post>(
@@ -88,26 +95,36 @@ pub fn posts_index(req: &Request, ctx: &Context) -> Response {
                 "SELECT {} FROM posts WHERE text LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
                 Post::columns()
             ),
-            (
-                format!("%{}%", query.query.unwrap_or_default().replace("%", "\\%")),
-                limit,
-                limit * (query.page.unwrap_or(1) - 1),
-            ),
+            (search_query, query.limit, query.limit * (query.page - 1)),
         )
         .map(|mut post| {
-            post.process(ctx);
+            post.fetch_relationships(ctx);
             post
         })
+        .map(Into::<api::Post>::into)
         .collect::<Vec<_>>();
 
-    Response::new().json(posts)
+    Response::new().json(api::PostIndexResponse {
+        pagination: api::Pagination {
+            total,
+            page: query.page,
+            limit: query.limit,
+        },
+        data: posts,
+    })
 }
 
 // MARK: Posts create
-#[derive(Deserialize, Validate)]
-struct PostBody {
+#[derive(Validate)]
+struct PostCreateUpdateBody {
     #[validate(length(min = 1, max = 512))]
     text: String,
+}
+
+impl From<api::PostCreateUpdateBody> for PostCreateUpdateBody {
+    fn from(body: api::PostCreateUpdateBody) -> Self {
+        Self { text: body.text }
+    }
 }
 
 pub fn posts_create(req: &Request, ctx: &Context) -> Response {
@@ -122,8 +139,10 @@ pub fn posts_create(req: &Request, ctx: &Context) -> Response {
     };
 
     // Parse and validate body
-    let body = match serde_urlencoded::from_bytes::<PostBody>(req.body.as_deref().unwrap_or(&[])) {
-        Ok(body) => body,
+    let body = match serde_urlencoded::from_bytes::<api::PostCreateUpdateBody>(
+        req.body.as_deref().unwrap_or(&[]),
+    ) {
+        Ok(body) => Into::<PostCreateUpdateBody>::into(body),
         Err(_) => {
             return Response::new()
                 .status(Status::BadRequest)
@@ -138,21 +157,13 @@ pub fn posts_create(req: &Request, ctx: &Context) -> Response {
     let mut post = Post {
         user_id: auth_user.id,
         text: body.text,
-        user: Some(auth_user.clone()),
         ..Default::default()
     };
-    ctx.database.execute(
-        format!(
-            "INSERT INTO posts ({}) VALUES ({})",
-            Post::columns(),
-            Post::values()
-        ),
-        post.clone(),
-    );
+    ctx.database.insert_post(post.clone());
 
     // Return new post
-    post.process(ctx);
-    Response::new().json(post)
+    post.fetch_relationships(ctx);
+    Response::new().json(Into::<api::Post>::into(post))
 }
 
 // MARK: Posts show
@@ -179,14 +190,14 @@ pub fn posts_show(req: &Request, ctx: &Context) -> Response {
             )
         )
         .map(|mut reply| {
-            reply.process(ctx);
+            reply.fetch_relationships(ctx);
             reply
         })
         .collect::<Vec<_>>();
     post.replies = Some(replies);
 
-    post.process(ctx);
-    Response::new().json(post)
+    post.fetch_relationships(ctx);
+    Response::new().json(Into::<api::Post>::into(post))
 }
 
 // MARK: Posts update
@@ -205,8 +216,10 @@ pub fn posts_update(req: &Request, ctx: &Context) -> Response {
     }
 
     // Parse and validate body
-    let body = match serde_urlencoded::from_bytes::<PostBody>(req.body.as_deref().unwrap_or(&[])) {
-        Ok(body) => body,
+    let body = match serde_urlencoded::from_bytes::<api::PostCreateUpdateBody>(
+        req.body.as_deref().unwrap_or(&[]),
+    ) {
+        Ok(body) => Into::<PostCreateUpdateBody>::into(body),
         Err(_) => {
             return Response::new()
                 .status(Status::BadRequest)
@@ -221,13 +234,13 @@ pub fn posts_update(req: &Request, ctx: &Context) -> Response {
     post.text = body.text;
     post.updated_at = DateTime::now();
     ctx.database.execute(
-        "UPDATE posts SET text = ?, updated_at = ? WHERE id = ?",
-        (post.text.clone(), post.updated_at, post.id),
+        "UPDATE posts SET text = ?, updated_at = ? WHERE id = ? OR parent_post_id = ?",
+        (post.text.clone(), post.updated_at, post.id, post.id),
     );
 
     // Return updated post
-    post.process(ctx);
-    Response::new().json(post)
+    post.fetch_relationships(ctx);
+    Response::new().json(Into::<api::Post>::into(post))
 }
 
 // MARK: Posts delete
@@ -289,7 +302,15 @@ pub fn posts_replies(req: &Request, ctx: &Context) -> Response {
     }
 
     // Get post replies
-    let limit = query.limit.unwrap_or(LIMIT_DEFAULT);
+    let search_query = format!("%{}%", query.query.replace("%", "\\%"));
+    let total = ctx
+        .database
+        .query::<i64>(
+            "SELECT COUNT(id) FROM posts WHERE parent_post_id = ? AND text LIKE ?",
+            (post.id, search_query.clone()),
+        )
+        .next()
+        .expect("Can't count posts");
     let posts = ctx
         .database
         .query::<Post>(
@@ -299,18 +320,26 @@ pub fn posts_replies(req: &Request, ctx: &Context) -> Response {
             ),
             (
                 post.id,
-                format!("%{}%", query.query.unwrap_or_default().replace("%", "\\%")),
-                limit,
-                limit * (query.page.unwrap_or(1) - 1),
+                search_query,
+                query.limit,
+                query. limit * (query.page - 1),
             ),
         )
         .map(|mut post| {
-            post.process(ctx);
+            post.fetch_relationships(ctx);
             post
         })
+        .map(Into::<api::Post>::into)
         .collect::<Vec<_>>();
 
-    Response::new().json(posts)
+    Response::new().json(api::PostIndexResponse {
+        pagination: api::Pagination {
+            total,
+            page: query.page,
+            limit: query.limit,
+        },
+        data: posts,
+    })
 }
 
 // MARK: Post create reply
@@ -331,8 +360,10 @@ pub fn posts_create_reply(req: &Request, ctx: &Context) -> Response {
     };
 
     // Parse and validate body
-    let body = match serde_urlencoded::from_bytes::<PostBody>(req.body.as_deref().unwrap_or(&[])) {
-        Ok(body) => body,
+    let body = match serde_urlencoded::from_bytes::<api::PostCreateUpdateBody>(
+        req.body.as_deref().unwrap_or(&[]),
+    ) {
+        Ok(body) => Into::<PostCreateUpdateBody>::into(body),
         Err(_) => {
             return Response::new()
                 .status(Status::BadRequest)
@@ -344,26 +375,14 @@ pub fn posts_create_reply(req: &Request, ctx: &Context) -> Response {
     }
 
     // Create new reply post
-    let now = DateTime::now();
     let mut reply = Post {
-        id: Uuid::now_v7(),
         r#type: PostType::Reply,
         parent_post_id: Some(post.id),
         user_id: auth_user.id,
         text: body.text,
-        user: Some(auth_user.clone()),
-        created_at: now,
-        updated_at: now,
         ..Default::default()
     };
-    ctx.database.execute(
-        format!(
-            "INSERT INTO posts ({}) VALUES ({})",
-            Post::columns(),
-            Post::values()
-        ),
-        reply.clone(),
-    );
+    ctx.database.insert_post(reply.clone());
 
     // Update parent post replies counter
     ctx.database.execute(
@@ -372,8 +391,8 @@ pub fn posts_create_reply(req: &Request, ctx: &Context) -> Response {
     );
 
     // Return new reply
-    reply.process(ctx);
-    Response::new().json(reply)
+    reply.fetch_relationships(ctx);
+    Response::new().json(Into::<api::Post>::into(reply))
 }
 
 // MARK: Posts repost
@@ -394,25 +413,14 @@ pub fn posts_repost(req: &Request, ctx: &Context) -> Response {
     };
 
     // Create new repost
-    let now = DateTime::now();
     let mut repost = Post {
-        id: Uuid::now_v7(),
         r#type: PostType::Repost,
         parent_post_id: Some(post.content_post_id()),
         user_id: auth_user.id,
-        user: Some(auth_user.clone()),
-        created_at: now,
-        updated_at: now,
+        text: post.text.clone(),
         ..Default::default()
     };
-    ctx.database.execute(
-        format!(
-            "INSERT INTO posts ({}) VALUES ({})",
-            Post::columns(),
-            Post::values()
-        ),
-        repost.clone(),
-    );
+    ctx.database.insert_post(repost.clone());
 
     // Update content post reposts counter
     ctx.database.execute(
@@ -421,8 +429,8 @@ pub fn posts_repost(req: &Request, ctx: &Context) -> Response {
     );
 
     // Return new repost
-    repost.process(ctx);
-    Response::new().json(repost)
+    repost.fetch_relationships(ctx);
+    Response::new().json(Into::<api::Post>::into(repost))
 }
 
 // MARK: Posts like
@@ -447,14 +455,11 @@ pub fn posts_like(req: &Request, ctx: &Context) -> Response {
     remove_post_dislike(&ctx.database, post.content_post_id(), auth_user);
 
     // Create new post like interaction
-    let now = DateTime::now();
     let post_interaction = PostInteraction {
-        id: Uuid::now_v7(),
         post_id: post.content_post_id(),
         user_id: auth_user.id,
         r#type: PostInteractionType::Like,
-        created_at: now,
-        updated_at: now,
+        ..Default::default()
     };
     ctx.database.execute(
         format!(
@@ -516,14 +521,11 @@ pub fn posts_dislike(req: &Request, ctx: &Context) -> Response {
     remove_post_dislike(&ctx.database, post.content_post_id(), auth_user);
 
     // Create new post dislike interaction
-    let now = DateTime::now();
     let post_interaction = PostInteraction {
-        id: Uuid::now_v7(),
         post_id: post.content_post_id(),
         user_id: auth_user.id,
         r#type: PostInteractionType::Dislike,
-        created_at: now,
-        updated_at: now,
+        ..Default::default()
     };
     ctx.database.execute(
         format!(
@@ -561,4 +563,324 @@ pub fn posts_dislike_delete(req: &Request, ctx: &Context) -> Response {
     // Remove post dislike
     remove_post_dislike(&ctx.database, post.content_post_id(), auth_user);
     Response::new()
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::router;
+    use crate::test_utils::create_user_session;
+
+    // MARK: Test Posts index
+    #[test]
+    fn test_posts_index() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Admin);
+
+        for _ in 0..10 {
+            ctx.database.insert_post(Post {
+                user_id: user.id,
+                text: "Hello world".to_string(),
+                ..Default::default()
+            });
+        }
+
+        let req = Request::with_url("http://localhost/posts")
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let res = serde_json::from_slice::<api::PostIndexResponse>(&res.body).unwrap();
+        assert_eq!(res.pagination.total, 10);
+    }
+
+    // MARK: Test Posts create
+    #[test]
+    fn test_posts_create() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (_, session) = create_user_session(&ctx, UserRole::Admin);
+
+        let req = Request::with_url("http://localhost/posts")
+            .method(http::Method::Post)
+            .header("Authorization", format!("Bearer {}", session.token))
+            .body("text=Hello%20world");
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let res = serde_json::from_slice::<api::Post>(&res.body).unwrap();
+        assert_eq!(&res.text, "Hello world");
+    }
+
+    // MARK: Test Posts show
+    #[test]
+    fn test_posts_show() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Admin);
+
+        let post = Post {
+            user_id: user.id,
+            text: "Hello world".to_string(),
+            ..Default::default()
+        };
+        ctx.database.insert_post(post.clone());
+
+        let req = Request::with_url(format!("http://localhost/posts/{}", post.id))
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let res = serde_json::from_slice::<api::Post>(&res.body).unwrap();
+        assert_eq!(res.id, post.id);
+    }
+
+    // MARK: Test Posts update
+    #[test]
+    fn test_posts_update() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Admin);
+
+        let post = Post {
+            user_id: user.id,
+            text: "Hello world".to_string(),
+            ..Default::default()
+        };
+        ctx.database.insert_post(post.clone());
+
+        let req = Request::with_url(format!("http://localhost/posts/{}", post.id))
+            .method(http::Method::Put)
+            .header("Authorization", format!("Bearer {}", session.token))
+            .body("text=Updated%20text");
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let res = serde_json::from_slice::<api::Post>(&res.body).unwrap();
+        assert_eq!(&res.text, "Updated text");
+    }
+
+    // MARK: Test Posts delete
+    #[test]
+    fn test_posts_delete() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Admin);
+
+        let post = Post {
+            user_id: user.id,
+            text: "Hello world".to_string(),
+            ..Default::default()
+        };
+        ctx.database.insert_post(post.clone());
+
+        let req = Request::with_url(format!("http://localhost/posts/{}", post.id))
+            .method(http::Method::Delete)
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+
+        let req = Request::with_url(format!("http://localhost/posts/{}", post.id))
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::NotFound);
+    }
+
+    // MARK: Test Posts replies
+    #[test]
+    fn test_posts_replies() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Admin);
+
+        let post = Post {
+            user_id: user.id,
+            text: "Hello world".to_string(),
+            ..Default::default()
+        };
+        ctx.database.insert_post(post.clone());
+
+        for _ in 0..5 {
+            ctx.database.insert_post(Post {
+                user_id: user.id,
+                text: "Reply".to_string(),
+                parent_post_id: Some(post.id),
+                r#type: PostType::Reply,
+                ..Default::default()
+            });
+        }
+
+        let req = Request::with_url(format!("http://localhost/posts/{}/replies", post.id))
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let res = serde_json::from_slice::<api::PostIndexResponse>(&res.body).unwrap();
+        assert_eq!(res.pagination.total, 5);
+    }
+
+    // MARK: Test Posts create reply
+    #[test]
+    fn test_posts_create_reply() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Admin);
+
+        let post = Post {
+            user_id: user.id,
+            text: "Hello world".to_string(),
+            ..Default::default()
+        };
+        ctx.database.insert_post(post.clone());
+
+        let req = Request::with_url(format!("http://localhost/posts/{}/reply", post.id))
+            .method(http::Method::Post)
+            .header("Authorization", format!("Bearer {}", session.token))
+            .body("text=Reply%20text");
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let res = serde_json::from_slice::<api::Post>(&res.body).unwrap();
+        assert_eq!(&res.text, "Reply text");
+    }
+
+    // MARK: Test Posts repost
+    #[test]
+    fn test_posts_repost() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Admin);
+
+        let post = Post {
+            user_id: user.id,
+            text: "Hello world".to_string(),
+            ..Default::default()
+        };
+        ctx.database.insert_post(post.clone());
+
+        let req = Request::with_url(format!("http://localhost/posts/{}/repost", post.id))
+            .method(http::Method::Post)
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+        let res = serde_json::from_slice::<api::Post>(&res.body).unwrap();
+        assert!(res.parent_post.is_some());
+    }
+
+    // MARK: Test Posts like
+    #[test]
+    fn test_posts_like() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Admin);
+
+        let post = Post {
+            user_id: user.id,
+            text: "Hello world".to_string(),
+            ..Default::default()
+        };
+        ctx.database.insert_post(post.clone());
+
+        let req = Request::with_url(format!("http://localhost/posts/{}/like", post.id))
+            .method(http::Method::Put)
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+
+        let post = ctx
+            .database
+            .query::<Post>("SELECT * FROM posts WHERE id = ?", post.id)
+            .next()
+            .unwrap();
+        assert_eq!(post.likes_count, 1);
+    }
+
+    // MARK: Test Posts like delete
+    #[test]
+    fn test_posts_like_delete() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Admin);
+
+        let post = Post {
+            user_id: user.id,
+            text: "Hello world".to_string(),
+            ..Default::default()
+        };
+        ctx.database.insert_post(post.clone());
+
+        let req = Request::with_url(format!("http://localhost/posts/{}/like", post.id))
+            .method(http::Method::Post)
+            .header("Authorization", format!("Bearer {}", session.token));
+        router.handle(&req);
+
+        let req = Request::with_url(format!("http://localhost/posts/{}/like", post.id))
+            .method(http::Method::Delete)
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+
+        let post = ctx
+            .database
+            .query::<Post>("SELECT * FROM posts WHERE id = ?", post.id)
+            .next()
+            .unwrap();
+        assert_eq!(post.likes_count, 0);
+    }
+
+    // MARK: Test Posts dislike
+    #[test]
+    fn test_posts_dislike() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Admin);
+
+        let post = Post {
+            user_id: user.id,
+            text: "Hello world".to_string(),
+            ..Default::default()
+        };
+        ctx.database.insert_post(post.clone());
+
+        let req = Request::with_url(format!("http://localhost/posts/{}/dislike", post.id))
+            .method(http::Method::Put)
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+
+        let post = ctx
+            .database
+            .query::<Post>("SELECT * FROM posts WHERE id = ?", post.id)
+            .next()
+            .unwrap();
+        assert_eq!(post.dislikes_count, 1);
+    }
+
+    // MARK: Test Posts dislike delete
+    #[test]
+    fn test_posts_dislike_delete() {
+        let ctx = Context::with_test_database();
+        let router = router(ctx.clone());
+        let (user, session) = create_user_session(&ctx, UserRole::Admin);
+
+        let post = Post {
+            user_id: user.id,
+            text: "Hello world".to_string(),
+            ..Default::default()
+        };
+        ctx.database.insert_post(post.clone());
+
+        let req = Request::with_url(format!("http://localhost/posts/{}/dislike", post.id))
+            .method(http::Method::Post)
+            .header("Authorization", format!("Bearer {}", session.token));
+        router.handle(&req);
+
+        let req = Request::with_url(format!("http://localhost/posts/{}/dislike", post.id))
+            .method(http::Method::Delete)
+            .header("Authorization", format!("Bearer {}", session.token));
+        let res = router.handle(&req);
+        assert_eq!(res.status, Status::Ok);
+
+        let post = ctx
+            .database
+            .query::<Post>("SELECT * FROM posts WHERE id = ?", post.id)
+            .next()
+            .unwrap();
+        assert_eq!(post.dislikes_count, 0);
+    }
 }
