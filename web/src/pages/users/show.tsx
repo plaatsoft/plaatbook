@@ -98,7 +98,7 @@ export function UsersShow({ user_id }: { user_id: string }) {
                                 )}
                                 <span className="tag" title="User joined date">
                                     <CalendarIcon className="is-small mr-1" />
-                                    Joined {dateFormatAgo(user.created_at)}
+                                    Joined {dateFormatAgo(user.createdAt)}
                                 </span>
                             </p>
                         </div>
@@ -127,7 +127,7 @@ function UserPostsList({ user }: { user: User }) {
             items={posts}
             fetchPage={async (page) => {
                 const newPosts = (await UsersService.getInstance().getPosts(user.id, page))!;
-                setPosts((posts) => [...posts, ...newPosts]);
+                setPosts((posts) => [...posts, ...newPosts.data]);
             }}
             template={(post) => (
                 <PostComponent

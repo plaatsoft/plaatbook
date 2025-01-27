@@ -44,8 +44,8 @@ function PostsList() {
         <InfiniteList
             items={posts}
             fetchPage={async (page) => {
-                const newPosts = await PostsService.getInstance().getAll(page);
-                setPosts((posts) => [...posts, ...newPosts]);
+                const newPosts = await PostsService.getInstance().getPage(page);
+                setPosts((posts) => [...posts, ...newPosts.data]);
             }}
             template={(post) => (
                 <PostComponent

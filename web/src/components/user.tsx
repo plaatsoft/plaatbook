@@ -20,7 +20,7 @@ export function UserComponent({ user }: { user: User }) {
                         <strong>@{user.username}</strong>
                     </Link>
                 </p>
-                <p>Joined {dateFormatAgo(user.created_at)}</p>
+                <p>Joined {dateFormatAgo(user.createdAt)}</p>
             </div>
         </div>
     );

@@ -5,7 +5,7 @@
  */
 
 import { signal } from '@preact/signals';
-import { Session, Report, User } from '../api.ts';
+import { Session, Report, User, AuthLoginResponse, AuthValidateResponse, SessionIndexResponse } from '../api.ts';
 import { route } from '../router.tsx';
 
 export const $authToken = signal<(string | null) | undefined>(undefined);
@@ -42,7 +42,7 @@ export class AuthService {
         if (res.status != 200) {
             return false;
         }
-        const { token } = (await res.json()) as { token: string; session: Session; user: User };
+        const { token } = (await res.json()) as AuthLoginResponse;
 
         // Update stores
         const tokens = JSON.parse(localStorage.getItem('tokens') || '[]') as string[];
@@ -91,7 +91,7 @@ export class AuthService {
                 continue;
             }
 
-            const { session, user } = (await res.json()) as { session: Session; user: User };
+            const { session, user } = (await res.json()) as AuthValidateResponse;
             if (i == 0) {
                 $authToken.value = token;
                 $authSession.value = session;
@@ -128,16 +128,16 @@ export class AuthService {
         return true;
     }
 
-    async getActiveSessions(): Promise<Session[]> {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}/sessions`, {
+    async getActiveSessions(page: number): Promise<SessionIndexResponse | null> {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${$authUser.value!.id}/sessions?page=${page}`, {
             headers: {
                 Authorization: `Bearer ${$authToken.value}`,
             },
         });
         if (res.status != 200) {
-            return [];
+            return null;
         }
-        return (await res.json()) as Session[];
+        return (await res.json()) as SessionIndexResponse;
     }
 
     async revokeSession(session: Session): Promise<boolean> {

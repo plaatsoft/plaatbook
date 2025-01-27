@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 PlaatSoft
+ * Copyright (c) 2024-2025 PlaatSoft
  *
  * SPDX-License-Identifier: MIT
  */
@@ -41,11 +41,11 @@ export function PostComponent({
         route(`/posts/${post.id}`);
     };
 
-    const contentPost = post.type === PostType.REPOST ? post.parent_post! : post;
+    const contentPost = post.type === PostType.REPOST ? post.parentPost! : post;
     return (
         <>
             {isFullPage && contentPost.type == PostType.REPLY && (
-                <PostComponent post={contentPost.parent_post!} isFullPage={isFullPage} replyHideParent />
+                <PostComponent post={contentPost.parentPost!} isFullPage={isFullPage} replyHideParent />
             )}
 
             <div className="media" onClick={openPost}>
@@ -58,7 +58,7 @@ export function PostComponent({
                 <div className="media-content">
                     {post.type === PostType.REPLY && (
                         <div className="mb-1">
-                            <Link href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
+                            <Link href={`/posts/${post.parentPost!.id}`} style="color: inherit;">
                                 <CommentIcon className="is-small mr-1" />
                                 {post.user!.username} replied
                             </Link>
@@ -66,7 +66,7 @@ export function PostComponent({
                     )}
                     {post.type === PostType.REPOST && (
                         <div className="mb-1">
-                            <Link href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
+                            <Link href={`/posts/${post.parentPost!.id}`} style="color: inherit;">
                                 <RepostIcon className="is-small mr-1" />
                                 {post.user!.username} reposted
                             </Link>
@@ -77,8 +77,8 @@ export function PostComponent({
                         <Link className="mr-2" href={`/users/${contentPost.user!.username}`}>
                             <strong>@{contentPost.user!.username}</strong>
                         </Link>
-                        <small className="mr-2">{dateFormatAgo(contentPost.created_at)}</small>
-                        {contentPost.created_at !== contentPost.updated_at && (
+                        <small className="mr-2">{dateFormatAgo(contentPost.createdAt)}</small>
+                        {contentPost.createdAt !== contentPost.updatedAt && (
                             <span className="tag" style="position: absolute; top: 0;">
                                 <EditIcon className="is-small mr-1" />
                                 Edited
@@ -90,10 +90,10 @@ export function PostComponent({
                         )}
                     </div>
 
-                    <div className="content" dangerouslySetInnerHTML={{ __html: contentPost.text_html! }}></div>
+                    <div className="content" dangerouslySetInnerHTML={{ __html: contentPost.textHtml! }}></div>
 
                     {!isFullPage && !replyHideParent && contentPost.type == PostType.REPLY && (
-                        <ParentPost post={contentPost.parent_post!} />
+                        <ParentPost post={contentPost.parentPost!} />
                     )}
 
                     {$authUser.value && <PostActions post={post} onUpdate={onUpdate} />}
@@ -123,7 +123,7 @@ function PostOptions({ post, onUpdate }: { post: Post; onUpdate?: (post: Post | 
                 'Are you sure?',
                 post.type === PostType.REPOST
                     ? 'Are you sure you want to delete this repost?'
-                    : `Are you sure you want to delete this post, the ${post.replies_count} replies and the ${post.reposts_count} reposts?`,
+                    : `Are you sure you want to delete this post, the ${post.repliesCount} replies and the ${post.repostsCount} reposts?`,
                 'Delete',
                 DeleteIcon,
             )
@@ -180,36 +180,36 @@ function PostActions({ post, onUpdate }: { post: Post; onUpdate?: (post: Post) =
 
     const likePost = async (event: MouseEvent) => {
         event.stopPropagation();
-        if (!post.auth_user_liked) {
+        if (!post.authUserLiked) {
             await PostsService.getInstance().like(post.id);
-            if (post.auth_user_disliked) {
-                post.dislikes_count--;
-                post.auth_user_disliked = false;
+            if (post.authUserDisliked) {
+                post.dislikesCount--;
+                post.authUserDisliked = false;
             }
-            post.likes_count++;
-            post.auth_user_liked = true;
+            post.likesCount++;
+            post.authUserLiked = true;
         } else {
             await PostsService.getInstance().remove_like(post.id);
-            post.likes_count--;
-            post.auth_user_liked = false;
+            post.likesCount--;
+            post.authUserLiked = false;
         }
         if (onUpdate) onUpdate(post);
     };
 
     const dislikePost = async (event: MouseEvent) => {
         event.stopPropagation();
-        if (!post.auth_user_disliked) {
+        if (!post.authUserDisliked) {
             await PostsService.getInstance().dislike(post.id);
-            if (post.auth_user_liked) {
-                post.likes_count--;
-                post.auth_user_liked = false;
+            if (post.authUserLiked) {
+                post.likesCount--;
+                post.authUserLiked = false;
             }
-            post.dislikes_count++;
-            post.auth_user_disliked = true;
+            post.dislikesCount++;
+            post.authUserDisliked = true;
         } else {
             await PostsService.getInstance().remove_dislike(post.id);
-            post.dislikes_count--;
-            post.auth_user_disliked = false;
+            post.dislikesCount--;
+            post.authUserDisliked = false;
         }
         if (onUpdate) onUpdate(post);
     };
@@ -231,31 +231,31 @@ function PostActions({ post, onUpdate }: { post: Post; onUpdate?: (post: Post) =
         <div className="buttons">
             <button className={`button is-small pl-4 py-2`} onClick={replyPost} title="Reply to post">
                 <CommentIcon className="mr-2" />
-                {post.replies_count}
+                {post.repliesCount}
             </button>
             <button className={`button is-small pl-4 py-2`} onClick={repostPost} title="Repost post">
                 <RepostIcon className="mr-2" />
-                {post.reposts_count}
+                {post.repostsCount}
             </button>
             <button
-                className={`button is-small ${post.auth_user_liked ? 'is-link' : ''} pl-4 py-2`}
+                className={`button is-small ${post.authUserLiked ? 'is-link' : ''} pl-4 py-2`}
                 onClick={likePost}
                 title="Like post"
             >
                 <LikeIcon className="mr-2" />
-                {post.likes_count}
+                {post.likesCount}
             </button>
             <button
-                className={`button is-small ${post.auth_user_disliked ? 'is-danger' : ''} pl-4 py-2`}
+                className={`button is-small ${post.authUserDisliked ? 'is-danger' : ''} pl-4 py-2`}
                 onClick={dislikePost}
                 title="Dislike post"
             >
                 <DislikeIcon className="mr-2" />
-                {post.dislikes_count}
+                {post.dislikesCount}
             </button>
             <button className={`button is-small pl-4 py-2`} onClick={(event) => event.stopPropagation()}>
                 <StatsIcon className="mr-2" />
-                {post.views_count}
+                {post.viewsCount}
             </button>
             <button className={`button is-small pl-4 py-2`} onClick={sharePost}>
                 <ShareIcon className="mr-2" />
@@ -271,7 +271,7 @@ function ParentPost({ post }: { post: Post }) {
         route(`/posts/${post.id}`);
     };
 
-    const contentPost = post.type === PostType.REPOST ? post.parent_post! : post;
+    const contentPost = post.type === PostType.REPOST ? post.parentPost! : post;
     return (
         <div className="media" onClick={openPost}>
             <div className="media-left">
@@ -282,7 +282,7 @@ function ParentPost({ post }: { post: Post }) {
             <div className="media-content">
                 {post.type === PostType.REPLY && (
                     <div className="mb-1">
-                        <Link href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
+                        <Link href={`/posts/${post.parentPost!.id}`} style="color: inherit;">
                             <CommentIcon className="is-small mr-1" />
                             {post.user!.username} replied
                         </Link>
@@ -290,7 +290,7 @@ function ParentPost({ post }: { post: Post }) {
                 )}
                 {post.type === PostType.REPOST && (
                     <div className="mb-1">
-                        <Link href={`/posts/${post.parent_post!.id}`} style="color: inherit;">
+                        <Link href={`/posts/${post.parentPost!.id}`} style="color: inherit;">
                             <RepostIcon className="is-small mr-1" />
                             {post.user!.username} reposted
                         </Link>
@@ -301,8 +301,8 @@ function ParentPost({ post }: { post: Post }) {
                     <Link className="mr-2" href={`/users/${contentPost.user!.username}`}>
                         <strong>@{contentPost.user!.username}</strong>
                     </Link>
-                    <small className="mr-2">{dateFormatAgo(contentPost.created_at)}</small>
-                    {contentPost.created_at !== contentPost.updated_at && (
+                    <small className="mr-2">{dateFormatAgo(contentPost.createdAt)}</small>
+                    {contentPost.createdAt !== contentPost.updatedAt && (
                         <span className="tag" style="position: absolute; top: 0;">
                             <EditIcon className="is-small mr-1" />
                             Edited
@@ -310,7 +310,7 @@ function ParentPost({ post }: { post: Post }) {
                     )}
                 </div>
 
-                <div className="content" dangerouslySetInnerHTML={{ __html: contentPost.text_html! }}></div>
+                <div className="content" dangerouslySetInnerHTML={{ __html: contentPost.textHtml! }}></div>
             </div>
         </div>
     );
