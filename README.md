@@ -28,13 +28,13 @@
 -   Watch, build and run server:
 
     ```sh
-    make -C server start
+    (cd server && ./meta.sh start)
     ```
 
 -   Run checks:
 
     ```sh
-    make -C server check
+    (cd server && ./meta.sh check)
     ```
 
 ### Web
@@ -43,13 +43,13 @@
 -   Watch, build and run web frontend:
 
     ```sh
-    make -C web start
+    (cd web && ./meta.sh start)
     ```
 
 -   Run checks:
 
     ```sh
-    make -C web check
+    (cd web && ./meta.sh check)
     ```
 
 -   Open page in browser
