@@ -32,12 +32,14 @@ function install_deps() {
 function check() {
     check_copyright
     install_deps
+    generate_api
     npm run lint
     npm run build
 }
 
 function start() {
     install_deps
+    generate_api
     npm start
 }
 
