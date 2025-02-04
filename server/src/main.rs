@@ -9,7 +9,7 @@ use std::path::Path;
 use std::sync::LazyLock;
 
 use router::{Router, RouterBuilder};
-use useragent::UserAgentParser;
+use simple_useragent::UserAgentParser;
 
 use crate::controllers::auth::{auth_login, auth_logout, auth_validate};
 use crate::controllers::posts::{
