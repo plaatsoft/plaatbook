@@ -6,10 +6,11 @@
 
 use std::sync::LazyLock;
 
+use bsqlite::{FromRow, FromValue};
+use chrono::{DateTime, Utc};
+use const_format::formatcp;
 use from_enum::FromEnum;
 use regex::Regex;
-use sqlite::{FromRow, FromValue};
-use time::DateTime;
 use uuid::Uuid;
 
 use super::{PostInteractionType, User};
@@ -33,8 +34,8 @@ pub struct Post {
     pub dislikes_count: i64,
     #[sqlite(rename = "views")]
     pub views_count: i64,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
     #[sqlite(skip)]
     pub parent_post: Option<Box<Post>>,
     #[sqlite(skip)]
@@ -57,7 +58,7 @@ pub enum PostType {
 
 impl Default for Post {
     fn default() -> Self {
-        let now = DateTime::now();
+        let now = Utc::now();
         Self {
             id: Uuid::now_v7(),
             r#type: PostType::Normal,
@@ -120,7 +121,7 @@ impl Post {
         self.user = ctx
             .database
             .query::<User>(
-                format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
+                formatcp!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
                 self.user_id,
             )
             .next();
@@ -131,7 +132,7 @@ impl Post {
             let mut parent_post = ctx
                 .database
                 .query::<Post>(
-                    format!("SELECT {} FROM posts WHERE id = ? LIMIT 1", Post::columns()),
+                    formatcp!("SELECT {} FROM posts WHERE id = ? LIMIT 1", Post::columns()),
                     parent_post_id,
                 )
                 .next()

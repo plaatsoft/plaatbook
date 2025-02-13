@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-use sqlite::{FromRow, FromValue};
-use time::DateTime;
+use bsqlite::{FromRow, FromValue};
+use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 #[derive(FromRow)]
@@ -14,13 +14,13 @@ pub struct PostInteraction {
     pub post_id: Uuid,
     pub user_id: Uuid,
     pub r#type: PostInteractionType,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl Default for PostInteraction {
     fn default() -> Self {
-        let now = DateTime::now();
+        let now = Utc::now();
         Self {
             id: Uuid::now_v7(),
             post_id: Uuid::nil(),

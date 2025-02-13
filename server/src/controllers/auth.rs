@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: MIT
  */
 
+use chrono::Utc;
+use const_format::formatcp;
 use http::{Request, Response, Status};
 use pbkdf2::password_verify;
 use serde::Deserialize;
-use time::DateTime;
 use validate::Report;
 
 use crate::database::Extension;
@@ -32,7 +33,7 @@ pub fn auth_login(req: &Request, ctx: &Context) -> Response {
     let user = ctx
         .database
         .query::<User>(
-            format!(
+            formatcp!(
                 "SELECT {} FROM users WHERE username = ? OR email = ? LIMIT 1",
                 User::columns()
             ),
@@ -120,7 +121,7 @@ pub fn auth_login(req: &Request, ctx: &Context) -> Response {
 
 pub fn generate_random_token() -> String {
     let mut token_bytes = [0u8; 256];
-    getrandom::getrandom(&mut token_bytes).expect("Can't get random bytes");
+    getrandom::fill(&mut token_bytes).expect("Can't get random bytes");
     base64::encode(&token_bytes, true)
 }
 
@@ -138,7 +139,7 @@ pub fn auth_logout(_: &Request, ctx: &Context) -> Response {
     ctx.database.execute(
         "UPDATE sessions SET expires_at = ? WHERE token = ?",
         (
-            DateTime::now(),
+            Utc::now(),
             ctx.auth_session.as_ref().expect("Not authed").token.clone(),
         ),
     );

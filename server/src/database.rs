@@ -4,10 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
-use std::path::Path;
-
+use chrono::NaiveDate;
+use const_format::formatcp;
 use pbkdf2::password_hash;
-use time::Date;
 
 use crate::models::{Post, Session, User, UserRole};
 
@@ -18,10 +17,10 @@ pub trait Extension {
     fn insert_post(&self, post: Post);
 }
 
-impl Extension for sqlite::Connection {
+impl Extension for bsqlite::Connection {
     fn insert_user(&self, user: User) {
         self.execute(
-            format!(
+            formatcp!(
                 "INSERT INTO users ({}) VALUES ({})",
                 User::columns(),
                 User::values()
@@ -32,7 +31,7 @@ impl Extension for sqlite::Connection {
 
     fn insert_session(&self, session: Session) {
         self.execute(
-            format!(
+            formatcp!(
                 "INSERT INTO sessions ({}) VALUES ({})",
                 Session::columns(),
                 Session::values()
@@ -43,7 +42,7 @@ impl Extension for sqlite::Connection {
 
     fn insert_post(&self, post: Post) {
         self.execute(
-            format!(
+            formatcp!(
                 "INSERT INTO posts ({}) VALUES ({})",
                 Post::columns(),
                 Post::values()
@@ -53,9 +52,8 @@ impl Extension for sqlite::Connection {
     }
 }
 
-// MARK: Open database
-pub fn open(path: &Path) -> Result<sqlite::Connection, sqlite::ConnectionError> {
-    let database = sqlite::Connection::open(path)?;
+// MARK: Create tables
+pub fn create_tables(database: &bsqlite::Connection) {
     database.execute(
         "CREATE TABLE IF NOT EXISTS users (
             id BLOB PRIMARY KEY,
@@ -126,11 +124,10 @@ pub fn open(path: &Path) -> Result<sqlite::Connection, sqlite::ConnectionError> 
         )",
         (),
     );
-    Ok(database)
 }
 
 // MARK: Seed database
-pub fn seed(database: &sqlite::Connection) {
+pub fn seed(database: &bsqlite::Connection) {
     let users_count = database
         .query::<i64>("SELECT COUNT(id) FROM users", ())
         .next()
@@ -141,7 +138,7 @@ pub fn seed(database: &sqlite::Connection) {
             email: "admin@plaatsoft.nl".to_string(),
             password: password_hash("admin"),
             firstname: Some("Admin".to_string()),
-            birthdate: Date::from_ymd(2024, 12, 2),
+            birthdate: NaiveDate::from_ymd_opt(2024, 12, 2),
             bio: Some("Admin of PlaatBook".to_string()),
             location: Some("Gouda, Netherlands".to_string()),
             website: Some("https://www.plaatsoft.nl/".to_string()),

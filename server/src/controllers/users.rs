@@ -6,10 +6,11 @@
 
 use std::str::FromStr;
 
+use chrono::{NaiveDate, Utc};
+use const_format::formatcp;
 use http::{Request, Response, Status};
 use pbkdf2::password_hash;
 use serde::{Deserialize, Deserializer};
-use time::{Date, DateTime};
 use uuid::Uuid;
 use validate::Validate;
 
@@ -32,7 +33,7 @@ fn find_user(req: &Request, ctx: &Context) -> Option<User> {
 
     ctx.database
         .query::<User>(
-            format!(
+            formatcp!(
                 "SELECT {} FROM users WHERE id = ? OR username = ? LIMIT 1",
                 User::columns()
             ),
@@ -76,7 +77,7 @@ pub fn users_index(req: &Request, ctx: &Context) -> Response {
     let users = ctx
         .database
         .query::<User>(
-            format!(
+            formatcp!(
                 "SELECT {} FROM users WHERE username LIKE ? LIMIT ? OFFSET ?",
                 User::columns()
             ),
@@ -236,11 +237,11 @@ pub fn users_update(req: &Request, ctx: &Context) -> Response {
     user.lastname = body.lastname;
     user.birthdate = body
         .birthdate
-        .and_then(|birthdate| Date::from_str(&birthdate).ok());
+        .and_then(|birthdate| NaiveDate::from_str(&birthdate).ok());
     user.bio = body.bio;
     user.location = body.location;
     user.website = body.website;
-    user.updated_at = DateTime::now();
+    user.updated_at = Utc::now();
     ctx.database.execute(
         "UPDATE users SET username = ?, email = ?, firstname = ?, lastname = ?, birthdate = ?, bio = ?, location = ?, website = ?, updated_at = ? WHERE id = ?",
         (
@@ -311,7 +312,7 @@ pub fn users_change_password(req: &Request, ctx: &Context) -> Response {
 
     // Update user
     user.password = password_hash(&body.password);
-    user.updated_at = DateTime::now();
+    user.updated_at = Utc::now();
     ctx.database.execute(
         "UPDATE users SET password = ?, updated_at = ? WHERE id = ?",
         (user.password.clone(), user.updated_at, user.id),
@@ -351,18 +352,18 @@ pub fn users_sessions(req: &Request, ctx: &Context) -> Response {
         .database
         .query::<i64>(
             "SELECT COUNT(id) FROM sessions WHERE user_id = ? AND expires_at > ?",
-            (user.id, DateTime::now()),
+            (user.id, Utc::now()),
         )
         .next()
         .expect("Can't count sessions");
     let user_sessions = ctx
             .database
             .query::<Session>(
-                format!(
+                formatcp!(
                     "SELECT {} FROM sessions WHERE user_id = ? AND expires_at > ? ORDER BY expires_at DESC LIMIT ? OFFSET ?",
                     Session::columns()
                 ),
-                (user.id, DateTime::now(), query.limit, query.limit * (query.page - 1)),
+                (user.id, Utc::now(), query.limit, query.limit * (query.page - 1)),
             )
             .map(Into::<api::Session>::into)
             .collect::<Vec<_>>();
@@ -411,7 +412,7 @@ pub fn users_posts(req: &Request, ctx: &Context) -> Response {
     let user_posts = ctx
         .database
         .query::<Post>(
-            format!(
+            formatcp!(
                 "SELECT {} FROM posts WHERE user_id = ? AND text LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
                 Post::columns()
             ),

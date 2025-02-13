@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
+use bsqlite::{FromRow, FromValue};
+use chrono::{DateTime, NaiveDate, Utc};
 use pbkdf2::password_verify;
-use sqlite::{FromRow, FromValue};
-use time::{Date, DateTime};
 use uuid::Uuid;
 
 use crate::{api, Context};
@@ -20,18 +20,18 @@ pub struct User {
     pub password: String,
     pub firstname: Option<String>,
     pub lastname: Option<String>,
-    pub birthdate: Option<Date>,
+    pub birthdate: Option<NaiveDate>,
     pub bio: Option<String>,
     pub location: Option<String>,
     pub website: Option<String>,
     pub role: UserRole,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl Default for User {
     fn default() -> Self {
-        let now = DateTime::now();
+        let now = Utc::now();
         User {
             id: Uuid::now_v7(),
             username: "".to_string(),

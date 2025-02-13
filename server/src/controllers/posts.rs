@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
+use chrono::Utc;
+use const_format::formatcp;
 use http::{Request, Response, Status};
-use time::DateTime;
 use uuid::Uuid;
 use validate::Validate;
 
@@ -30,13 +31,13 @@ fn find_post(req: &Request, ctx: &Context) -> Option<Post> {
 
     ctx.database
         .query::<Post>(
-            format!("SELECT {} FROM posts WHERE id = ? LIMIT 1", Post::columns()),
+            formatcp!("SELECT {} FROM posts WHERE id = ? LIMIT 1", Post::columns()),
             post_id,
         )
         .next()
 }
 
-fn remove_post_like(database: &sqlite::Connection, post_id: Uuid, auth_user: &User) {
+fn remove_post_like(database: &bsqlite::Connection, post_id: Uuid, auth_user: &User) {
     // Remove post like interaction
     database.execute(
         "DELETE FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ?",
@@ -47,7 +48,7 @@ fn remove_post_like(database: &sqlite::Connection, post_id: Uuid, auth_user: &Us
     }
 }
 
-fn remove_post_dislike(database: &sqlite::Connection, post_id: Uuid, auth_user: &User) {
+fn remove_post_dislike(database: &bsqlite::Connection, post_id: Uuid, auth_user: &User) {
     // Remove post dislike interaction
     database.execute(
         "DELETE FROM post_interactions WHERE post_id = ? AND user_id = ? AND type = ?",
@@ -91,7 +92,7 @@ pub fn posts_index(req: &Request, ctx: &Context) -> Response {
     let posts = ctx
         .database
         .query::<Post>(
-            format!(
+            formatcp!(
                 "SELECT {} FROM posts WHERE text LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
                 Post::columns()
             ),
@@ -180,7 +181,7 @@ pub fn posts_show(req: &Request, ctx: &Context) -> Response {
     let replies = ctx
         .database
         .query::<Post>(
-            format!(
+            formatcp!(
                 "SELECT {} FROM posts WHERE parent_post_id = ? AND type = ? ORDER BY created_at DESC",
                 Post::columns()
             ),
@@ -232,7 +233,7 @@ pub fn posts_update(req: &Request, ctx: &Context) -> Response {
 
     // Update post
     post.text = body.text;
-    post.updated_at = DateTime::now();
+    post.updated_at = Utc::now();
     ctx.database.execute(
         "UPDATE posts SET text = ?, updated_at = ? WHERE id = ? OR parent_post_id = ?",
         (post.text.clone(), post.updated_at, post.id, post.id),
@@ -314,7 +315,7 @@ pub fn posts_replies(req: &Request, ctx: &Context) -> Response {
     let posts = ctx
         .database
         .query::<Post>(
-            format!(
+            formatcp!(
                 "SELECT {} FROM posts WHERE parent_post_id = ? AND text LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
                 Post::columns()
             ),
@@ -462,7 +463,7 @@ pub fn posts_like(req: &Request, ctx: &Context) -> Response {
         ..Default::default()
     };
     ctx.database.execute(
-        format!(
+        formatcp!(
             "INSERT INTO post_interactions ({}) VALUES ({})",
             PostInteraction::columns(),
             PostInteraction::values()
@@ -528,7 +529,7 @@ pub fn posts_dislike(req: &Request, ctx: &Context) -> Response {
         ..Default::default()
     };
     ctx.database.execute(
-        format!(
+        formatcp!(
             "INSERT INTO post_interactions ({}) VALUES ({})",
             PostInteraction::columns(),
             PostInteraction::values()

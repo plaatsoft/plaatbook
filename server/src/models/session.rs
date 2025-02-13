@@ -6,8 +6,9 @@
 
 use std::time::Duration;
 
-use sqlite::FromRow;
-use time::DateTime;
+use bsqlite::FromRow;
+use chrono::{DateTime, Utc};
+use const_format::formatcp;
 use uuid::Uuid;
 
 use super::User;
@@ -28,16 +29,16 @@ pub struct Session {
     pub client_name: Option<String>,
     pub client_version: Option<String>,
     pub client_os: Option<String>,
-    pub expires_at: DateTime,
-    pub created_at: DateTime,
-    pub updated_at: DateTime,
+    pub expires_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
     #[sqlite(skip)]
     pub user: Option<User>,
 }
 
 impl Default for Session {
     fn default() -> Self {
-        let now = DateTime::now();
+        let now = Utc::now();
         Self {
             id: Uuid::now_v7(),
             user_id: Uuid::nil(),
@@ -84,7 +85,7 @@ impl Session {
         self.user = ctx
             .database
             .query::<User>(
-                format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
+                formatcp!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
                 self.user_id,
             )
             .next();

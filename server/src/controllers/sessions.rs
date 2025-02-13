@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: MIT
  */
 
+use chrono::Utc;
+use const_format::formatcp;
 use http::{Request, Response, Status};
-use time::DateTime;
 use uuid::Uuid;
 use validate::Validate;
 
@@ -26,7 +27,7 @@ fn find_session(req: &Request, ctx: &Context) -> Option<Session> {
     };
     ctx.database
         .query::<Session>(
-            format!(
+            formatcp!(
                 "SELECT {} FROM sessions WHERE id = ? LIMIT 1",
                 Session::columns()
             ),
@@ -65,7 +66,7 @@ pub fn sessions_index(req: &Request, ctx: &Context) -> Response {
     let sessions = ctx
         .database
         .query::<Session>(
-            format!(
+            formatcp!(
                 "SELECT {} FROM sessions ORDER BY expires_at DESC LIMIT ? OFFSET ?",
                 Session::columns()
             ),
@@ -75,7 +76,7 @@ pub fn sessions_index(req: &Request, ctx: &Context) -> Response {
             session.user = ctx
                 .database
                 .query::<User>(
-                    format!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
+                    formatcp!("SELECT {} FROM users WHERE id = ? LIMIT 1", User::columns()),
                     session.user_id,
                 )
                 .next();
@@ -130,7 +131,7 @@ pub fn sessions_revoke(req: &Request, ctx: &Context) -> Response {
 
     ctx.database.execute(
         "UPDATE sessions SET expires_at = ? WHERE id = ?",
-        (DateTime::now(), session.id),
+        (Utc::now(), session.id),
     );
     Response::new()
 }

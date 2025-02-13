@@ -8,6 +8,7 @@ use std::net::{Ipv4Addr, TcpListener};
 use std::path::Path;
 use std::sync::LazyLock;
 
+use bsqlite::Connection;
 use router::{Router, RouterBuilder};
 use simple_useragent::UserAgentParser;
 
@@ -44,14 +45,17 @@ static USER_AGENT_PARSER: LazyLock<UserAgentParser> = LazyLock::new(UserAgentPar
 
 #[derive(Clone)]
 pub(crate) struct Context {
-    database: sqlite::Connection,
+    database: Connection,
     auth_user: Option<User>,
     auth_session: Option<Session>,
 }
 
 impl Context {
     pub(crate) fn with_database(database_path: impl AsRef<Path>) -> Self {
-        let database = database::open(database_path.as_ref()).expect("Can't open database");
+        let database = Connection::open(database_path).expect("Can't open database");
+        database.enable_wal_logging();
+        database.apply_various_performance_settings();
+        database::create_tables(&database);
         database::seed(&database);
         Self {
             database,
@@ -62,7 +66,8 @@ impl Context {
 
     #[cfg(test)]
     pub(crate) fn with_test_database() -> Self {
-        let database = database::open(Path::new(":memory:")).expect("Can't open database");
+        let database = Connection::open_memory().expect("Can't open database");
+        database::create_tables(&database);
         Self {
             database,
             auth_user: None,
