@@ -6,7 +6,7 @@
 
 use chrono::Utc;
 use const_format::formatcp;
-use http::{Request, Response};
+use small_http::{Request, Response, Status};
 
 use crate::models::{self, Session};
 use crate::Context;
@@ -61,7 +61,7 @@ pub fn auth_required_pre_layer(req: &Request, ctx: &mut Context) -> Option<Respo
         None => {
             return Some(
                 Response::new()
-                    .status(http::Status::Unauthorized)
+                    .status(Status::Unauthorized)
                     .body("401 Unauthorized"),
             );
         }
@@ -84,7 +84,7 @@ pub fn auth_required_pre_layer(req: &Request, ctx: &mut Context) -> Option<Respo
         None => {
             return Some(
                 Response::new()
-                    .status(http::Status::Unauthorized)
+                    .status(Status::Unauthorized)
                     .body("401 Unauthorized"),
             );
         }
@@ -120,7 +120,7 @@ mod test {
         let router = router(ctx.clone());
 
         let res = router.handle(&Request::with_url("http://localhost/auth/validate"));
-        assert_eq!(res.status, http::Status::Unauthorized);
+        assert_eq!(res.status, Status::Unauthorized);
     }
 
     #[test]
@@ -135,6 +135,6 @@ mod test {
         let req = Request::with_url("http://localhost/auth/validate")
             .header("Authorization", format!("Bearer {}", session.token));
         let res = router.handle(&req);
-        assert_eq!(res.status, http::Status::Ok);
+        assert_eq!(res.status, Status::Ok);
     }
 }

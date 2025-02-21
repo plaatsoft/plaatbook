@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-use http::{Request, Response, Status};
+use small_http::{Request, Response, Status};
 
 use crate::{api, Context};
 

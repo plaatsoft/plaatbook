@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-use http::{Method, Request, Response};
+use small_http::{Method, Request, Response};
 
 pub use crate::layers::auth::{auth_optional_pre_layer, auth_required_pre_layer};
 use crate::Context;
@@ -13,7 +13,7 @@ mod auth;
 
 // MARK: Log
 pub fn log_pre_layer(req: &Request, _: &mut Context) -> Option<Response> {
-    println!("{} {}", req.method, req.url.path);
+    println!("{} {}", req.method, req.url.path());
     None
 }
 

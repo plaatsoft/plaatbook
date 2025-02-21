@@ -6,18 +6,18 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
-base64 = { git = "https://github.com/bplaat/crates.git" }
 bsqlite = { version = "0.1.2", features = ["uuid", "chrono"] }
 from_enum = { git = "https://github.com/bplaat/crates.git" }
-http = { git = "https://github.com/bplaat/crates.git", features = ["json"] }
 simple-useragent = "0.1.2"
+small-http = { version = "0.1.0", features = ["json"] }
+small-router = "0.1.0"
 pbkdf2 = { git = "https://github.com/bplaat/crates.git" }
-router = { git = "https://github.com/bplaat/crates.git" }
 validate = { git = "https://github.com/bplaat/crates.git", features = [
     "email",
     "serde",
 ] }
 
+base64 = "0.22"
 const_format = "0.2"
 chrono = { version = "0.4", default-features = false, features = [
     "now",
@@ -34,11 +34,12 @@ serde_urlencoded = "0.7.1"
 openapi-generator = { git = "https://github.com/bplaat/crates.git" }
 
 [patch.crates-io]
-uuid = { git = "https://github.com/bplaat/crates.git" }
 chrono = { git = "https://github.com/bplaat/crates.git" }
 getrandom = { git = "https://github.com/bplaat/crates.git" }
 libsqlite3-sys = { git = "https://github.com/bplaat/crates.git" }
 threadpool = { git = "https://github.com/bplaat/crates.git" }
+url = { git = "https://github.com/bplaat/crates.git" }
+uuid = { git = "https://github.com/bplaat/crates.git" }
 
 [profile.release]
 strip = true

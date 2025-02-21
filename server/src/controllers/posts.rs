@@ -6,7 +6,7 @@
 
 use chrono::Utc;
 use const_format::formatcp;
-use http::{Request, Response, Status};
+use small_http::{Request, Response, Status};
 use uuid::Uuid;
 use validate::Validate;
 
@@ -68,7 +68,7 @@ pub fn posts_index(req: &Request, ctx: &Context) -> Response {
     // -
 
     // Parse index query
-    let query = match req.url.query.as_ref() {
+    let query = match req.url.query() {
         Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {
             Ok(query) => query,
             Err(_) => return Response::with_status(Status::BadRequest),
@@ -291,7 +291,7 @@ pub fn posts_replies(req: &Request, ctx: &Context) -> Response {
     // -
 
     // Parse request query
-    let query = match req.url.query.as_ref() {
+    let query = match req.url.query() {
         Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {
             Ok(query) => query,
             Err(_) => return Response::with_status(Status::BadRequest),
@@ -568,6 +568,8 @@ pub fn posts_dislike_delete(req: &Request, ctx: &Context) -> Response {
 
 #[cfg(test)]
 mod test {
+    use small_http::Method;
+
     use super::*;
     use crate::router;
     use crate::test_utils::create_user_session;
@@ -603,7 +605,7 @@ mod test {
         let (_, session) = create_user_session(&ctx, UserRole::Admin);
 
         let req = Request::with_url("http://localhost/posts")
-            .method(http::Method::Post)
+            .method(Method::Post)
             .header("Authorization", format!("Bearer {}", session.token))
             .body("text=Hello%20world");
         let res = router.handle(&req);
@@ -649,7 +651,7 @@ mod test {
         ctx.database.insert_post(post.clone());
 
         let req = Request::with_url(format!("http://localhost/posts/{}", post.id))
-            .method(http::Method::Put)
+            .method(Method::Put)
             .header("Authorization", format!("Bearer {}", session.token))
             .body("text=Updated%20text");
         let res = router.handle(&req);
@@ -673,7 +675,7 @@ mod test {
         ctx.database.insert_post(post.clone());
 
         let req = Request::with_url(format!("http://localhost/posts/{}", post.id))
-            .method(http::Method::Delete)
+            .method(Method::Delete)
             .header("Authorization", format!("Bearer {}", session.token));
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Ok);
@@ -731,7 +733,7 @@ mod test {
         ctx.database.insert_post(post.clone());
 
         let req = Request::with_url(format!("http://localhost/posts/{}/reply", post.id))
-            .method(http::Method::Post)
+            .method(Method::Post)
             .header("Authorization", format!("Bearer {}", session.token))
             .body("text=Reply%20text");
         let res = router.handle(&req);
@@ -755,7 +757,7 @@ mod test {
         ctx.database.insert_post(post.clone());
 
         let req = Request::with_url(format!("http://localhost/posts/{}/repost", post.id))
-            .method(http::Method::Post)
+            .method(Method::Post)
             .header("Authorization", format!("Bearer {}", session.token));
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Ok);
@@ -778,7 +780,7 @@ mod test {
         ctx.database.insert_post(post.clone());
 
         let req = Request::with_url(format!("http://localhost/posts/{}/like", post.id))
-            .method(http::Method::Put)
+            .method(Method::Put)
             .header("Authorization", format!("Bearer {}", session.token));
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Ok);
@@ -806,12 +808,12 @@ mod test {
         ctx.database.insert_post(post.clone());
 
         let req = Request::with_url(format!("http://localhost/posts/{}/like", post.id))
-            .method(http::Method::Post)
+            .method(Method::Post)
             .header("Authorization", format!("Bearer {}", session.token));
         router.handle(&req);
 
         let req = Request::with_url(format!("http://localhost/posts/{}/like", post.id))
-            .method(http::Method::Delete)
+            .method(Method::Delete)
             .header("Authorization", format!("Bearer {}", session.token));
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Ok);
@@ -839,7 +841,7 @@ mod test {
         ctx.database.insert_post(post.clone());
 
         let req = Request::with_url(format!("http://localhost/posts/{}/dislike", post.id))
-            .method(http::Method::Put)
+            .method(Method::Put)
             .header("Authorization", format!("Bearer {}", session.token));
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Ok);
@@ -867,12 +869,12 @@ mod test {
         ctx.database.insert_post(post.clone());
 
         let req = Request::with_url(format!("http://localhost/posts/{}/dislike", post.id))
-            .method(http::Method::Post)
+            .method(Method::Post)
             .header("Authorization", format!("Bearer {}", session.token));
         router.handle(&req);
 
         let req = Request::with_url(format!("http://localhost/posts/{}/dislike", post.id))
-            .method(http::Method::Delete)
+            .method(Method::Delete)
             .header("Authorization", format!("Bearer {}", session.token));
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Ok);

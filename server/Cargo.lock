@@ -4,8 +4,9 @@ version = 4
 
 [[package]]
 name = "base64"
-version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
 name = "bsqlite"
@@ -32,7 +33,7 @@ dependencies = [
 [[package]]
 name = "chrono"
 version = "0.4.0+patch"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
+source = "git+https://github.com/bplaat/crates.git#bf05684f9311c516704c921bdad82a103f8b7ffd"
 dependencies = [
  "serde",
 ]
@@ -59,9 +60,9 @@ dependencies = [
 
 [[package]]
 name = "equivalent"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5443807d6dff69373d433ab9ef5378ad8df50ca6298caf15de6e52e24aaf54d5"
+checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "form_urlencoded"
@@ -75,7 +76,7 @@ dependencies = [
 [[package]]
 name = "from_enum"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
+source = "git+https://github.com/bplaat/crates.git#bf05684f9311c516704c921bdad82a103f8b7ffd"
 dependencies = [
  "quote",
  "syn",
@@ -84,25 +85,13 @@ dependencies = [
 [[package]]
 name = "getrandom"
 version = "0.3.0+patch"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
+source = "git+https://github.com/bplaat/crates.git#bf05684f9311c516704c921bdad82a103f8b7ffd"
 
 [[package]]
 name = "hashbrown"
 version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
-
-[[package]]
-name = "http"
-version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
- "threadpool",
- "url",
-]
 
 [[package]]
 name = "indexmap"
@@ -124,7 +113,7 @@ checksum = "d75a2a4b1b190afb6f5425f10f6a8f959d2ea0b9c2b1d79553551850539e4674"
 [[package]]
 name = "libsqlite3-sys"
 version = "0.31.0+patch"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
+source = "git+https://github.com/bplaat/crates.git#bf05684f9311c516704c921bdad82a103f8b7ffd"
 
 [[package]]
 name = "memchr"
@@ -135,7 +124,7 @@ checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 [[package]]
 name = "openapi-generator"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
+source = "git+https://github.com/bplaat/crates.git#bf05684f9311c516704c921bdad82a103f8b7ffd"
 dependencies = [
  "indexmap",
  "serde",
@@ -145,7 +134,7 @@ dependencies = [
 [[package]]
 name = "pbkdf2"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
+source = "git+https://github.com/bplaat/crates.git#bf05684f9311c516704c921bdad82a103f8b7ffd"
 dependencies = [
  "base64",
  "getrandom",
@@ -167,15 +156,15 @@ dependencies = [
  "const_format",
  "from_enum",
  "getrandom",
- "http",
  "openapi-generator",
  "pbkdf2",
  "regex",
- "router",
  "serde",
  "serde_json",
  "serde_urlencoded",
  "simple-useragent",
+ "small-http",
+ "small-router",
  "uuid",
  "validate",
 ]
@@ -224,14 +213,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
-name = "router"
-version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
-dependencies = [
- "http",
-]
-
-[[package]]
 name = "ryu"
 version = "1.0.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -239,18 +220,18 @@ checksum = "6ea1a2d0a644769cc99faa24c3ad26b379b786fe7c36fd3c546254801650e6dd"
 
 [[package]]
 name = "serde"
-version = "1.0.217"
+version = "1.0.218"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02fc4265df13d6fa1d00ecff087228cc0a2b5f3c0e87e258d8b94a156e984c70"
+checksum = "e8dfc9d19bdbf6d17e22319da49161d5d0108e4188e8b680aef6299eed22df60"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.217"
+version = "1.0.218"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a9bf7cf98d04a2b28aead066b7496853d4779c9cc183c440dbac457641e19a0"
+checksum = "f09503e191f4e797cb8aac08e9a4a4695c5edf6a2e70e376d961ddd5c969f82b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -259,9 +240,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.138"
+version = "1.0.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d434192e7da787e94a6ea7e9670b26a036d0ca41e0b7efb2676dd32bae872949"
+checksum = "44f86c3acccc9c65b153fe1b85a3be07fe5515274ec9f0653b4a0875731c72a6"
 dependencies = [
  "itoa",
  "memchr",
@@ -306,6 +287,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "small-http"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "260775c11df7b5ab93fd4a086dd01a906da2fcfe32bb0c77293e504d4c2978e5"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "threadpool",
+ "url",
+]
+
+[[package]]
+name = "small-router"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a2f66c7592e93c0c7ce350d34d52fac294bb42029e293b246912f9d6982bcf8"
+dependencies = [
+ "small-http",
+]
+
+[[package]]
 name = "syn"
 version = "2.0.98"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -319,13 +322,13 @@ dependencies = [
 [[package]]
 name = "threadpool"
 version = "1.8.0+patch"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
+source = "git+https://github.com/bplaat/crates.git#bf05684f9311c516704c921bdad82a103f8b7ffd"
 
 [[package]]
 name = "unicode-ident"
-version = "1.0.16"
+version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a210d160f08b701c8721ba1c726c11662f877ea6b7094007e1ca9a1041945034"
+checksum = "00e2473a93778eb0bad35909dff6a10d28e63f792f16ed15e404fca9d5eeedbe"
 
 [[package]]
 name = "unicode-xid"
@@ -341,13 +344,13 @@ checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "url"
-version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
+version = "2.5.0+patch"
+source = "git+https://github.com/bplaat/crates.git#bf05684f9311c516704c921bdad82a103f8b7ffd"
 
 [[package]]
 name = "uuid"
 version = "1.0.0+patch"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
+source = "git+https://github.com/bplaat/crates.git#bf05684f9311c516704c921bdad82a103f8b7ffd"
 dependencies = [
  "getrandom",
  "serde",
@@ -356,7 +359,7 @@ dependencies = [
 [[package]]
 name = "validate"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
+source = "git+https://github.com/bplaat/crates.git#bf05684f9311c516704c921bdad82a103f8b7ffd"
 dependencies = [
  "regex",
  "serde",
@@ -366,7 +369,7 @@ dependencies = [
 [[package]]
 name = "validate_derive"
 version = "0.1.0"
-source = "git+https://github.com/bplaat/crates.git#945d8d89c0d3126975b445673490173ed8d28b82"
+source = "git+https://github.com/bplaat/crates.git#bf05684f9311c516704c921bdad82a103f8b7ffd"
 dependencies = [
  "quote",
  "syn",

@@ -4,11 +4,13 @@
  * SPDX-License-Identifier: MIT
  */
 
+use base64::engine::general_purpose::STANDARD_NO_PAD as BASE64_NO_PAD;
+use base64::Engine as _;
 use chrono::Utc;
 use const_format::formatcp;
-use http::{Request, Response, Status};
 use pbkdf2::password_verify;
 use serde::Deserialize;
+use small_http::{Request, Response, Status};
 use validate::Report;
 
 use crate::database::Extension;
@@ -64,10 +66,7 @@ pub fn auth_login(req: &Request, ctx: &Context) -> Response {
         loc: String,
     }
     let ip_address = req.client_addr.ip();
-    let ip_info = match http::fetch(Request::with_url(format!(
-        "http://ipinfo.io/{}/json",
-        ip_address
-    ))) {
+    let ip_info = match Request::with_url(format!("http://ipinfo.io/{}/json", ip_address)).fetch() {
         Ok(res) => serde_json::from_slice::<IpInfo>(&res.body).ok(),
         Err(_) => None,
     };
@@ -122,7 +121,7 @@ pub fn auth_login(req: &Request, ctx: &Context) -> Response {
 pub fn generate_random_token() -> String {
     let mut token_bytes = [0u8; 256];
     getrandom::fill(&mut token_bytes).expect("Can't get random bytes");
-    base64::encode(&token_bytes, true)
+    BASE64_NO_PAD.encode(token_bytes)
 }
 
 // MARK: Auth validate
@@ -149,6 +148,7 @@ pub fn auth_logout(_: &Request, ctx: &Context) -> Response {
 #[cfg(test)]
 mod test {
     use pbkdf2::password_hash;
+    use small_http::Method;
 
     use super::*;
     use crate::database::Extension;
@@ -171,7 +171,7 @@ mod test {
 
         // Login with username
         let req = Request::with_url("http://localhost/auth/login")
-            .method(http::Method::Post)
+            .method(Method::Post)
             .body("logon=test&password=password");
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Ok);
@@ -181,7 +181,7 @@ mod test {
 
         // Login with email
         let req = Request::with_url("http://localhost/auth/login")
-            .method(http::Method::Post)
+            .method(Method::Post)
             .body("logon=test@example.com&password=password");
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Ok);
@@ -191,7 +191,7 @@ mod test {
 
         // Login with wrong username
         let req = Request::with_url("http://localhost/auth/login")
-            .method(http::Method::Post)
+            .method(Method::Post)
             .body("logon=wrongtest&password=password");
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Unauthorized);
@@ -203,7 +203,7 @@ mod test {
 
         // Login with wrong password
         let req = Request::with_url("http://localhost/auth/login")
-            .method(http::Method::Post)
+            .method(Method::Post)
             .body("logon=test&password=wrongpassword");
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Unauthorized);
@@ -245,7 +245,7 @@ mod test {
 
         // Logout session
         let req = Request::with_url("http://localhost/auth/logout")
-            .method(http::Method::Put)
+            .method(Method::Put)
             .header("Authorization", format!("Bearer {}", session.token));
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Ok);

@@ -9,8 +9,8 @@ use std::path::Path;
 use std::sync::LazyLock;
 
 use bsqlite::Connection;
-use router::{Router, RouterBuilder};
 use simple_useragent::UserAgentParser;
+use small_router::{Router, RouterBuilder};
 
 use crate::controllers::auth::{auth_login, auth_logout, auth_validate};
 use crate::controllers::posts::{
@@ -139,5 +139,5 @@ fn main() {
     println!("Server is listening on: http://localhost:{}/", HTTP_PORT);
     let listener = TcpListener::bind((Ipv4Addr::UNSPECIFIED, HTTP_PORT))
         .unwrap_or_else(|_| panic!("Can't bind to port: {}", HTTP_PORT));
-    http::serve(listener, move |req| router.handle(req));
+    small_http::serve(listener, move |req| router.handle(req));
 }

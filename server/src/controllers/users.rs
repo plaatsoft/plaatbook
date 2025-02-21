@@ -8,9 +8,9 @@ use std::str::FromStr;
 
 use chrono::{NaiveDate, Utc};
 use const_format::formatcp;
-use http::{Request, Response, Status};
 use pbkdf2::password_hash;
 use serde::{Deserialize, Deserializer};
+use small_http::{Request, Response, Status};
 use uuid::Uuid;
 use validate::Validate;
 
@@ -53,7 +53,7 @@ pub fn users_index(req: &Request, ctx: &Context) -> Response {
     }
 
     // Parse request query
-    let query = match req.url.query.as_ref() {
+    let query = match req.url.query() {
         Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {
             Ok(query) => query,
             Err(_) => return Response::with_status(Status::BadRequest),
@@ -337,7 +337,7 @@ pub fn users_sessions(req: &Request, ctx: &Context) -> Response {
     }
 
     // Parse index query
-    let query = match req.url.query.as_ref() {
+    let query = match req.url.query() {
         Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {
             Ok(query) => query,
             Err(_) => return Response::with_status(Status::BadRequest),
@@ -388,7 +388,7 @@ pub fn users_posts(req: &Request, ctx: &Context) -> Response {
     // -
 
     // Parse request query
-    let query = match req.url.query.as_ref() {
+    let query = match req.url.query() {
         Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {
             Ok(query) => query,
             Err(_) => return Response::with_status(Status::BadRequest),
@@ -441,6 +441,8 @@ pub fn users_posts(req: &Request, ctx: &Context) -> Response {
 
 #[cfg(test)]
 mod test {
+    use small_http::Method;
+
     use super::*;
     use crate::controllers::auth::generate_random_token;
     use crate::router;
@@ -473,7 +475,7 @@ mod test {
         let (_, session) = create_user_session(&ctx, UserRole::Admin);
 
         let req = Request::with_url("http://localhost/users")
-            .method(http::Method::Post)
+            .method(Method::Post)
             .header("Authorization", format!("Bearer {}", session.token))
             .body(
                 serde_urlencoded::to_string(api::UserCreateBody {
@@ -513,7 +515,7 @@ mod test {
         let (user, session) = create_user_session(&ctx, UserRole::Normal);
 
         let req = Request::with_url(format!("http://localhost/users/{}", user.id))
-            .method(http::Method::Put)
+            .method(Method::Put)
             .header("Authorization", format!("Bearer {}", session.token))
             .body(
                 serde_urlencoded::to_string(api::UserUpdateBody {
@@ -559,7 +561,7 @@ mod test {
             "http://localhost/users/{}/change_password",
             user.id
         ))
-        .method(http::Method::Put)
+        .method(Method::Put)
         .header("Authorization", format!("Bearer {}", session.token))
         .body(
             serde_urlencoded::to_string(api::UserUpdatePasswordBody {

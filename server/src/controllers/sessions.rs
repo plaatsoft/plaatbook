@@ -6,7 +6,7 @@
 
 use chrono::Utc;
 use const_format::formatcp;
-use http::{Request, Response, Status};
+use small_http::{Request, Response, Status};
 use uuid::Uuid;
 use validate::Validate;
 
@@ -47,7 +47,7 @@ pub fn sessions_index(req: &Request, ctx: &Context) -> Response {
     }
 
     // Parse index query
-    let query = match req.url.query.as_ref() {
+    let query = match req.url.query() {
         Some(query) => match serde_urlencoded::from_str::<IndexQuery>(query) {
             Ok(query) => query,
             Err(_) => return Response::with_status(Status::BadRequest),
@@ -138,6 +138,8 @@ pub fn sessions_revoke(req: &Request, ctx: &Context) -> Response {
 
 #[cfg(test)]
 mod test {
+    use small_http::Method;
+
     use super::*;
     use crate::controllers::auth::generate_random_token;
     use crate::database::Extension;
@@ -211,7 +213,7 @@ mod test {
         // Revoke your own session
         let (_, user_session) = create_user_session(&ctx, UserRole::Normal);
         let req = Request::with_url(format!("http://localhost/sessions/{}", user_session.id))
-            .method(http::Method::Delete)
+            .method(Method::Delete)
             .header("Authorization", format!("Bearer {}", user_session.token));
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Ok);
@@ -226,7 +228,7 @@ mod test {
         let (_, admin_session) = create_user_session(&ctx, UserRole::Admin);
         let (_, user_session) = create_user_session(&ctx, UserRole::Normal);
         let req = Request::with_url(format!("http://localhost/sessions/{}", user_session.id))
-            .method(http::Method::Delete)
+            .method(Method::Delete)
             .header("Authorization", format!("Bearer {}", admin_session.token));
         let res = router.handle(&req);
         assert_eq!(res.status, Status::Ok);
